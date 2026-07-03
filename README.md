@@ -178,8 +178,8 @@ MIT License
 
 ```bibtex
 @software{NeuroBenchStudio,
-  title={NeuroBench Studio: EEG Foundation Model Platform},
-  author={NeuroBench Studio Contributors},
+  title={NeuroBench Studio: Vibe Coding for EEG — A No-Code Platform for EEG Deep Learning, Foundation Models, and Visual Pipeline Orchestration},
+  author={Geletaw Sahle Tegenaw and Tomas Ward},
   year={2026},
   url={https://github.com/your-repo/NeuroBenchStudio}
 }
