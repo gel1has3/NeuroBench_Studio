@@ -179,7 +179,7 @@ MIT License
 ```bibtex
 @software{NeuroBenchStudio,
   title={NeuroBench Studio: EEG Foundation Model Platform},
-  author={NeuroBench Studio Contributors},
+  author={Geletaw Sahle Tegenaw and Tomas Ward},
   year={2026},
   url={https://github.com/your-repo/NeuroBenchStudio}
 }
