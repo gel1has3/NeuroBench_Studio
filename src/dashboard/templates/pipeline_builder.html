@@ -1,0 +1,1341 @@
+{% extends "base.html" %}
+
+{% block title %}🔧 Pipeline Builder - NeuroBench Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vibe-hero {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .5rem;
+    padding: .6rem 1rem;
+    margin-bottom: .75rem;
+  }
+  .vibe-hero h5 { font-size: 1rem; margin-bottom: 0; }
+  .vibe-hero .text-muted { font-size: .78rem; }
+
+  .pipeline-canvas {
+    background: #f8f9fa;
+    background-image:
+      radial-gradient(circle, #dee2e6 1px, transparent 1px);
+    background-size: 20px 20px;
+    min-height: 600px;
+    max-height: 800px;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 2px solid #dee2e6;
+    border-radius: .5rem;
+  }
+
+  .pipeline-canvas::-webkit-scrollbar { width: 8px; height: 8px; }
+  .pipeline-canvas::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+  .pipeline-canvas::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+  .pipeline-canvas::-webkit-scrollbar-thumb:hover { background: #555; }
+  .pipeline-canvas::-webkit-scrollbar-corner { background: #f1f1f1; }
+
+  .node {
+    position: absolute;
+    width: 280px;
+    min-width: 160px;
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: .5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    cursor: move;
+    user-select: none;
+    z-index: 10;
+    transition: width 0.05s ease;
+  }
+  .node.selected { border-color: #28a745; box-shadow: 0 0 0 2px rgba(40,167,69,.2); }
+
+  .node-resize-handle {
+    position: absolute; right: 0; bottom: 0;
+    width: 16px; height: 16px;
+    cursor: se-resize; z-index: 25; opacity: 0.3; transition: opacity 0.2s;
+  }
+  .node-resize-handle::after {
+    content: ''; position: absolute; right: 3px; bottom: 3px;
+    width: 8px; height: 8px;
+    border-right: 2px solid #6c757d; border-bottom: 2px solid #6c757d;
+    border-radius: 0 0 2px 0;
+  }
+  .node:hover .node-resize-handle, .node.selected .node-resize-handle { opacity: 0.8; }
+  .node-resize-handle:active { opacity: 1; }
+
+  .node.collapsed-node { width: auto !important; min-width: 140px; max-width: 200px; }
+  .node.collapsed-node .node-header { border-radius: .5rem; white-space: nowrap; }
+  .node.collapsed-node .node-body { display: none !important; }
+  .node.collapsed-node .node-port { display: block !important; }
+  .node.collapsed-node .node-resize-handle { display: none; }
+
+  .node-header {
+    padding: .5rem .75rem;
+    background: #e9ecef;
+    border-bottom: 1px solid #ced4da;
+    border-radius: .5rem .5rem 0 0;
+    font-weight: 600;
+    font-size: .85rem;
+    cursor: move;
+    color: #212529;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .node-controls { display: flex; gap: 0.25rem; }
+  .node-control-btn {
+    background: transparent; border: none; color: #6c757d;
+    cursor: pointer; padding: 0.25rem 0.5rem; font-size: 0.75rem;
+    border-radius: 0.25rem; transition: all 0.2s;
+  }
+  .node-control-btn:hover { background: #dee2e6; color: #212529; }
+
+  .node-body {
+    padding: .75rem;
+    max-height: 400px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+  .node-body.collapsed { max-height: 0; padding: 0; overflow: hidden; }
+  .node-body::-webkit-scrollbar { width: 6px; }
+  .node-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+  .node-body::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+  .node-body::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  .preprocessing-steps {
+    background: #f8f9fa; border: 1px solid #dee2e6;
+    border-radius: .375rem; padding: .5rem; margin-bottom: .75rem; font-size: .7rem;
+  }
+  .preprocessing-step {
+    display: flex; align-items: center; padding: .25rem 0; border-bottom: 1px dashed #dee2e6;
+  }
+  .preprocessing-step:last-child { border-bottom: none; }
+  .step-number {
+    background: #007bff; color: white; border-radius: 50%;
+    width: 20px; height: 20px; display: flex; align-items: center;
+    justify-content: center; font-weight: bold; font-size: .65rem;
+    margin-right: .5rem; flex-shrink: 0;
+  }
+  .step-label { flex: 1; color: #495057; font-size: .7rem; }
+  .step-status { font-size: .65rem; color: #28a745; }
+
+  .node-port {
+    width: 14px; height: 14px;
+    background: #28a745; border: 2px solid #fff;
+    border-radius: 50%; position: absolute;
+    cursor: crosshair; z-index: 20;
+    transition: all 0.2s ease;
+  }
+  .node-port.input.port-left { top: 50%; left: -7px; transform: translateY(-50%); }
+  .node-port.output.port-right { top: 50%; right: -7px; transform: translateY(-50%); }
+  .node-port.input.port-top { top: -7px; left: 50%; transform: translateX(-50%); }
+  .node-port.output.port-bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+  .node-port:hover { background: #007bff; transform: scale(1.3); }
+
+  #connectionsSvg {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 5;
+  }
+  .connection-line { stroke: #28a745; stroke-width: 2; fill: none; pointer-events: none; }
+  .connection-line.temp { stroke: #007bff; stroke-dasharray: 5,5; }
+
+  .btn-run {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    border: none; color: #fff; font-weight: 600;
+    padding: .5rem 1rem; border-radius: .375rem;
+    width: 100%; margin-top: .5rem;
+  }
+  .btn-run:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-run:hover:not(:disabled) { background: linear-gradient(135deg, #1e7e34, #1a5f2a); color: #fff; }
+
+  .node-type-dataset .node-header { background: #007bff; color: #fff; }
+  .node-type-preprocess .node-header { background: #fd7e14; color: #fff; }
+  .node-type-split_strategy .node-header { background: #e83e8c; color: #fff; }
+  .node-type-validation .node-header { background: #0d6efd; color: #fff; }
+  .node-type-model .node-header { background: #6f42c1; color: #fff; }
+
+  .form-control, .form-select {
+    background: #ffffff; border: 1px solid #ced4da;
+    color: #212529; font-size: .8rem;
+  }
+  .form-control:focus, .form-select:focus {
+    background: #ffffff; border-color: #28a745;
+    color: #212529; box-shadow: 0 0 0 .2rem rgba(40,167,69,.25);
+  }
+  .form-label { font-size: .75rem; color: #6c757d; margin-bottom: .25rem; }
+
+  .pipeline-toolbar {
+    background: #ffffff; border: 1px solid #dee2e6;
+    border-radius: .5rem; padding: .75rem; margin-bottom: 1rem;
+  }
+  .toolbar-btn {
+    background: #f8f9fa; border: 1px solid #ced4da;
+    color: #212529; padding: .4rem .8rem; border-radius: .375rem;
+    font-size: .8rem; cursor: pointer; margin-right: .5rem;
+  }
+  .toolbar-btn:hover { background: #e9ecef; border-color: #28a745; }
+
+  .node-palette-item-horizontal {
+    background: #ffffff; border: 1px solid #ced4da;
+    border-radius: .375rem; cursor: grab;
+    transition: all 0.2s; display: inline-block;
+  }
+  .node-palette-item-horizontal:hover {
+    border-color: #28a745; transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+  }
+  .node-palette-item-horizontal:active { cursor: grabbing; }
+  .node-palette-header {
+    padding: .5rem .75rem; border-radius: .375rem;
+    font-weight: 600; font-size: .8rem; color: #fff; white-space: nowrap;
+  }
+
+  .context-menu {
+    position: absolute; background: #ffffff; border: 1px solid #ced4da;
+    border-radius: .5rem; box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    z-index: 1000; min-width: 180px; padding: .25rem 0;
+  }
+  .context-menu-item {
+    padding: .5rem 1rem; cursor: pointer; font-size: .85rem;
+    color: #212529; transition: background 0.2s;
+  }
+  .context-menu-item:hover { background: #f8f9fa; color: #000; }
+  .context-menu-item.danger { color: #dc3545; }
+  .context-menu-item.danger:hover { background: #dc3545; color: #fff; }
+  .context-menu-divider { height: 1px; background: #dee2e6; margin: .25rem 0; }
+
+  /* ── INLINE RUN PANEL ── */
+  #runPanel {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: .5rem;
+    margin-top: 1rem;
+  }
+  #runPanel .panel-header {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: .75rem 1rem;
+    border-radius: .5rem .5rem 0 0;
+    color: #e6edf3;
+    font-weight: 600;
+  }
+  #runPanel .panel-body { padding: 1rem; }
+  #runPanel .progress { height: 20px; background: #21262d; border-radius: 10px; }
+  #runPanel .progress-bar { border-radius: 10px; transition: width .3s ease; }
+  #runPanel .msg { color: #8b949e; font-size: .85rem; margin-bottom: .25rem; }
+  #runPanel .phase-item {
+    display: flex; align-items: center; padding: .3rem 0;
+    border-bottom: 1px solid #21262d; font-size: .85rem;
+  }
+  #runPanel .phase-item:last-child { border-bottom: none; }
+  #runPanel .phase-icon { width: 24px; text-align: center; margin-right: .5rem; }
+  #runPanel .phase-text { flex: 1; color: #8b949e; }
+  #runPanel .phase-check { color: #30363d; font-size: 1rem; }
+  #runPanel .phase-check.done { color: #28a745; }
+  .metric-card {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: .375rem; padding: .75rem; text-align: center;
+  }
+  .metric-card .value { font-size: 1.5rem; font-weight: bold; }
+  .metric-card .label { font-size: .75rem; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="vibe-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-diagram-3 text-success fs-5"></i>
+      <div>
+        <h5 class="fw-semibold">Pipeline Builder</h5>
+        <p class="text-muted mb-0">Drag, connect, and run ML pipelines — no coding required</p>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+    </div>
+  </div>
+
+  <!-- Node Palette -->
+  <div class="pipeline-toolbar mb-3">
+    <strong class="small text-muted me-3">Node Palette:</strong>
+    <span class="small text-muted me-3" style="font-size:0.75rem;">Drag nodes to canvas</span>
+    <div class="d-inline-flex gap-2">
+      <div class="node-palette-item-horizontal" draggable="true" data-node-type="dataset">
+        <div class="node-palette-header" style="background: #2b6cb0;">
+          <i class="bi bi-database me-1"></i>Dataset
+        </div>
+      </div>
+      <div class="node-palette-item-horizontal" draggable="true" data-node-type="preprocess">
+        <div class="node-palette-header" style="background: #975a16;">
+          <i class="bi bi-gear me-1"></i>Preprocessing
+        </div>
+      </div>
+      <div class="node-palette-item-horizontal" draggable="true" data-node-type="model">
+        <div class="node-palette-header" style="background: #702459;">
+          <i class="bi bi-cpu me-1"></i>Model
+        </div>
+      </div>
+      <div class="node-palette-item-horizontal" draggable="true" data-node-type="split_strategy">
+        <div class="node-palette-header" style="background: #e83e8c;">
+          <i class="bi bi-diagram-3 me-1"></i>Data Splitting
+        </div>
+      </div>
+      <div class="node-palette-item-horizontal" draggable="true" data-node-type="validation">
+        <div class="node-palette-header" style="background: #0d6efd;">
+          <i class="bi bi-graph-up me-1"></i>Validation & Eval
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="pipeline-toolbar">
+    <span class="me-auto">
+      <button class="toolbar-btn" onclick="generateDefaultPipeline()"><i class="bi bi-magic me-1"></i>Generate Default Pipeline</button>
+      <button class="toolbar-btn" onclick="clearCanvas()"><i class="bi bi-trash me-1"></i>Clear</button>
+      <button class="toolbar-btn" onclick="validatePipeline()"><i class="bi bi-check-circle me-1"></i>Validate</button>
+      <span class="border-start mx-2" style="height:20px;"></span>
+      <button class="toolbar-btn" onclick="minimizeAllNodes()"><i class="bi bi-dash-square me-1"></i>Minimize All</button>
+      <button class="toolbar-btn" onclick="expandAllNodes()"><i class="bi bi-plus-square me-1"></i>Expand All</button>
+      <button class="toolbar-btn" onclick="fitToScreen()"><i class="bi bi-fullscreen me-1"></i>Fit to Screen</button>
+      <button class="toolbar-btn" onclick="runPanelTest()"><i class="bi bi-bug me-1"></i>Test Panel</button>
+    </span>
+  </div>
+
+  <!-- Alert -->
+  <div id="pipelineAlert" class="alert d-none" role="alert"></div>
+
+  <!-- Canvas -->
+  <div class="pipeline-canvas" id="canvas">
+    <svg id="connectionsSvg"></svg>
+  </div>
+
+  <!-- Inline Run Panel -->
+  <div id="runPanel" class="d-none">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+      <span>▶ Pipeline Execution</span>
+      <span id="runStatusBadge" class="badge bg-secondary">Ready</span>
+    </div>
+    <div class="panel-body">
+      <div id="progressSection">
+        <div class="d-flex justify-content-between mb-1">
+          <span id="runStage" class="small text-muted">Waiting...</span>
+          <span id="runPercent" class="small text-muted">0%</span>
+        </div>
+        <div class="progress mb-3">
+          <div id="runBar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div id="phaseList">
+          <div class="phase-item"><span class="phase-icon">⏳</span><span class="phase-text">Load dataset</span><span class="phase-check">◻</span></div>
+          <div class="phase-item"><span class="phase-icon">⏳</span><span class="phase-text">Preprocess data</span><span class="phase-check">◻</span></div>
+          <div class="phase-item"><span class="phase-icon">⏳</span><span class="phase-text">Train model</span><span class="phase-check">◻</span></div>
+          <div class="phase-item"><span class="phase-icon">⏳</span><span class="phase-text">Evaluate results</span><span class="phase-check">◻</span></div>
+        </div>
+        <div id="runMessages" class="mt-2" style="max-height: 120px; overflow-y: auto;"></div>
+      </div>
+      <div id="resultsSection" class="d-none">
+        <div class="d-flex align-items-center mb-3 p-3 rounded" style="background: #0d2818; border: 1px solid #238636;">
+          <span style="font-size: 2rem; margin-right: 1rem;">✅</span>
+          <div>
+            <h5 class="text-success mb-0">Pipeline Complete</h5>
+            <small class="text-muted" id="resultMeta"></small>
+          </div>
+        </div>
+        <div id="resultMetrics" class="row g-2 mb-3"></div>
+        <div id="resultDetails" class="small" style="color: #8b949e; font-family: monospace; white-space: pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){'use strict';
+
+// ── DOM REFS ──────────────────────────────────────────────────────
+var canvas=document.getElementById('canvas');
+var svg=document.getElementById('connectionsSvg');
+var nodes=[];
+var connections=[];
+var nodeIdCounter=0;
+var dragState=null;
+var connectState=null;
+var contextMenu=null;
+var selectedNode=null;
+var isRunning=false;
+var eventSource=null;
+
+// ── NODE TEMPLATES ──────────────────────────────────────────────
+var NODE_TEMPLATES={
+  dataset:{
+    type:'dataset',title:'Local Dataset',
+    fields:[
+      {name:'dataset_id',label:'Local Dataset',value:'',type:'select',options:['adhd200','tuh_eeg','chb_mit','helsinki_neonatal','sleep_edf']},
+      {name:'n_chans',label:'Num Channels',value:'129',type:'number',readonly:true},
+      {name:'sfreq',label:'Sampling Freq (Hz)',value:'100',type:'number',readonly:true},
+    ],
+    inputs:[],outputs:['Raw Data']
+  },
+  preprocess_step2:{
+    type:'preprocess',title:'1. Temporal Filtering',
+    fields:[
+      {name:'highpass_freq',label:'High-Pass (Hz)',value:'0.5',type:'number'},
+      {name:'lowpass_freq',label:'Low-Pass (Hz)',value:'100',type:'number'},
+      {name:'notch_freq',label:'Notch (Hz)',value:'50',type:'number'},
+    ],
+    inputs:['Raw Data'],outputs:['Filtered Data']
+  },
+  preprocess_step3:{
+    type:'preprocess',title:'2. Downsampling',
+    fields:[
+      {name:'downsample_freq',label:'Target Freq (Hz)',value:'256',type:'number'},
+    ],
+    inputs:['Filtered Data'],outputs:['Resampled Data']
+  },
+  preprocess_step4:{
+    type:'preprocess',title:'3. Bad Channel Detection',
+    fields:[
+      {name:'threshold',label:'Threshold (std)',value:'3',type:'number'},
+      {name:'interpolation',label:'Interpolation',value:'true',type:'select',options:['true','false']},
+    ],
+    inputs:['Resampled Data'],outputs:['Clean Channels']
+  },
+  preprocess_step5:{
+    type:'preprocess',title:'4. Re-Referencing',
+    fields:[
+      {name:'method',label:'Method',value:'CAR',type:'select',options:['CAR','REST','Average','None']},
+    ],
+    inputs:['Clean Channels'],outputs:['Re-Referenced']
+  },
+  preprocess_step6:{
+    type:'preprocess',title:'5. ICA Artifact Removal',
+    fields:[
+      {name:'ica_method',label:'ICA Method',value:'ICLabel',type:'select',options:['ICLabel','Manual','None']},
+      {name:'remove_eye',label:'Remove Eye Blinks',value:'true',type:'select',options:['true','false']},
+      {name:'remove_muscle',label:'Remove Muscle',value:'true',type:'select',options:['true','false']},
+    ],
+    inputs:['Re-Referenced'],outputs:['Clean EEG']
+  },
+  preprocess_step7:{
+    type:'preprocess',title:'6. Segmentation',
+    fields:[
+      {name:'window_size',label:'Window (sec)',value:'4',type:'number'},
+      {name:'overlap',label:'Overlap (%)',value:'50',type:'number'},
+    ],
+    inputs:['Clean EEG'],outputs:['Epochs']
+  },
+  preprocess_step8:{
+    type:'preprocess',title:'7. Baseline Correction',
+    fields:[
+      {name:'baseline',label:'Baseline Correction',value:'true',type:'select',options:['true','false']},
+      {name:'baseline_period',label:'Baseline Period (ms)',value:'-200:0',type:'text'},
+    ],
+    inputs:['Epochs'],outputs:['Final Data']
+  },
+  split_strategy:{
+    type:'split_strategy',title:'Data Splitting Strategy',
+    fields:[
+      {name:'split_mode',label:'Split Mode',value:'standard',type:'select',options:['standard','development','loso']},
+      {name:'train_pct',label:'Train %',value:'70',type:'number'},
+      {name:'val_pct',label:'Val %',value:'15',type:'number'},
+      {name:'test_pct',label:'Test %',value:'15',type:'number'},
+    ],
+    inputs:['Final Data'],outputs:['Split Data']
+  },
+  validation:{
+    type:'validation',title:'Validation & Evaluation',
+    fields:[
+      {name:'primary_metric',label:'Primary Metrics',value:'balanced_accuracy,f1_score',type:'text'},
+      {name:'secondary_metrics',label:'Additional Metrics',value:'precision,recall,confusion_matrix',type:'text'},
+      {name:'reporting_format',label:'Reporting Format',value:'classification_report',type:'select',options:['classification_report','confusion_matrix','latex_table','all']},
+      {name:'statistical_test',label:'Statistical Test',value:'none',type:'select',options:['none','paired_ttest','wilcoxon','anova_friedman']},
+    ],
+    inputs:['Split Data'],outputs:['Evaluated Data']
+  },
+  model:{
+    type:'model',title:'Braindecode Model',
+    fields:[
+      {name:'architecture',label:'Architecture',value:'EEGNet',type:'select',options:['EEGNet','Deep4Net','ShallowFBCSPNet','EEGPT','BENDR','BIOT','ContraWR']},
+      {name:'n_outputs',label:'Num Outputs',value:'2',type:'number'},
+      {name:'n_epochs',label:'Training Epochs',value:'5',type:'number'},
+      {name:'batch_size',label:'Batch Size',value:'32',type:'number'},
+    ],
+    inputs:['Final Data'],outputs:[]
+  }
+};
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function showAlert(msg,type){
+  var el=document.getElementById('pipelineAlert');
+  el.className='alert alert-'+type;
+  el.textContent=msg;
+  el.classList.remove('d-none');
+}
+
+function showRunMsg(msg,color){
+  var el=document.getElementById('runMessages');
+  var d=document.createElement('div');
+  d.className='msg';
+  d.style.color=color||'#8b949e';
+  d.textContent='▸ '+msg;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+
+function setPhase(idx,icon,done){
+  var phases=document.querySelectorAll('#phaseList .phase-item');
+  if(idx<phases.length){
+    phases[idx].querySelector('.phase-icon').textContent=icon;
+    phases[idx].querySelector('.phase-check').textContent=done?'✓':'◻';
+    phases[idx].querySelector('.phase-check').className='phase-check'+(done?' done':'');
+  }
+}
+
+// ── NODE RENDERING ──────────────────────────────────────────────
+function addNode(type,x,y){
+  var tpl=NODE_TEMPLATES[type];
+  var id='node_'+(++nodeIdCounter);
+  var posX=x||(50+Math.random()*200);
+  var posY=y||(50+Math.random()*200);
+  var node={id:id,type:type,x:posX,y:posY,fields:tpl.fields,inputs:tpl.inputs,outputs:tpl.outputs,title:tpl.title};
+  nodes.push(node);
+  renderNode(node);
+  if(type==='dataset'){
+    setTimeout(function(){
+      var sel=document.getElementById(id).querySelector('[data-field="dataset_id"]');
+      if(sel)sel.addEventListener('change',function(){fetchDatasetDimensions(id,sel.value);});
+    },0);
+  }
+  if(type==='model'){
+    setTimeout(function(){populateModelDropdown(id);},0);
+  }
+  if(type==='split_strategy'){
+    setTimeout(function(){
+      var sel=document.getElementById(id).querySelector('[data-field="split_mode"]');
+      if(sel)sel.addEventListener('change',function(){handleSplitModeChange(id,sel.value);});
+    },0);
+  }
+  return node;
+}
+
+function addPreprocessingPipeline(x,y){
+  var steps=['preprocess_step2','preprocess_step3','preprocess_step4','preprocess_step5','preprocess_step6','preprocess_step7','preprocess_step8'];
+  var startX=x||50;
+  var startY=y||50;
+  var spacing=250;
+  var prev=null;
+  var created=[];
+  steps.forEach(function(st,idx){
+    var tpl=NODE_TEMPLATES[st];
+    var id='node_'+(++nodeIdCounter);
+    var node={id:id,type:st,x:startX+idx*spacing,y:startY,fields:tpl.fields,inputs:tpl.inputs,outputs:tpl.outputs,title:tpl.title};
+    nodes.push(node);
+    created.push(node);
+    if(prev){connections.push({from:prev,to:id});}
+    prev=id;
+  });
+  created.forEach(function(n){renderNode(n);});
+  renderConnections();
+  showAlert('Preprocessing pipeline created with 7 steps!','success');
+}
+
+function fetchDatasetDimensions(nodeId,name){
+  if(!name)return;
+  fetch('/api/datasets/'+encodeURIComponent(name))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status!=='success')return;
+      var ds=d.dataset;
+      var el=document.getElementById(nodeId);
+      var ch=el.querySelector('[data-field="n_chans"]');
+      var sf=el.querySelector('[data-field="sfreq"]');
+      if(ch&&ds.n_channels)ch.value=ds.n_channels;
+      if(sf&&ds.sfreq)sf.value=ds.sfreq;
+    }).catch(function(){});
+}
+
+function handleSplitModeChange(nodeId,mode){
+  var el=document.getElementById(nodeId);
+  var tr=el.querySelector('[data-field="train_pct"]');
+  var vl=el.querySelector('[data-field="val_pct"]');
+  var te=el.querySelector('[data-field="test_pct"]');
+  if(!tr||!vl||!te)return;
+  var td=tr.closest('.mb-2');
+  var vd=vl.closest('.mb-2');
+  var ted=te.closest('.mb-2');
+  if(mode==='loso'){td.style.display='none';vd.style.display='none';ted.style.display='none';}
+  else if(mode==='development'){td.style.display='block';vd.style.display='block';ted.style.display='none';tr.value='80';vl.value='20';te.value='0';}
+  else{td.style.display='block';vd.style.display='block';ted.style.display='block';tr.value='70';vl.value='15';te.value='15';}
+  var node=nodes.find(function(n){return n.id===nodeId;});
+  if(node){
+    var tf=node.fields.find(function(f){return f.name==='train_pct';});
+    var vf=node.fields.find(function(f){return f.name==='val_pct';});
+    var tef=node.fields.find(function(f){return f.name==='test_pct';});
+    if(tf)tf.value=tr.value;if(vf)vf.value=vl.value;if(tef)tef.value=te.value;
+  }
+}
+
+function populateModelDropdown(nodeId){
+  var el=document.getElementById(nodeId);
+  var sel=el.querySelector('[data-field="architecture"]');
+  if(!sel)return;
+  fetch('/api/braindecode/models')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status!=='success')return;
+      var models=d.model_names||[];
+      sel.innerHTML='';
+      models.forEach(function(m){
+        var opt=document.createElement('option');
+        opt.value=m;opt.textContent=m;
+        if(m==='EEGNet')opt.selected=true;
+        sel.appendChild(opt);
+      });
+    }).catch(function(){});
+  var body=el.querySelector('.node-body');
+  var existing=body.querySelector('.btn-run');
+  if(existing)existing.remove();
+  var btn=document.createElement('button');
+  btn.className='btn-run';
+  btn.innerHTML='<i class="bi bi-play-fill me-1"></i>Run Experiment';
+  btn.addEventListener('click',function(){runExperiment(nodeId);});
+  body.appendChild(btn);
+}
+
+function renderNode(node){
+  var tpl=NODE_TEMPLATES[node.type];
+  var el=document.createElement('div');
+  el.className='node node-type-'+node.type;
+  el.id=node.id;
+  el.style.left=node.x+'px';
+  el.style.top=node.y+'px';
+
+  var fieldsHtml='';
+  node.fields.forEach(function(f){
+    if(node.type==='validation'&&['primary_metric','secondary_metrics'].includes(f.name)) return;
+    if(f.type==='select'){
+      fieldsHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><select class="form-select node-field" data-field="'+f.name+'">';
+      f.options.forEach(function(o){fieldsHtml+='<option value="'+o+'"'+(o===f.value?' selected':'')+'>'+o+'</option>';});
+      fieldsHtml+='</select></div>';
+    }else{
+      fieldsHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><input type="'+f.type+'" class="form-control node-field" data-field="'+f.name+'" value="'+f.value+'"></div>';
+    }
+  });
+
+  var portsHtml='';
+  if(node.inputs.length) portsHtml+='<div class="node-port input port-left" data-node="'+node.id+'" data-port="input" title="'+node.inputs[0]+'"></div>';
+  if(node.outputs.length) portsHtml+='<div class="node-port output port-right" data-node="'+node.id+'" data-port="output" title="'+node.outputs[0]+'"></div>';
+
+  var stepsHtml='';
+  if(node.type==='preprocess'){
+    stepsHtml='<div class="preprocessing-steps"><strong style="font-size:.75rem">📋 Preprocessing Pipeline:</strong>';
+    var labels=['Data Ingestion','Temporal Filtering','Downsampling','Bad Channel Detection','Re-Referencing','ICA Artifact Removal','Segmentation','Baseline Correction'];
+    labels.forEach(function(l,i){
+      stepsHtml+='<div class="preprocessing-step"><span class="step-number">'+(i+1)+'</span><span class="step-label">'+l+'</span><span class="step-status">✓</span></div>';
+    });
+    stepsHtml+='</div>';
+  }
+
+  var valHtml='';
+  if(node.type==='validation'){
+    valHtml='<ul class="nav nav-tabs mb-2" style="font-size:0.75rem">';
+    valHtml+='<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#metrics-'+node.id+'" style="padding:0.25rem 0.5rem">Metrics</a></li>';
+    valHtml+='<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reporting-'+node.id+'" style="padding:0.25rem 0.5rem">Reporting</a></li></ul>';
+    valHtml+='<div class="tab-content"><div class="tab-pane fade show active" id="metrics-'+node.id+'">';
+    node.fields.filter(function(f){return ['primary_metric','secondary_metrics'].includes(f.name);}).forEach(function(f){
+      valHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><input type="text" class="form-control node-field" data-field="'+f.name+'" value="'+f.value+'"></div>';
+    });
+    valHtml+='</div><div class="tab-pane fade" id="reporting-'+node.id+'">';
+    node.fields.filter(function(f){return !['primary_metric','secondary_metrics'].includes(f.name);}).forEach(function(f){
+      if(f.type==='select'){
+        valHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><select class="form-select node-field" data-field="'+f.name+'">';
+        f.options.forEach(function(o){valHtml+='<option value="'+o+'"'+(o===f.value?' selected':'')+'>'+o+'</option>';});
+        valHtml+='</select></div>';
+      }else{
+        valHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><input type="'+f.type+'" class="form-control node-field" data-field="'+f.name+'" value="'+f.value+'"></div>';
+      }
+    });
+    valHtml+='</div></div>';
+  }
+
+  var bodyCollapsed=node.type==='model'?'':'collapsed';
+
+  el.innerHTML='<div class="node-header"><span>'+node.title+' <span class="ms-1 text-muted" style="font-size:.7rem">#'+node.id.split('_')[1]+'</span></span><div class="node-controls"><button class="node-control-btn" onclick="toggleCollapseNode(\''+node.id+'\')" title="Expand">+</button><button class="node-control-btn" onclick="toggleCompactNode(\''+node.id+'\')" title="Compact">⊟</button></div></div><div class="node-body '+bodyCollapsed+'" id="body_'+node.id+'">'+(node.type==='preprocess'?stepsHtml:'')+(node.type==='validation'?valHtml:fieldsHtml)+'</div><div class="node-resize-handle" title="Resize"></div>'+portsHtml;
+  canvas.appendChild(el);
+  attachNodeEvents(el,node);
+  updatePortPositions();
+}
+
+function attachNodeEvents(el,node){
+  el.querySelector('.node-header').addEventListener('mousedown',function(e){
+    e.preventDefault();
+    var cr=canvas.getBoundingClientRect();
+    dragState={node:node,offsetX:e.clientX-cr.left-node.x,offsetY:e.clientY-cr.top-node.y,el:el};
+    el.classList.add('selected');
+    selectedNode=node;
+  });
+  el.addEventListener('contextmenu',function(e){
+    e.preventDefault();
+    showContextMenu(e.clientX,e.clientY,node);
+  });
+  el.addEventListener('click',function(e){
+    e.stopPropagation();
+    document.querySelectorAll('.node').forEach(function(n){n.classList.remove('selected');});
+    el.classList.add('selected');
+    selectedNode=node;
+  });
+  el.querySelectorAll('.node-port').forEach(function(port){
+    port.addEventListener('mousedown',function(e){
+      e.preventDefault();e.stopPropagation();
+      var isOut=port.dataset.port==='output';
+      connectState={fromNode:isOut?node.id:null,toNode:isOut?null:node.id,fromPort:isOut?'output':'input',el:port,startX:e.clientX,startY:e.clientY};
+    });
+  });
+}
+
+// ── CONTEXT MENU ────────────────────────────────────────────────
+function showContextMenu(x,y,node){
+  if(contextMenu){contextMenu.remove();}
+  var menu=document.createElement('div');
+  menu.className='context-menu';
+  menu.style.left=x+'px';
+  menu.style.top=y+'px';
+  var items=[
+    {label:'✏️ Edit Properties',action:function(){editNodeProperties(node);}},
+    {label:'📋 Duplicate Node',action:function(){duplicateNode(node);}},
+    {divider:true},
+    {label:'🗑️ Delete Node',action:function(){deleteNode(node);},danger:true}
+  ];
+  items.forEach(function(it){
+    if(it.divider){
+      var d=document.createElement('div');d.className='context-menu-divider';menu.appendChild(d);
+    }else{
+      var mi=document.createElement('div');
+      mi.className='context-menu-item'+(it.danger?' danger':'');
+      mi.textContent=it.label;
+      mi.addEventListener('click',function(){it.action();menu.remove();contextMenu=null;});
+      menu.appendChild(mi);
+    }
+  });
+  document.body.appendChild(menu);
+  contextMenu=menu;
+  setTimeout(function(){
+    document.addEventListener('click',function closeMenu(){
+      if(contextMenu){contextMenu.remove();contextMenu=null;}
+      document.removeEventListener('click',closeMenu);
+    });
+  },0);
+}
+
+function editNodeProperties(node){
+  var el=document.getElementById(node.id);
+  var fields=node.fields;
+  var dlg=document.createElement('div');
+  dlg.className='modal fade';dlg.id='propModal';
+  dlg.innerHTML='<div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Node Properties</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="propTitle" value="'+node.title+'"></div>'+fields.map(function(f){return '<div class="mb-3"><label class="form-label">'+f.label+'</label>'+(f.type==='select'?'<select class="form-select" id="prop_'+f.name+'">'+f.options.map(function(o){return '<option value="'+o+'"'+(o===f.value?' selected':'')+'>'+o+'</option>';}).join('')+'</select>':'<input type="'+f.type+'" class="form-control" id="prop_'+f.name+'" value="'+f.value+'"'+(f.readonly?' readonly':'')+'>')+'</div>';}).join('')+'</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="saveNodeProperties(\''+node.id+'\')">Save</button></div></div></div>';
+  document.body.appendChild(dlg);
+  var modal=new bootstrap.Modal(dlg);
+  modal.show();
+  dlg.addEventListener('hidden.bs.modal',function(){dlg.remove();});
+}
+
+function saveNodeProperties(nodeId){
+  var node=nodes.find(function(n){return n.id===nodeId;});
+  if(!node)return;
+  var title=document.getElementById('propTitle').value;
+  node.title=title;
+  node.fields.forEach(function(f){
+    var el=document.getElementById('prop_'+f.name);
+    if(el&&!f.readonly)f.value=el.value;
+  });
+  var old=document.getElementById(nodeId);
+  old.remove();
+  renderNode(node);
+  bootstrap.Modal.getInstance(document.getElementById('propModal')).hide();
+  showAlert('Node properties updated!','success');
+}
+
+function duplicateNode(node){
+  var n={...node,id:'node_'+(++nodeIdCounter),x:node.x+20,y:node.y+20,fields:node.fields.map(function(f){return {...f};})};
+  nodes.push(n);renderNode(n);
+  showAlert('Node duplicated!','success');
+}
+
+function deleteNode(node){
+  if(!confirm('Delete this node and its connections?'))return;
+  connections=connections.filter(function(c){return c.from!==node.id&&c.to!==node.id;});
+  nodes=nodes.filter(function(n){return n.id!==node.id;});
+  var el=document.getElementById(node.id);
+  if(el)el.remove();
+  renderConnections();
+}
+
+// ── MOUSE EVENTS ────────────────────────────────────────────────
+document.addEventListener('mousemove',function(e){
+  if(dragState){
+    var cr=canvas.getBoundingClientRect();
+    dragState.node.x=e.clientX-dragState.offsetX-cr.left;
+    dragState.node.y=e.clientY-dragState.offsetY-cr.top;
+    dragState.el.style.left=dragState.node.x+'px';
+    dragState.el.style.top=dragState.node.y+'px';
+    renderConnections();
+  }
+  if(connectState){
+    renderConnections();
+    var cr=canvas.getBoundingClientRect();
+    var x=e.clientX-cr.left;
+    var y=e.clientY-cr.top;
+    var start=getPortCenter(connectState.el);
+    drawTempLine(start.x,start.y,x,y);
+  }
+});
+
+document.addEventListener('mouseup',function(e){
+  if(dragState){dragState=null;}
+  if(connectState){
+    var target=document.elementFromPoint(e.clientX,e.clientY);
+    if(target&&target.classList.contains('node-port')){
+      var tn=target.dataset.node,tp=target.dataset.port;
+      var from,to;
+      if(connectState.fromNode&&tp==='input'){from=connectState.fromNode;to=tn;}
+      else if(connectState.toNode&&tp==='output'){from=tn;to=connectState.toNode;}
+      if(from&&to&&from!==to){
+        connections=connections.filter(function(c){return !(c.from===from&&c.to===to);});
+        connections.push({from:from,to:to});
+      }
+    }
+    connectState=null;
+    renderConnections();
+  }
+});
+
+function getPortCenter(portEl){
+  var r=portEl.getBoundingClientRect(),cr=canvas.getBoundingClientRect();
+  return{x:r.left+r.width/2-cr.left,y:r.top+r.height/2-cr.top};
+}
+
+// ── CONNECTIONS ─────────────────────────────────────────────────
+function updatePortPositions(){
+  connections.forEach(function(c){
+    var fn=nodes.find(function(n){return n.id===c.from;});
+    var tn=nodes.find(function(n){return n.id===c.to;});
+    if(!fn||!tn)return;
+    var fe=document.getElementById(c.from);
+    var te=document.getElementById(c.to);
+    if(!fe||!te)return;
+    var fr=fe.getBoundingClientRect();
+    var tr=te.getBoundingClientRect();
+    var cr=canvas.getBoundingClientRect();
+    var fcx=fn.x+(fr.width/2),fcy=fn.y+(fr.height/2);
+    var tcx=tn.x+(tr.width/2),tcy=tn.y+(tr.height/2);
+    var dx=tcx-fcx,dy=tcy-fcy;
+    var adx=Math.abs(dx),ady=Math.abs(dy);
+    var fp=fe.querySelector('.node-port.output');
+    var tp=te.querySelector('.node-port.input');
+    if(!fp||!tp)return;
+    fp.classList.remove('port-right','port-bottom');
+    tp.classList.remove('port-left','port-top');
+    if(adx>=ady){fp.classList.add('port-right');tp.classList.add('port-left');}
+    else{fp.classList.add('port-bottom');tp.classList.add('port-top');}
+  });
+}
+
+function renderConnections(){
+  updatePortPositions();
+  svg.innerHTML='';
+  connections.forEach(function(c){
+    var fe=document.getElementById(c.from),te=document.getElementById(c.to);
+    if(!fe||!te)return;
+    var fp=fe.querySelector('.node-port.output'),tp=te.querySelector('.node-port.input');
+    if(!fp||!tp)return;
+    var p1=getPortCenter(fp),p2=getPortCenter(tp);
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    var fb=fp.classList.contains('port-bottom'),tt=tp.classList.contains('port-top');
+    var vert=fb&&tt;
+    var d;
+    if(vert){
+      var my=(p1.y+p2.y)/2;
+      d='M'+p1.x+','+p1.y+' C'+p1.x+','+my+' '+p2.x+','+my+' '+p2.x+','+p2.y;
+    }else{
+      var mx=(p1.x+p2.x)/2;
+      d='M'+p1.x+','+p1.y+' C'+mx+','+p1.y+' '+mx+','+p2.y+' '+p2.x+','+p2.y;
+    }
+    path.setAttribute('d',d);
+    path.setAttribute('class','connection-line');
+    svg.appendChild(path);
+  });
+}
+
+function drawTempLine(x1,y1,x2,y2){
+  var t=svg.querySelector('.temp');
+  if(!t){t=document.createElementNS('http://www.w3.org/2000/svg','path');t.setAttribute('class','connection-line temp');svg.appendChild(t);}
+  var dx=Math.abs(x2-x1),dy=Math.abs(y2-y1);
+  var d;
+  if(dy>dx){
+    var my=(y1+y2)/2;
+    d='M'+x1+','+y1+' C'+x1+','+my+' '+x2+','+my+' '+x2+','+y2;
+  }else{
+    var mx=(x1+x2)/2;
+    d='M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2;
+  }
+  t.setAttribute('d',d);
+}
+
+// ── VALIDATE ────────────────────────────────────────────────────
+function validatePipeline(){
+  var el=document.getElementById('pipelineAlert');
+  el.classList.add('d-none');
+  if(nodes.length===0){showAlert('Add at least one node.','warning');return;}
+  var cn=new Set();
+  connections.forEach(function(c){cn.add(c.from);cn.add(c.to);});
+  var mns=nodes.filter(function(n){return n.type==='model';});
+  for(var i=0;i<mns.length;i++){
+    if(!cn.has(mns[i].id)){showAlert('Model "'+mns[i].title+'" is not connected.','danger');return;}
+  }
+  showAlert('Pipeline looks good!','success');
+}
+
+// ── PANEL HELPERS ────────────────────────────────────────────────
+function runPanelTest(){
+  var panel=document.getElementById('runPanel');
+  panel.classList.remove('d-none');
+  document.getElementById('runStatusBadge').textContent='🧪 Test OK';
+  document.getElementById('runStatusBadge').className='badge bg-success';
+  document.getElementById('runStage').textContent='JavaScript loaded!';
+  showRunMsg('✅ Pipeline builder loaded. Click "Run Experiment" on a Model node.','#7ee787');
+}
+
+function finishRun(){
+  isRunning=false;
+  if(eventSource){eventSource.close();eventSource=null;}
+  document.querySelectorAll('.btn-run').forEach(function(b){
+    b.disabled=false;
+    b.innerHTML='<i class="bi bi-play-fill me-1"></i>Run Experiment';
+  });
+}
+
+// ── RUN EXPERIMENT ──────────────────────────────────────────────
+function runExperiment(nodeId){
+  if(isRunning){showAlert('Experiment already running!','warning');return;}
+
+  var alertEl=document.getElementById('pipelineAlert');
+  alertEl.classList.add('d-none');
+
+  var modelNode=nodes.find(function(n){return n.id===nodeId;});
+  var modelEl=document.getElementById(nodeId);
+  if(!modelNode||!modelEl){showAlert('Model node not found.','danger');return;}
+
+  var isConn=connections.some(function(c){return c.to===nodeId;});
+  if(!isConn){showAlert('Model node is not connected.','danger');return;}
+
+  var upstream=findUpstream(nodeId);
+  if(!upstream){showAlert('No Dataset node found.','danger');return;}
+
+  var datasetEl=document.getElementById(upstream);
+  if(!datasetEl){showAlert('Dataset node not found.','danger');return;}
+  var datasetId=datasetEl.querySelector('[data-field="dataset_id"]').value;
+
+  var architecture=modelEl.querySelector('[data-field="architecture"]').value;
+  var n_outputs=parseInt(modelEl.querySelector('[data-field="n_outputs"]').value)||2;
+  var n_epochs=parseInt(modelEl.querySelector('[data-field="n_epochs"]').value)||5;
+  var batch_size=parseInt(modelEl.querySelector('[data-field="batch_size"]').value)||32;
+  var n_chans=129;
+  var sfreq=100;
+  var n_times=Math.floor(sfreq*2);
+
+  var payload={
+    graph:{nodes:nodes.map(function(n){
+      var el=document.getElementById(n.id);
+      var fields={};
+      n.fields.forEach(function(f){
+        var fe=el?el.querySelector('[data-field="'+f.name+'"]'):null;
+        fields[f.name]=fe?fe.value:f.value;
+      });
+      return{id:n.id,type:n.type,title:n.title,fields:fields,inputs:n.inputs,outputs:n.outputs};
+    }),connections:connections.map(function(c){return{from:c.from,to:c.to};})},
+    dataset_id:datasetId,
+    model_config:{architecture:architecture,n_chans:n_chans,n_times:n_times,n_outputs:n_outputs,sfreq:sfreq,batch_size:batch_size,n_epochs:n_epochs}
+  };
+
+  isRunning=true;
+
+  // Show run panel
+  var panel=document.getElementById('runPanel');
+  panel.classList.remove('d-none');
+  document.getElementById('resultsSection').classList.add('d-none');
+  document.getElementById('progressSection').classList.remove('d-none');
+  document.getElementById('runStatusBadge').textContent='⏳ Running';
+  document.getElementById('runStatusBadge').className='badge bg-primary';
+  document.getElementById('runStage').textContent='Starting...';
+  document.getElementById('runBar').style.width='0%';
+  document.getElementById('runPercent').textContent='0%';
+  document.getElementById('runMessages').innerHTML='';
+  document.querySelectorAll('#phaseList .phase-item').forEach(function(p){
+    p.querySelector('.phase-icon').textContent='⏳';
+    p.querySelector('.phase-check').textContent='◻';
+    p.querySelector('.phase-check').className='phase-check';
+  });
+
+  document.querySelectorAll('.btn-run').forEach(function(b){
+    b.disabled=true;
+    b.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>Running...';
+  });
+
+  showRunMsg('🚀 Sending pipeline request...','#58a6ff');
+
+  fetch('/api/run-pipeline',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.status==='queued'){
+      showRunMsg('✅ Pipeline queued (ID: '+d.run_id+')','#7ee787');
+      document.getElementById('runStage').textContent='Queued...';
+      document.getElementById('runBar').style.width='5%';
+      document.getElementById('runPercent').textContent='5%';
+
+      eventSource=new EventSource('/api/pipeline/progress/'+d.run_id);
+
+      eventSource.onmessage=function(evt){
+        try{
+          var data=JSON.parse(evt.data);
+          var pct=Math.min(data.progress||0,100);
+          document.getElementById('runBar').style.width=pct+'%';
+          document.getElementById('runPercent').textContent=Math.round(pct)+'%';
+          if(data.stage){
+            document.getElementById('runStage').textContent=data.stage.charAt(0).toUpperCase()+data.stage.slice(1)+'...';
+          }
+          if(data.message){
+            showRunMsg(data.message,data.stage==='error'?'#ff7b72':'#7ee787');
+          }
+          if(data.stage==='loading'){setPhase(0,'🔄',false);}
+          else if(data.stage==='preprocessing'){setPhase(0,'✅',true);setPhase(1,'🔄',false);}
+          else if(data.stage==='training'){setPhase(0,'✅',true);setPhase(1,'✅',true);setPhase(2,'🔄',false);}
+          else if(data.stage==='complete'||data.stage==='done'){
+            setPhase(0,'✅',true);setPhase(1,'✅',true);setPhase(2,'✅',true);setPhase(3,'✅',true);
+            showResults(data.results||data);
+            setTimeout(function(){window.location.href='/results';},2000);
+          }else if(data.stage==='error'){
+            setPhase(3,'❌',false);
+            showError(data);
+          }
+          if(data.details&&data.details.epoch){
+            var ed=data.details;
+            showRunMsg('Epoch '+ed.epoch+'/'+ed.total_epochs+' | Loss: '+(ed.train_loss||0).toFixed(4)+' | Train: '+(ed.train_acc||0).toFixed(1)+'% | Val: '+(ed.val_acc||0).toFixed(1)+'%');
+          }
+        }catch(e){}
+      };
+
+      eventSource.onerror=function(){
+        setTimeout(function(){
+          if(eventSource&&eventSource.readyState===EventSource.CLOSED){finishRun();}
+        },5000);
+      };
+    }else{
+      finishRun();
+      showRunMsg('❌ '+(d.message||'Failed'),'#ff7b72');
+      showAlert('Pipeline failed: '+(d.message||'Error'),'danger');
+    }
+  }).catch(function(err){
+    finishRun();
+    showRunMsg('❌ '+err.message,'#ff7b72');
+    showAlert('Error: '+err.message,'danger');
+  });
+}
+
+function findUpstream(nodeId){
+  var visited=new Set();
+  function dfs(id){
+    if(visited.has(id))return null;
+    visited.add(id);
+    var incoming=connections.filter(function(c){return c.to===id;});
+    for(var i=0;i<incoming.length;i++){
+      var src=nodes.find(function(n){return n.id===incoming[i].from;});
+      if(src.type==='dataset')return src.id;
+      var found=dfs(incoming[i].from);
+      if(found)return found;
+    }
+    return null;
+  }
+  return dfs(nodeId);
+}
+
+function showResults(results){
+  finishRun();
+  document.getElementById('progressSection').classList.add('d-none');
+  var sec=document.getElementById('resultsSection');
+  sec.classList.remove('d-none');
+  document.getElementById('runStatusBadge').textContent='✅ Complete';
+  document.getElementById('runStatusBadge').className='badge bg-success';
+
+  var metrics=results.metrics||{};
+  var meta=results.pipeline_metadata||{};
+  document.getElementById('resultMeta').textContent=(meta.dataset_id||'')+' · '+(meta.total_time_formatted||'')+' · '+(meta.timestamp?new Date(meta.timestamp).toLocaleTimeString():'');
+
+  var mhtml='';
+  var items=[
+    {k:'accuracy',l:'Accuracy',c:'#28a745'},
+    {k:'balanced_accuracy',l:'Balanced',c:'#17a2b8'},
+    {k:'f1_score',l:'F1 Score',c:'#ffc107'},
+    {k:'precision',l:'Precision',c:'#007bff'},
+    {k:'recall',l:'Recall',c:'#6610f2'}
+  ];
+  items.forEach(function(it){
+    var v=metrics[it.k];
+    if(v!==undefined){
+      mhtml+='<div class="col-4 col-md-2"><div class="metric-card"><div class="value" style="color:'+it.c+'">'+(v*100).toFixed(1)+'%</div><div class="label">'+it.l+'</div></div></div>';
+    }
+  });
+  document.getElementById('resultMetrics').innerHTML=mhtml;
+
+  var details='';
+  if(results.data_summary){
+    var ds=results.data_summary;
+    details+='Channels: '+ds.n_channels+' | Samples: '+(ds.n_samples||0).toLocaleString()+' | Duration: '+(ds.duration_sec||0).toFixed(1)+'s\n';
+  }
+  if(metrics.n_samples){
+    details+='Train: '+(metrics.n_train||0)+' samples | Test: '+(metrics.n_test||0)+' samples\n';
+  }
+  if(results.model_info){
+    details+='Architecture: '+(results.model_info.architecture||'')+' | Params: '+((results.model_info.n_params||0).toLocaleString())+' | Device: '+(results.model_info.device||'');
+  }
+  document.getElementById('resultDetails').textContent=details||'Results available.';
+}
+
+function showError(data){
+  finishRun();
+  document.getElementById('runStatusBadge').textContent='❌ Error';
+  document.getElementById('runStatusBadge').className='badge bg-danger';
+  showRunMsg('❌ '+(data.error||data.message||'Unknown error'),'#ff7b72');
+  showAlert('Pipeline failed: '+(data.error||data.message||'Error'),'danger');
+}
+
+// ── CANVAS OPERATIONS ──────────────────────────────────────────
+function clearCanvas(){
+  if(!confirm('Clear all nodes and connections?'))return;
+  nodes=[];connections=[];
+  document.querySelectorAll('.node').forEach(function(n){n.remove();});
+  svg.innerHTML='';
+  document.getElementById('runPanel').classList.add('d-none');
+  document.getElementById('resultsSection').classList.add('d-none');
+  selectedNode=null;
+  isRunning=false;
+  if(eventSource){eventSource.close();eventSource=null;}
+}
+
+function generateDefaultPipeline(){
+  nodes=[];connections=[];
+  document.querySelectorAll('.node').forEach(function(n){n.remove();});
+  svg.innerHTML='';
+  document.getElementById('runPanel').classList.add('d-none');
+
+  var cr=canvas.getBoundingClientRect();
+  var padding=30,nw=280,nh=50,hGap=30,vGap=30;
+  var aw=cr.width-padding*2;
+  var cols=Math.max(1,Math.floor((aw+hGap)/(nw+hGap)));
+
+  var pn=[
+    {type:'dataset',title:'Dataset'},
+    {type:'preprocess_step2',title:'1. Temporal Filtering'},
+    {type:'preprocess_step3',title:'2. Downsampling'},
+    {type:'preprocess_step4',title:'3. Bad Channel Detection'},
+    {type:'preprocess_step5',title:'4. Re-Referencing'},
+    {type:'preprocess_step6',title:'5. ICA Artifact Removal'},
+    {type:'preprocess_step7',title:'6. Segmentation'},
+    {type:'preprocess_step8',title:'7. Baseline Correction'},
+    {type:'split_strategy',title:'Data Splitting'},
+    {type:'validation',title:'Validation & Eval'},
+    {type:'model',title:'Braindecode Model'}
+  ];
+
+  var created=[];
+  pn.forEach(function(item,idx){
+    var col=idx%cols,row=Math.floor(idx/cols);
+    var x=padding+col*(nw+hGap),y=padding+row*(nh+vGap);
+    var tpl=NODE_TEMPLATES[item.type];
+    var id='node_'+(++nodeIdCounter);
+    var node={id:id,type:item.type,x:x,y:y,fields:tpl.fields.map(function(f){return{...f};}),inputs:tpl.inputs,outputs:tpl.outputs,title:item.title};
+    nodes.push(node);
+    created.push(node);
+    renderNode(node);
+  });
+
+  var mn=created.find(function(n){return n.type==='model';});
+  if(mn)setTimeout(function(){populateModelDropdown(mn.id);},0);
+
+  var sn=created.find(function(n){return n.type==='split_strategy';});
+  if(sn){
+    setTimeout(function(){
+      var sel=document.getElementById(sn.id).querySelector('[data-field="split_mode"]');
+      if(sel)sel.addEventListener('change',function(){handleSplitModeChange(sn.id,sel.value);});
+    },0);
+  }
+
+  for(var i=0;i<created.length-1;i++){
+    connections.push({from:created[i].id,to:created[i+1].id});
+  }
+  renderConnections();
+  showAlert('Default pipeline: '+created.length+' nodes generated.','success');
+}
+
+// ── COLLAPSE / EXPAND ──────────────────────────────────────────
+function toggleCollapseNode(nodeId){
+  var el=document.getElementById(nodeId);
+  var body=document.getElementById('body_'+nodeId);
+  var btn=el.querySelector('.node-control-btn:first-child');
+  if(!body)return;
+  el.classList.remove('collapsed-node');
+  var isColl=body.classList.toggle('collapsed');
+  btn.textContent=isColl?'+':'−';
+  btn.title=isColl?'Expand':'Collapse';
+}
+
+function toggleCompactNode(nodeId){
+  var el=document.getElementById(nodeId);
+  var body=document.getElementById('body_'+nodeId);
+  var btn=el.querySelector('.node-control-btn:first-child');
+  if(!body)return;
+  var isComp=el.classList.toggle('collapsed-node');
+  if(isComp){body.classList.add('collapsed');btn.textContent='+';btn.title='Expand';}
+  else{body.classList.remove('collapsed');btn.textContent='−';btn.title='Collapse';}
+  renderConnections();
+}
+
+function minimizeAllNodes(){
+  nodes.forEach(function(n){
+    var el=document.getElementById(n.id);
+    if(el){
+      el.classList.add('collapsed-node');
+      var body=document.getElementById('body_'+n.id);
+      if(body)body.classList.add('collapsed');
+      var btn=el.querySelector('.node-control-btn:first-child');
+      if(btn){btn.textContent='+';btn.title='Expand';}
+    }
+  });
+  renderConnections();
+  showAlert('All nodes minimized.','info');
+}
+
+function expandAllNodes(){
+  nodes.forEach(function(n){
+    var el=document.getElementById(n.id);
+    if(el){
+      el.classList.remove('collapsed-node');
+      var body=document.getElementById('body_'+n.id);
+      if(body)body.classList.remove('collapsed');
+      var btn=el.querySelector('.node-control-btn:first-child');
+      if(btn){btn.textContent='−';btn.title='Collapse';}
+    }
+  });
+  renderConnections();
+  showAlert('All nodes expanded.','info');
+}
+
+function fitToScreen(){
+  if(nodes.length===0){showAlert('No nodes to arrange.','warning');return;}
+  var cr=canvas.getBoundingClientRect();
+  var padding=30,nw=280,nh=180,hGap=40,vGap=60;
+  var aw=cr.width-padding*2;
+  var cols=Math.max(1,Math.floor((aw+hGap)/(nw+hGap)));
+  nodes.forEach(function(node,idx){
+    var col=idx%cols,row=Math.floor(idx/cols);
+    node.x=padding+col*(nw+hGap);
+    node.y=padding+row*(nh+vGap);
+    var el=document.getElementById(node.id);
+    if(el){el.style.left=node.x+'px';el.style.top=node.y+'px';}
+  });
+  renderConnections();
+  showAlert('Nodes arranged in '+Math.ceil(nodes.length/cols)+' rows.','success');
+}
+
+// ── DRAG AND DROP ──────────────────────────────────────────────
+document.querySelectorAll('.node-palette-item-horizontal').forEach(function(item){
+  item.addEventListener('dragstart',function(e){
+    e.dataTransfer.setData('nodeType',item.dataset.nodeType);
+    e.dataTransfer.effectAllowed='copy';
+  });
+});
+
+canvas.addEventListener('dragover',function(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='copy';
+  canvas.style.backgroundColor='#e9ecef';
+});
+
+canvas.addEventListener('dragleave',function(e){
+  canvas.style.backgroundColor='#f8f9fa';
+});
+
+canvas.addEventListener('drop',function(e){
+  e.preventDefault();
+  canvas.style.backgroundColor='#f8f9fa';
+  var nt=e.dataTransfer.getData('nodeType');
+  if(nt){
+    var cr=canvas.getBoundingClientRect();
+    var x=e.clientX-cr.left-140;
+    var y=e.clientY-cr.top-40;
+    if(nt==='preprocess'){addPreprocessingPipeline(x,y);}
+    else{addNode(nt,x,y);}
+  }
+});
+
+canvas.addEventListener('click',function(e){
+  if(e.target===canvas||e.target===svg){
+    document.querySelectorAll('.node').forEach(function(n){n.classList.remove('selected');});
+    selectedNode=null;
+  }
+});
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+    if(selectedNode){deleteNode(selectedNode);selectedNode=null;}
+  }
+});
+
+// ── RESIZE ─────────────────────────────────────────────────────
+var resizeState=null;
+document.addEventListener('mousedown',function(e){
+  var h=e.target.closest('.node-resize-handle');
+  if(!h)return;
+  e.preventDefault();e.stopPropagation();
+  var ne=h.closest('.node'),ni=ne.id,nd=nodes.find(function(n){return n.id===ni;});
+  if(!nd)return;
+  resizeState={node:nd,el:ne,startX:e.clientX,startWidth:ne.offsetWidth};
+});
+
+document.addEventListener('mousemove',function(e){
+  if(!resizeState)return;
+  var dx=e.clientX-resizeState.startX;
+  var nw=Math.max(160,resizeState.startWidth+dx);
+  resizeState.el.style.width=nw+'px';
+  resizeState.node.width=nw;
+  renderConnections();
+});
+
+document.addEventListener('mouseup',function(e){
+  if(resizeState)resizeState=null;
+});
+
+// ── EXPOSE ─────────────────────────────────────────────────────
+window.clearCanvas=clearCanvas;
+window.validatePipeline=validatePipeline;
+window.generateDefaultPipeline=generateDefaultPipeline;
+window.minimizeAllNodes=minimizeAllNodes;
+window.expandAllNodes=expandAllNodes;
+window.fitToScreen=fitToScreen;
+window.toggleCollapseNode=toggleCollapseNode;
+window.toggleCompactNode=toggleCompactNode;
+window.runExperiment=runExperiment;
+window.editNodeProperties=editNodeProperties;
+window.saveNodeProperties=saveNodeProperties;
+window.runPanelTest=runPanelTest;
+
+})();
+</script>
+{% endblock %}

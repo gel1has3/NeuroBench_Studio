@@ -1,0 +1,652 @@
+{% extends "base.html" %}
+
+{% block title %}🧠 Models - NeuroBench Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Page-level layout ─────────────────────────────────────────── */
+  .vibe-hero {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .5rem;
+    padding: .6rem 1rem;
+    margin-bottom: .75rem;
+  }
+  .vibe-hero h5 { font-size: 1rem; margin-bottom: 0; }
+  .vibe-hero .text-muted { font-size: .78rem; }
+  .vibe-hero .badge-version { font-size: .65rem; letter-spacing: .04em; }
+
+  /* ── Sidebar / model list ──────────────────────────────────────── */
+  #modelSidebar {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+    position: sticky;
+    top: 70px;
+  }
+  .model-list-item {
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all .15s ease;
+    padding: .45rem .75rem;
+    border-radius: 0 .375rem .375rem 0;
+    font-size: .875rem;
+  }
+  .model-list-item:hover {
+    background: rgba(99,179,237,.08);
+    border-left-color: #63b3ed;
+  }
+  .model-list-item.active {
+    background: rgba(99,179,237,.15);
+    border-left-color: #63b3ed;
+    color: #63b3ed;
+    font-weight: 600;
+  }
+  .model-list-item .badge {
+    font-size: .65rem;
+  }
+
+  /* ── Search box ────────────────────────────────────────────────── */
+  #modelSearch {
+    background: rgba(255,255,255,.05);
+    border-color: rgba(255,255,255,.15);
+    color: inherit;
+  }
+  #modelSearch:focus {
+    background: rgba(255,255,255,.08);
+    border-color: #63b3ed;
+    box-shadow: 0 0 0 .2rem rgba(99,179,237,.25);
+    color: inherit;
+  }
+
+  /* ── Detail panel ──────────────────────────────────────────────── */
+  #detailPanel {
+    min-height: 400px;
+  }
+  .param-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+  .param-table td { font-size: .85rem; vertical-align: middle; }
+  .param-required {
+    background: rgba(245,101,101,.12);
+    color: #fc8181;
+    font-weight: 600;
+  }
+  .param-optional { color: #68d391; }
+  .param-name { font-family: 'SFMono-Regular', Consolas, monospace; color: #90cdf4; }
+  .param-value {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: .8rem;
+    max-width: 320px;
+    word-break: break-all;
+  }
+
+  /* ── Stats cards ───────────────────────────────────────────────── */
+  .stat-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+    text-align: center;
+  }
+  .stat-card .stat-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+  .stat-card .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; opacity: .65; margin-top: .2rem; }
+
+  /* ── Loading spinner ───────────────────────────────────────────── */
+  #bdLoadingSpinner { display: none; }
+
+  /* ── Copy-code button ──────────────────────────────────────────── */
+  .copy-btn { font-size: .75rem; }
+
+  /* ── Scrollbar styling ─────────────────────────────────────────── */
+  #modelSidebar::-webkit-scrollbar { width: 4px; }
+  #modelSidebar::-webkit-scrollbar-track { background: transparent; }
+  #modelSidebar::-webkit-scrollbar-thumb { background: rgba(99,179,237,.3); border-radius: 2px; }
+
+  /* ── Filter chips ──────────────────────────────────────────────── */
+  .filter-chip {
+    cursor: pointer;
+    font-size: .75rem;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.2);
+    transition: all .15s;
+    user-select: none;
+  }
+  .filter-chip:hover, .filter-chip.active {
+    background: rgba(99,179,237,.2);
+    border-color: #63b3ed;
+    color: #63b3ed;
+  }
+
+  /* ── Code snippet ──────────────────────────────────────────────── */
+  #codeSnippet {
+    background: #0d1117;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: .5rem;
+    font-size: .8rem;
+    line-height: 1.6;
+    max-height: 320px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================================================================ -->
+<!-- Page Header                                                        -->
+<!-- ================================================================ -->
+<div class="vibe-hero d-flex align-items-center justify-content-between flex-wrap gap-2">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-cpu text-info fs-5"></i>
+    <div class="d-flex align-items-center gap-2">
+      <h5 class="fw-semibold">Braindecode Models</h5>
+      <span class="badge bg-info text-dark badge-version">v{{ bd_version }}</span>
+    </div>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()">
+      <i class="bi bi-arrow-left me-1"></i>Back
+    </button>
+    <button id="bdRefreshBtn" class="btn btn-sm btn-outline-info">
+      <i class="bi bi-arrow-clockwise me-1"></i>Re-scan
+    </button>
+    <a href="/api/braindecode/models" target="_blank" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-braces me-1"></i>JSON
+    </a>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Summary Stats Row                                                  -->
+<!-- ================================================================ -->
+<div class="row g-2 mb-3 px-1" id="summaryRow">
+  <div class="col-6 col-sm-3">
+    <div class="stat-card">
+      <div class="stat-num text-info" id="statTotalModels">—</div>
+      <div class="stat-label">Total Models</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="stat-card">
+      <div class="stat-num text-warning" id="statRequiredParams">—</div>
+      <div class="stat-label">Avg Required Params</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="stat-card">
+      <div class="stat-num text-success" id="statOptionalParams">—</div>
+      <div class="stat-label">Avg Optional Params</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="stat-card">
+      <div class="stat-num text-primary" id="statBdVersion">{{ bd_version }}</div>
+      <div class="stat-label">Braindecode Version</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Main Two-Column Layout                                             -->
+<!-- ================================================================ -->
+<div class="row g-3">
+
+  <!-- ── Left: Model List Sidebar ─────────────────────────────────── -->
+  <div class="col-lg-3 col-md-4">
+    <div class="card border-secondary h-100">
+      <div class="card-header py-2 d-flex align-items-center justify-content-between">
+        <span class="fw-semibold small"><i class="bi bi-list-ul me-1"></i>Models</span>
+        <span class="badge bg-secondary" id="visibleCount">0</span>
+      </div>
+      <div class="card-body p-2">
+        <!-- Search -->
+        <input type="text" id="modelSearch" class="form-control form-control-sm mb-2"
+               placeholder="🔍  Search models…" autocomplete="off">
+        <!-- Filter chips -->
+        <div class="d-flex flex-wrap gap-1 mb-2" id="filterChips">
+          <span class="filter-chip active" data-filter="all">All</span>
+          <span class="filter-chip" data-filter="transformer">Transformer</span>
+          <span class="filter-chip" data-filter="cnn">CNN</span>
+          <span class="filter-chip" data-filter="sleep">Sleep</span>
+          <span class="filter-chip" data-filter="eeg">EEG*</span>
+          <span class="filter-chip" data-filter="signal">Signal</span>
+        </div>
+        <!-- Spinner -->
+        <div id="bdLoadingSpinner" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+          <div class="small text-muted mt-1">Scanning braindecode…</div>
+        </div>
+        <!-- Model list -->
+        <div id="modelList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Detail Panel ──────────────────────────────────────── -->
+  <div class="col-lg-9 col-md-8">
+    <div id="detailPanel">
+
+      <!-- Placeholder shown before any model is selected -->
+      <div id="placeholderCard" class="card border-secondary text-center py-5">
+        <div class="card-body">
+          <i class="bi bi-arrow-left-circle display-4 text-muted mb-3 d-block"></i>
+          <h5 class="text-muted">Select a model from the list</h5>
+          <p class="text-muted small mb-0">
+            Click any model on the left to inspect its architecture parameters,
+            default values, and get a ready-to-use Python snippet.
+          </p>
+        </div>
+      </div>
+
+      <!-- Model detail card (hidden until a model is selected) -->
+      <div id="modelDetailCard" class="d-none">
+
+        <!-- Header -->
+        <div class="card border-secondary mb-3">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+              <div>
+                <h5 class="mb-1 fw-bold" id="detailModelName">—</h5>
+                <p class="text-muted small mb-2" id="detailDocstring">—</p>
+                <div class="d-flex gap-2 flex-wrap" id="detailBadges"></div>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-info copy-btn" id="copySnippetBtn"
+                        title="Copy Python snippet">
+                  <i class="bi bi-clipboard me-1"></i>Copy Code
+                </button>
+                <a id="detailApiLink" href="#" target="_blank"
+                   class="btn btn-sm btn-outline-secondary copy-btn">
+                  <i class="bi bi-braces me-1"></i>JSON
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="detailTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-params" data-bs-toggle="tab"
+                    data-bs-target="#pane-params" type="button" role="tab">
+              <i class="bi bi-sliders me-1"></i>Parameters
+              <span class="badge bg-secondary ms-1" id="tabParamCount">0</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-required" data-bs-toggle="tab"
+                    data-bs-target="#pane-required" type="button" role="tab">
+              <i class="bi bi-exclamation-circle me-1 text-warning"></i>Required
+              <span class="badge bg-warning text-dark ms-1" id="tabRequiredCount">0</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-code" data-bs-toggle="tab"
+                    data-bs-target="#pane-code" type="button" role="tab">
+              <i class="bi bi-code-slash me-1"></i>Code Snippet
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- ── All Parameters ──────────────────────────────────── -->
+          <div class="tab-pane fade show active" id="pane-params" role="tabpanel">
+            <div class="card border-secondary">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover mb-0 param-table">
+                    <thead class="table-dark">
+                      <tr>
+                        <th style="width:30%">Parameter</th>
+                        <th style="width:15%">Status</th>
+                        <th>Default Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paramTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Required Only ───────────────────────────────────── -->
+          <div class="tab-pane fade" id="pane-required" role="tabpanel">
+            <div class="card border-secondary">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover mb-0 param-table">
+                    <thead class="table-dark">
+                      <tr>
+                        <th style="width:40%">Parameter</th>
+                        <th>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody id="requiredTableBody"></tbody>
+                  </table>
+                </div>
+                <div id="noRequiredMsg" class="text-center text-muted py-3 small d-none">
+                  <i class="bi bi-check-circle text-success me-1"></i>
+                  All parameters have default values — no required arguments.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Code Snippet ────────────────────────────────────── -->
+          <div class="tab-pane fade" id="pane-code" role="tabpanel">
+            <div class="card border-secondary">
+              <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Python — ready to use</span>
+                <button class="btn btn-sm btn-outline-secondary copy-btn" id="copyCodeBtn">
+                  <i class="bi bi-clipboard me-1"></i>Copy
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <pre id="codeSnippet" class="p-3 mb-0"></pre>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tab-content -->
+      </div><!-- /modelDetailCard -->
+    </div><!-- /detailPanel -->
+  </div><!-- /col -->
+
+</div><!-- /row -->
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+/* ================================================================
+   Braindecode Explorer — JavaScript
+   ================================================================ */
+
+(function () {
+  'use strict';
+
+  // ── State ────────────────────────────────────────────────────────
+  let allModels = {};          // { ModelName: { params, n_params, … } }
+  let modelNames = [];         // sorted list
+  let currentModel = null;
+  let currentFilter = 'all';
+  let searchQuery = '';
+
+  // ── Filter keyword map ───────────────────────────────────────────
+  const FILTER_KEYWORDS = {
+    all:         null,
+    transformer: ['attn', 'transformer', 'conformer', 'former', 'bendr', 'biot',
+                  'labram', 'eegpt', 'luna', 'reve', 'pbt', 'cbramod', 'codebrain',
+                  'signaljepa', 'medformer'],
+    cnn:         ['net', 'cnn', 'conv', 'deep4', 'shallow', 'hybrid', 'sparc',
+                  'fbcnet', 'fbms', 'fblc', 'sccnet', 'syncnet', 'tcn', 'bdtcn',
+                  'tidnet', 'atcnet', 'ctnet'],
+    sleep:       ['sleep', 'usleep', 'attn'],
+    eeg:         ['eeg'],
+    signal:      ['signal'],
+  };
+
+  // ── DOM refs ─────────────────────────────────────────────────────
+  const modelList      = document.getElementById('modelList');
+  const modelSearch    = document.getElementById('modelSearch');
+  const visibleCount   = document.getElementById('visibleCount');
+  const spinner        = document.getElementById('bdLoadingSpinner');
+  const placeholder    = document.getElementById('placeholderCard');
+  const detailCard     = document.getElementById('modelDetailCard');
+  const bdRefreshBtn   = document.getElementById('bdRefreshBtn');
+
+  // ── Fetch all models ─────────────────────────────────────────────
+  function fetchModels() {
+    spinner.style.display = 'block';
+    modelList.innerHTML = '';
+    placeholder.classList.remove('d-none');
+    detailCard.classList.add('d-none');
+
+    fetch('/api/braindecode/models')
+      .then(r => r.json())
+      .then(data => {
+        spinner.style.display = 'none';
+        if (data.status !== 'success') {
+          modelList.innerHTML = `<div class="alert alert-danger small p-2">${data.message}</div>`;
+          return;
+        }
+        allModels   = data.models;
+        modelNames  = data.model_names;
+        updateSummaryStats(data);
+        renderModelList();
+      })
+      .catch(err => {
+        spinner.style.display = 'none';
+        modelList.innerHTML = `<div class="alert alert-danger small p-2">
+          <i class="bi bi-exclamation-triangle me-1"></i>Failed to load models: ${err.message}
+        </div>`;
+      });
+  }
+
+  // ── Summary stats ────────────────────────────────────────────────
+  function updateSummaryStats(data) {
+    document.getElementById('statTotalModels').textContent = data.total_models;
+    const models = Object.values(data.models);
+    const avgReq = models.length
+      ? (models.reduce((s, m) => s + m.n_required, 0) / models.length).toFixed(1)
+      : '—';
+    const avgOpt = models.length
+      ? (models.reduce((s, m) => s + m.n_optional, 0) / models.length).toFixed(1)
+      : '—';
+    document.getElementById('statRequiredParams').textContent = avgReq;
+    document.getElementById('statOptionalParams').textContent = avgOpt;
+  }
+
+  // ── Render sidebar list ──────────────────────────────────────────
+  function renderModelList() {
+    const q = searchQuery.toLowerCase();
+    const kws = FILTER_KEYWORDS[currentFilter];
+
+    const filtered = modelNames.filter(name => {
+      const nameLower = name.toLowerCase();
+      const matchSearch = !q || nameLower.includes(q);
+      const matchFilter = !kws || kws.some(k => nameLower.includes(k));
+      return matchSearch && matchFilter;
+    });
+
+    visibleCount.textContent = filtered.length;
+    modelList.innerHTML = '';
+
+    if (filtered.length === 0) {
+      modelList.innerHTML = '<div class="text-muted small text-center py-3">No models match.</div>';
+      return;
+    }
+
+    filtered.forEach(name => {
+      const m = allModels[name];
+      const div = document.createElement('div');
+      div.className = 'model-list-item d-flex align-items-center justify-content-between'
+                    + (name === currentModel ? ' active' : '');
+      div.dataset.model = name;
+      div.innerHTML = `
+        <span class="text-truncate me-1">${name}</span>
+        <span class="badge ${m.n_required > 0 ? 'bg-warning text-dark' : 'bg-success'} flex-shrink-0">
+          ${m.n_params}p
+        </span>`;
+      div.addEventListener('click', () => selectModel(name));
+      modelList.appendChild(div);
+    });
+  }
+
+  // ── Select & display a model ─────────────────────────────────────
+  function selectModel(name) {
+    currentModel = name;
+
+    // Highlight in sidebar
+    document.querySelectorAll('.model-list-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.model === name);
+    });
+
+    // Fetch detail
+    fetch(`/api/braindecode/models/${encodeURIComponent(name)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status !== 'success') return;
+        renderDetail(data);
+      })
+      .catch(console.error);
+  }
+
+  // ── Render detail panel ──────────────────────────────────────────
+  function renderDetail(data) {
+    placeholder.classList.add('d-none');
+    detailCard.classList.remove('d-none');
+
+    // Header
+    document.getElementById('detailModelName').textContent = data.model_name;
+    document.getElementById('detailDocstring').textContent =
+      data.doc || 'No docstring available.';
+    document.getElementById('detailApiLink').href =
+      `/api/braindecode/models/${encodeURIComponent(data.model_name)}`;
+
+    // Badges
+    const badgesEl = document.getElementById('detailBadges');
+    badgesEl.innerHTML = `
+      <span class="badge bg-info text-dark">
+        <i class="bi bi-sliders me-1"></i>${data.n_params} params
+      </span>
+      <span class="badge bg-warning text-dark">
+        <i class="bi bi-exclamation-circle me-1"></i>${data.n_required} required
+      </span>
+      <span class="badge bg-success">
+        <i class="bi bi-check-circle me-1"></i>${data.n_optional} optional
+      </span>
+      <span class="badge bg-secondary">
+        braindecode v${data.braindecode_version}
+      </span>`;
+
+    // Tab counts
+    document.getElementById('tabParamCount').textContent    = data.n_params;
+    document.getElementById('tabRequiredCount').textContent = data.n_required;
+
+    // All-params table
+    const tbody = document.getElementById('paramTableBody');
+    tbody.innerHTML = '';
+    Object.entries(data.params).forEach(([pname, pinfo]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="param-name">${escHtml(pname)}</td>
+        <td>
+          ${pinfo.required
+            ? '<span class="badge param-required">REQUIRED</span>'
+            : '<span class="badge param-optional bg-success bg-opacity-25">optional</span>'}
+        </td>
+        <td class="param-value text-muted">${escHtml(pinfo.display)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Required-only table
+    const reqTbody = document.getElementById('requiredTableBody');
+    const noReqMsg = document.getElementById('noRequiredMsg');
+    reqTbody.innerHTML = '';
+    const requiredParams = Object.entries(data.params).filter(([, p]) => p.required);
+    if (requiredParams.length === 0) {
+      noReqMsg.classList.remove('d-none');
+    } else {
+      noReqMsg.classList.add('d-none');
+      requiredParams.forEach(([pname]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="param-name">${escHtml(pname)}</td>
+          <td class="text-muted small">Must be provided by the user</td>`;
+        reqTbody.appendChild(tr);
+      });
+    }
+
+    // Code snippet
+    buildCodeSnippet(data);
+  }
+
+  // ── Build Python code snippet ────────────────────────────────────
+  function buildCodeSnippet(data) {
+    const name = data.model_name;
+    const params = data.params;
+
+    // Separate required vs optional
+    const reqLines = Object.entries(params)
+      .filter(([, p]) => p.required)
+      .map(([k]) => `    ${k}=<YOUR_VALUE>,  # REQUIRED`);
+
+    const optLines = Object.entries(params)
+      .filter(([, p]) => !p.required)
+      .map(([k, p]) => `    # ${k}=${p.display}`);
+
+    const snippet = [
+      `import braindecode.models as bd_models`,
+      ``,
+      `# Instantiate ${name}`,
+      `model = bd_models.${name}(`,
+      ...reqLines,
+      ...(optLines.length ? [`    # ── Optional defaults ──`] : []),
+      ...optLines,
+      `)`,
+      ``,
+      `print(model)`,
+    ].join('\n');
+
+    document.getElementById('codeSnippet').textContent = snippet;
+  }
+
+  // ── Copy helpers ─────────────────────────────────────────────────
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-outline-info', 'btn-outline-secondary');
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-info');
+      }, 1800);
+    });
+  }
+
+  document.getElementById('copySnippetBtn').addEventListener('click', function () {
+    copyText(document.getElementById('codeSnippet').textContent, this);
+  });
+  document.getElementById('copyCodeBtn').addEventListener('click', function () {
+    copyText(document.getElementById('codeSnippet').textContent, this);
+  });
+
+  // ── Search ───────────────────────────────────────────────────────
+  modelSearch.addEventListener('input', function () {
+    searchQuery = this.value.trim();
+    renderModelList();
+  });
+
+  // ── Filter chips ─────────────────────────────────────────────────
+  document.getElementById('filterChips').addEventListener('click', function (e) {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    renderModelList();
+  });
+
+  // ── Re-scan button ───────────────────────────────────────────────
+  bdRefreshBtn.addEventListener('click', fetchModels);
+
+  // ── Utility ─────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"');
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────
+  fetchModels();
+
+})();
+</script>
+{% endblock %}

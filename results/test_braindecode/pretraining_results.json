@@ -1,0 +1,49 @@
+{
+  "models": {
+    "shallow_net": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 1.2599593867601766,
+          "effective_rank": 1.4492390484841646,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 1.5106851778261077,
+          "effective_rank": 1.7039035638922468,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 1.3853222822931421,
+        "std_pr": 0.12536289553296553
+      }
+    }
+  },
+  "cross_model_cka": {},
+  "intrinsic_dimensionality": {},
+  "manifold_structure": {
+    "shallow_net": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.8024691358024691
+        ],
+        [
+          0.8024691358024691,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.7222222222222222,
+      "disease_mixing_score": 0.19753086419753085,
+      "mean_knn_overlap": 0.8024691358024691
+    }
+  }
+}

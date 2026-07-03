@@ -1,0 +1,89 @@
+# Pretraining Configuration for EEG Foundation Models
+# Self-supervised objectives: MAE, Contrastive, JEPA
+
+experiment:
+  name: eeg_foundation_pretraining
+  seed: 42
+  output_dir: results/pretraining
+  
+data:
+  root_dir: data
+  target_sfreq: 256
+  window_size_sec: 4.0
+  stride_sec: 2.0
+  harmonization_method: interpolation  # or 'csd'
+  diseases:
+    - adhd200
+    - tuh_eeg
+  
+  # Data loading
+  max_subjects_per_disease: 100  # Limit for initial pretraining
+  batch_size: 32
+  num_workers: 4
+
+models:
+  # Shared architecture parameters
+  embed_dim: 256
+  n_heads: 8
+  encoder_depth: 6
+  decoder_depth: 4
+  mlp_ratio: 4.0
+  dropout: 0.1
+  
+  # MAE specific
+  mae:
+    patch_size: 32
+    mask_ratio: 0.75
+    lr: 1e-3
+    weight_decay: 1e-4
+    n_epochs: 100
+  
+  # Contrastive specific
+  contrastive:
+    proj_dim: 128
+    temperature: 0.1
+    lr: 1e-3
+    weight_decay: 1e-4
+    n_epochs: 100
+  
+  # JEPA specific
+  jepa:
+    patch_size: 32
+    context_ratio: 0.5
+    predictor_depth: 2
+    lr: 1e-3
+    weight_decay: 1e-4
+    n_epochs: 100
+
+evaluation:
+  # Geometry analysis
+  compute_cka: true
+  compute_dimensionality: true
+  compute_manifold_structure: true
+  k_neighbors: 10
+  
+  # Feature probing
+  probe_tasks:
+    - disease
+    - subject_id
+    - site
+  
+  # Cross-disease analysis
+  cross_disease_cka: true
+
+reporting:
+  save_checkpoints: true
+  save_embeddings: true
+  save_geometry_results: true
+  log_interval: 10  # Print every N epochs
+  
+  # MLflow tracking
+  use_mlflow: false
+  mlflow_tracking_uri: mlruns/
+  experiment_name: eeg_foundation_pretraining
+
+# Computational resources
+compute:
+  device: auto  # 'cuda', 'cpu', or 'auto'
+  mixed_precision: false
+  pin_memory: true

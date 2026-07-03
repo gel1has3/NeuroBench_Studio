@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+
+{% block title %}📊 Datasets - NeuroBench Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vibe-hero {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .5rem;
+    padding: .6rem 1rem;
+    margin-bottom: .75rem;
+  }
+  .page-hero {
+    padding: .85rem 1rem;
+    border-radius: .8rem;
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.14), rgba(255,255,255,0.02));
+    border: 1px solid rgba(72, 187, 120, 0.18);
+  }
+  .page-kicker {
+    display: inline-block;
+    margin-bottom: .25rem;
+    color: #48bb78;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .vibe-hero h5 { font-size: 1rem; margin-bottom: 0; }
+  .vibe-hero .text-muted { font-size: .78rem; }
+  .stat-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .5rem;
+    padding: .6rem .75rem;
+    text-align: center;
+  }
+  .helper-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .panel-card {
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .stat-card .stat-num { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+  .stat-card .stat-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em; opacity: .65; margin-top: .15rem; }
+
+  .ds-list-item {
+    cursor: pointer; border-left: 3px solid transparent; transition: all .15s ease;
+    padding: .45rem .75rem; border-radius: 0 .375rem .375rem 0; font-size: .875rem;
+  }
+  .ds-list-item:hover { background: rgba(72,187,120,.08); border-left-color: #48bb78; }
+  .ds-list-item.active { background: rgba(72,187,120,.15); border-left-color: #48bb78; color: #48bb78; font-weight: 600; }
+
+  .disease-badge { display: inline-block; padding: .15rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .mono { font-family: 'SFMono-Regular', Consolas, monospace; }
+
+  .source-selector .btn-outline-success.active {
+    background: #48bb78; color: #000; border-color: #48bb78; font-weight: 600;
+  }
+
+  #eegdashPanel { display: none; }
+
+  .eeg-input { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.15); color: inherit; }
+  .eeg-input:focus { border-color: #48bb78; box-shadow: 0 0 0 .2rem rgba(72,187,120,.25); }
+
+  .bd-model-chip {
+    cursor: pointer; font-size: .75rem; padding: .25rem .6rem; border-radius: 999px;
+    border: 1px solid rgba(99,179,237,.3); transition: all .15s; user-select: none; background: rgba(99,179,237,.05);
+  }
+  .bd-model-chip:hover { background: rgba(99,179,237,.15); border-color: #63b3ed; }
+
+  #eegdashSpinner { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="vibe-hero page-hero d-flex align-items-center justify-content-between flex-wrap gap-2">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-database text-success fs-5"></i>
+    <div>
+      <span class="page-kicker">Data discovery</span>
+      <h5 class="fw-semibold mb-1">Datasets</h5>
+      <p class="text-muted mb-0">Browse local EEG data or stream curated recordings from EEGDash.</p>
+    </div>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+    <button id="dsRefreshBtn" class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+    <a href="/api/datasets" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-braces me-1"></i>JSON</a>
+  </div>
+</div>
+
+<!-- Source Selector -->
+<div class="btn-group source-selector mb-3 w-100 shadow-sm" role="group">
+  <button type="button" class="btn btn-outline-success active w-50 py-2" id="btnLocal" data-source="local">
+    <i class="bi bi-folder me-2"></i>📁 Local Datasets
+  </button>
+  <button type="button" class="btn btn-outline-success w-50 py-2" id="btnEegdash" data-source="eegdash">
+    <i class="bi bi-cloud-arrow-down me-2"></i>☁️ EEG Dash Datasets
+  </button>
+</div>
+
+<div class="card border-0 shadow-sm mb-3 helper-card">
+  <div class="card-body py-3">
+    <div class="row align-items-center g-2">
+      <div class="col-lg-8">
+        <h6 class="fw-semibold mb-1"><i class="bi bi-lightbulb me-2"></i>Choose the right data source</h6>
+        <p class="text-muted mb-0 small">Local datasets are available instantly for exploration, while EEGDash helps you stream curated recordings and inspect model-ready metadata.</p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <span class="small text-muted">Tip: select a dataset to inspect subjects, channels, and metadata.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- LOCAL DATASETS PANEL                                              -->
+<!-- ================================================================ -->
+<div id="localPanel">
+
+  <div class="row g-2 mb-3 px-1">
+    <div class="col-6 col-sm-3"><div class="stat-card"><div class="stat-num text-success" id="statTotalDatasets">—</div><div class="stat-label">Datasets</div></div></div>
+    <div class="col-6 col-sm-3"><div class="stat-card"><div class="stat-num text-info" id="statTotalSubjects">—</div><div class="stat-label">Subjects</div></div></div>
+    <div class="col-6 col-sm-3"><div class="stat-card"><div class="stat-num text-warning" id="statAvgChannels">—</div><div class="stat-label">Avg Channels</div></div></div>
+    <div class="col-6 col-sm-3"><div class="stat-card"><div class="stat-num text-primary" id="statDataSize">—</div><div class="stat-label">Data Size</div></div></div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-3 col-md-4">
+      <div class="card border-secondary h-100 panel-card">
+        <div class="card-header py-2 d-flex align-items-center justify-content-between">
+          <span class="fw-semibold small"><i class="bi bi-list-ul me-1"></i>Datasets</span>
+          <span class="badge bg-secondary" id="visibleCount">0</span>
+        </div>
+        <div class="card-body p-2">
+          <input type="text" id="dsSearch" class="form-control form-control-sm mb-2" placeholder="🔍 Search…" autocomplete="off">
+          <div id="localLoadingSpinner" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success" role="status"></div><div class="small text-muted mt-1">Scanning…</div></div>
+          <div id="dsList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9 col-md-8">
+      <div id="localDetailPanel">
+        <div id="placeholderCard" class="card border-secondary text-center py-5 panel-card">
+          <div class="card-body"><i class="bi bi-arrow-left-circle display-4 text-muted mb-3 d-block"></i><h5 class="text-muted">Select a dataset</h5><p class="text-muted small mb-0">Click any dataset on the left to inspect subjects, channels, and metadata.</p></div>
+        </div>
+        <div id="localDetailCard" class="d-none">
+          <div class="card border-secondary mb-3 panel-card"><div class="card-body">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+              <div><h5 class="mb-1 fw-bold" id="detailDsName">—</h5><p class="text-muted small mb-2" id="detailDsDescription">—</p><div class="d-flex gap-2 flex-wrap" id="detailBadges"></div></div>
+              <a id="detailApiLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-braces me-1"></i>JSON</a>
+            </div>
+          </div></div>
+          <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pane-overview" type="button"><i class="bi bi-info-circle me-1"></i>Overview</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-subjects" type="button"><i class="bi bi-people me-1"></i>Subjects <span class="badge bg-secondary ms-1" id="tabSubjectCount">0</span></button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-channels" type="button"><i class="bi bi-diagram-3 me-1"></i>Channels <span class="badge bg-secondary ms-1" id="tabChannelCount">0</span></button></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="pane-overview">
+              <div class="row g-2 mb-3" id="overviewStats"></div>
+              <div class="card border-secondary panel-card"><div class="card-header py-2"><span class="small fw-semibold">Properties</span></div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-sm mb-0"><tbody id="overviewTableBody"></tbody></table></div></div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="pane-subjects">
+              <div class="card border-secondary"><div class="card-body p-0"><div class="table-responsive">
+                <table class="table table-sm table-hover mb-0"><thead class="table-dark"><tr><th>Subject</th><th>Ch</th><th>Hz</th><th>Duration</th><th>Samples</th><th>Age</th><th>Sex</th></tr></thead><tbody id="subjectsTableBody"></tbody></table>
+              </div></div></div>
+            </div>
+            <div class="tab-pane fade" id="pane-channels">
+              <div class="card border-secondary"><div class="card-body p-0"><div class="table-responsive">
+                <table class="table table-sm table-hover mb-0"><thead class="table-dark"><tr><th>#</th><th>Channel</th></tr></thead><tbody id="channelsTableBody"></tbody></table>
+              </div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- EEG DASH PANEL                                                    -->
+<!-- ================================================================ -->
+<div id="eegdashPanel">
+  <div class="card border-secondary mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small text-muted">Curated Dataset</label>
+          <select id="eegDatasetSelect" class="form-select eeg-input">
+            <option value="">— Select a dataset —</option>
+            <optgroup label="Loading categories…">
+              <option disabled>Fetching catalog…</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">Subject (optional)</label>
+          <input type="text" id="eegSubject" class="form-control eeg-input" placeholder="e.g. 012">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted">Cache</label>
+          <input type="text" id="eegCacheDir" class="form-control eeg-input" value="./eeg_cache" placeholder="./eeg_cache">
+        </div>
+        <div class="col-md-2">
+          <button id="eegConnectBtn" class="btn btn-success w-100" disabled>
+            <i class="bi bi-cloud-arrow-down me-1"></i>Stream
+          </button>
+        </div>
+        <div class="col-md-2">
+          <button id="eegRefreshCatalogBtn" class="btn btn-outline-warning w-100" title="Refresh catalog from EEGDash">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+          </button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <button id="eegLoadMoreBtn" class="btn btn-outline-info btn-sm d-none">
+          <i class="bi bi-plus-circle me-1"></i>Load 10 More Recordings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EEGDash Connection Status -->
+  <div id="eegdashStatus" class="d-none"></div>
+
+  <!-- Loading Spinner -->
+  <div id="eegdashSpinner" class="text-center py-5">
+    <div class="spinner-border text-success" role="status" style="width:3rem;height:3rem"></div>
+    <div class="mt-2 text-success fw-semibold">Connecting to EEGDash API & streaming metadata…</div>
+    <div class="small text-muted mt-1">This may take a moment for first-time downloads</div>
+  </div>
+
+  <!-- EEGDash Results -->
+  <div id="eegdashResults" class="d-none">
+
+    <!-- Summary stats -->
+    <div class="row g-2 mb-3" id="eegSummaryStats"></div>
+
+    <!-- Recordings table -->
+    <div class="card border-secondary mb-3">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small"><i class="bi bi-list me-1"></i>Recordings</span>
+        <span class="badge bg-info text-dark" id="eegRecordingCount">0</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-dark"><tr><th>#</th><th>Channels</th><th>Sampling Rate</th><th>Duration (s)</th><th>Samples</th><th>Channel Names (first 5)</th><th>Description</th></tr></thead>
+            <tbody id="eegRecordingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Braindecode Model Configuration -->
+    <div class="card border-secondary">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small"><i class="bi bi-cpu me-1 text-info"></i>Auto-Configured Braindecode Models</span>
+        <span class="badge bg-info text-dark" id="bdModelCount">0</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-2">
+          <i class="bi bi-info-circle me-1"></i>
+          Model parameters have been dynamically set to match this dataset's channel count (<span id="bdNChans">?</span>),
+          window size (<span id="bdNTimes">?</span>), and sampling rate (<span id="bdSfreq">?</span> Hz).
+        </p>
+        <div id="braindecodeModels" class="d-flex flex-wrap gap-2 mb-3"></div>
+        <div id="bdModelParams" class="d-none">
+          <div class="card bg-dark border-secondary">
+            <div class="card-header py-1 d-flex justify-content-between align-items-center">
+              <span class="small fw-semibold" id="bdSelectedModelName">—</span>
+              <button class="btn btn-sm btn-outline-info copy-btn" id="bdCopyParams">
+                <i class="bi bi-clipboard me-1"></i>Copy
+              </button>
+            </div>
+            <div class="card-body p-0">
+              <pre id="bdParamsSnippet" class="p-3 mb-0" style="font-size:.8rem;background:#0d1117;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){'use strict';
+// ── SOURCE SELECTOR ─────────────────────────────────────────────
+const $btnLocal=document.getElementById('btnLocal');
+const $btnEeg=document.getElementById('btnEegdash');
+const $localPanel=document.getElementById('localPanel');
+const $eegPanel=document.getElementById('eegdashPanel');
+
+$btnLocal.addEventListener('click',function(){
+  $btnLocal.classList.add('active');$btnEeg.classList.remove('active');
+  $localPanel.style.display='block';$eegPanel.style.display='none';
+});
+$btnEeg.addEventListener('click',function(){
+  $btnEeg.classList.add('active');$btnLocal.classList.remove('active');
+  $localPanel.style.display='none';$eegPanel.style.display='block';
+  if(!window._eegLoaded)loadEegdashDatasets();
+});
+
+// ── LOCAL DATASETS (existing code adapted) ──────────────────────
+let allDatasets={},datasetNames=[],currentDs=null;
+const DC={adhd:'bg-warning text-dark',seizure:'bg-danger',sleep:'bg-info text-dark'};
+const DD={'adhd200':'ADHD-200 — High-density 256ch resting-state.','tuh_eeg':'TUH EEG — Large-scale clinical seizure.','chb_mit':'CHB-MIT — Pediatric seizure.','helsinki_neonatal':'Helsinki Neonatal — Newborn EEG.','sleep_edf':'Sleep EDF — Polysomnographic sleep.'};
+
+function loadLocalDatasets(){
+  const sp=document.getElementById('localLoadingSpinner');sp.style.display='block';
+  fetch('/api/datasets').then(r=>r.json()).then(d=>{
+    sp.style.display='none';
+    if(d.status!=='success')return;
+    allDatasets=d.datasets;datasetNames=d.dataset_names;
+    document.getElementById('statTotalDatasets').textContent=d.total_datasets;
+    document.getElementById('statTotalSubjects').textContent=d.total_subjects;
+    document.getElementById('statAvgChannels').textContent=d.avg_channels||'—';
+    document.getElementById('statDataSize').textContent=d.data_size||'—';
+    renderDsList();
+  }).catch(()=>{sp.style.display='none';});
+}
+
+function renderDsList(){
+  const list=document.getElementById('dsList');
+  const q=document.getElementById('dsSearch').value.toLowerCase();
+  const f=datasetNames.filter(n=>!q||n.toLowerCase().includes(q));
+  document.getElementById('visibleCount').textContent=f.length;
+  list.innerHTML='';
+  if(!f.length){list.innerHTML='<div class="text-muted small text-center py-3">No matches.</div>';return;}
+  f.forEach(n=>{
+    const ds=allDatasets[n],dis=ds.disease||n,col=DC[dis]||'bg-secondary';
+    const div=document.createElement('div');
+    div.className='ds-list-item d-flex align-items-center justify-content-between'+(n===currentDs?' active':'');
+    div.dataset.ds=n;
+    div.innerHTML=`<span class="text-truncate me-1">${n}</span><span class="badge ${col} flex-shrink-0">${ds.n_subjects||0}</span>`;
+    div.addEventListener('click',()=>selectLocalDs(n));
+    list.appendChild(div);
+  });
+}
+
+function selectLocalDs(name){
+  currentDs=name;
+  document.querySelectorAll('.ds-list-item').forEach(e=>e.classList.toggle('active',e.dataset.ds===name));
+  fetch(`/api/datasets/${encodeURIComponent(name)}`).then(r=>r.json()).then(d=>{if(d.status==='success')renderLocalDetail(d);}).catch(console.error);
+}
+
+function renderLocalDetail(d){
+  const ds=d.dataset;
+  document.getElementById('placeholderCard').classList.add('d-none');
+  document.getElementById('localDetailCard').classList.remove('d-none');
+  document.getElementById('detailDsName').textContent=d.dataset_name;
+  document.getElementById('detailDsDescription').textContent=DD[d.dataset_name]||'No description.';
+  document.getElementById('detailApiLink').href=`/api/datasets/${encodeURIComponent(d.dataset_name)}`;
+  const disease=ds.disease||d.dataset_name,col=DC[disease]||'bg-secondary';
+  document.getElementById('detailBadges').innerHTML=
+    `<span class="disease-badge ${col}">${disease}</span>`+
+    `<span class="badge bg-info text-dark"><i class="bi bi-people me-1"></i>${ds.n_subjects} subjects</span>`+
+    `<span class="badge bg-primary"><i class="bi bi-diagram-3 me-1"></i>${ds.n_channels||'?'} channels</span>`+
+    `<span class="badge bg-secondary">${ds.sfreq||'?'} Hz</span>`;
+  document.getElementById('tabSubjectCount').textContent=ds.n_subjects;
+  document.getElementById('tabChannelCount').textContent=ds.n_channels||0;
+  document.getElementById('overviewStats').innerHTML=
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-info">${ds.n_subjects}</div><div class="stat-label">Subjects</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-primary">${ds.n_channels||'?'}</div><div class="stat-label">Channels</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-warning">${ds.sfreq||'?'}</div><div class="stat-label">Sampling Rate</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-success">${ds.data_size||'?'}</div><div class="stat-label">Data Size</div></div></div>`;
+  document.getElementById('overviewTableBody').innerHTML=
+    `<tr><td class="fw-semibold" style="width:30%">Disease</td><td><span class="disease-badge ${col}">${disease}</span></td></tr>`+
+    `<tr><td class="fw-semibold">Directory</td><td class="mono text-muted">${ds.directory||'—'}</td></tr>`+
+    `<tr><td class="fw-semibold">Loader</td><td class="mono text-muted">${ds.loader_class||'—'}</td></tr>`+
+    `<tr><td class="fw-semibold">Subjects</td><td>${ds.n_subjects}</td></tr>`+
+    `<tr><td class="fw-semibold">Channels</td><td>${ds.n_channels||'?'}</td></tr>`+
+    `<tr><td class="fw-semibold">Sampling Rate</td><td>${ds.sfreq||'?'} Hz</td></tr>`;
+  const sb=document.getElementById('subjectsTableBody');sb.innerHTML='';
+  if(ds.subjects&&ds.subjects.length)ds.subjects.forEach(s=>{
+    sb.innerHTML+=`<tr><td class="mono">${esc(s.subject_id)}</td><td>${s.n_channels||'?'}</td><td>${s.sfreq||'?'}</td><td>${s.duration_sec?s.duration_sec.toFixed(1):'?'}</td><td>${s.n_samples||'?'}</td><td>${s.age||'—'}</td><td>${s.sex||'—'}</td></tr>`;
+  });else sb.innerHTML='<tr><td colspan="7" class="text-muted text-center small py-3">No subjects.</td></tr>';
+  const cb=document.getElementById('channelsTableBody');cb.innerHTML='';
+  if(ds.channels&&ds.channels.length)ds.channels.forEach((ch,i)=>{cb.innerHTML+=`<tr><td>${i+1}</td><td class="mono">${esc(ch)}</td></tr>`;});
+  else cb.innerHTML='<tr><td colspan="2" class="text-muted text-center small py-3">No channels.</td></tr>';
+}
+
+document.getElementById('dsSearch').addEventListener('input',renderDsList);
+document.getElementById('dsRefreshBtn').addEventListener('click',loadLocalDatasets);
+
+// ── EEGDASH CONNECTION ──────────────────────────────────────────
+let _eegLoaded=false;
+let _eegCurrentDsId=null;
+let _eegOffset=0;
+let _eegTotal=0;
+
+function loadEegdashDatasets(){
+  _eegLoaded=true;
+  const sel=document.getElementById('eegDatasetSelect');
+  console.log('Loading EEGDash datasets...');
+  fetch('/api/eegdash/catalog')
+    .then(r=>{
+      console.log('Catalog response status:', r.status);
+      return r.json();
+    })
+    .then(d=>{
+      console.log('Catalog data:', d);
+      if(d.status!=='success'){
+        console.error('Failed to load catalog:', d.message);
+        sel.innerHTML='<option disabled>Failed to load catalog</option>';
+        alert('Failed to load catalog: ' + (d.message || 'Unknown error'));
+        return;
+      }
+      const categories = d.categories;
+      const nCategories = Object.keys(categories).length;
+      const nTotal = Object.values(categories).flat().length;
+      console.log(`Loading ${nTotal} datasets in ${nCategories} categories`);
+      
+      sel.innerHTML='<option value="">— Select a dataset —</option>';
+      Object.entries(categories).forEach(([cat,items])=>{
+        console.log(`Adding category: ${cat} with ${items.length} items`);
+        const og=document.createElement('optgroup');og.label=cat;
+        items.forEach(it=>{
+          const o=document.createElement('option');o.value=it.id;
+          o.textContent=`${it.id} — ${it.title} (${it.n_records} recordings, ${it.size})`;
+          og.appendChild(o);
+        });
+        sel.appendChild(og);
+      });
+      console.log('Dropdown populated successfully with', sel.options.length, 'options');
+    })
+    .catch(err=>{
+      console.error('Error loading catalog:', err);
+      sel.innerHTML='<option disabled>Catalog unavailable</option>';
+      alert('Error loading catalog: ' + err.message);
+    });
+}
+
+document.getElementById('eegDatasetSelect').addEventListener('change',function(){
+  document.getElementById('eegConnectBtn').disabled=!this.value;
+});
+
+document.getElementById('eegRefreshCatalogBtn').addEventListener('click',function(){
+  const btn=this;btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>Refreshing…';
+  fetch('/api/eegdash/catalog?refresh=1')
+    .then(r=>r.json())
+    .then(d=>{
+      btn.disabled=false;btn.innerHTML='<i class="bi bi-arrow-clockwise me-1"></i>Refresh';
+      if(d.status==='success'){
+        loadEegdashDatasets(); // reload dropdown from cache (now fresh)
+        alert('Catalog refreshed! '+Object.values(d.categories).flat().length+' datasets loaded.');
+      }else{
+        alert('Refresh failed: '+(d.message||'Unknown error'));
+      }
+    })
+    .catch(()=>{btn.disabled=false;btn.innerHTML='<i class="bi bi-arrow-clockwise me-1"></i>Refresh';});
+});
+
+document.getElementById('eegConnectBtn').addEventListener('click',function(){
+  const dsId=document.getElementById('eegDatasetSelect').value.trim();
+  if(!dsId)return;
+  const subj=document.getElementById('eegSubject').value.trim();
+  const cache=document.getElementById('eegCacheDir').value.trim()||'./eeg_cache';
+  const spinner=document.getElementById('eegdashSpinner');
+  const results=document.getElementById('eegdashResults');
+  const status=document.getElementById('eegdashStatus');
+  const loadMoreBtn=document.getElementById('eegLoadMoreBtn');
+
+  _eegCurrentDsId=dsId;
+  _eegOffset=0;
+  spinner.style.display='block';results.classList.add('d-none');status.classList.add('d-none');
+  status.innerHTML='';loadMoreBtn.classList.add('d-none');
+
+  fetch('/api/eegdash/connect',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({dataset_id:dsId,subject:subj||null,cache_dir:cache,max_records:10,offset:0})
+  }).then(r=>r.json()).then(d=>{
+    spinner.style.display='none';
+    if(d.status!=='success'){
+      status.classList.remove('d-none','alert-success');status.classList.add('alert','alert-danger');
+      status.innerHTML=`<i class="bi bi-exclamation-triangle me-2"></i>${d.message||'Connection failed.'}`;
+      return;
+    }
+    _eegTotal=d.n_recordings;
+    _eegOffset=Math.min(10,_eegTotal);
+    renderEegdashResults(d);
+    if(_eegTotal>10)loadMoreBtn.classList.remove('d-none');
+  }).catch(err=>{
+    spinner.style.display='none';
+    status.classList.remove('d-none');status.classList.add('alert','alert-danger');
+    status.innerHTML=`<i class="bi bi-exclamation-triangle me-2"></i>${err.message}`;
+  });
+});
+
+document.getElementById('eegLoadMoreBtn').addEventListener('click',function(){
+  const dsId=_eegCurrentDsId;
+  if(!dsId)return;
+  const subj=document.getElementById('eegSubject').value.trim();
+  const cache=document.getElementById('eegCacheDir').value.trim()||'./eeg_cache';
+  const btn=this;btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>Loading…';
+
+  fetch('/api/eegdash/connect',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({dataset_id:dsId,subject:subj||null,cache_dir:cache,max_records:10,offset:_eegOffset})
+  }).then(r=>r.json()).then(d=>{
+    btn.disabled=false;btn.innerHTML='<i class="bi bi-plus-circle me-1"></i>Load 10 More Recordings';
+    if(d.status!=='success')return;
+    appendEegdashRecordings(d.recordings);
+    _eegOffset=Math.min(_eegOffset+10,_eegTotal);
+    if(_eegOffset>=_eegTotal)btn.classList.add('d-none');
+  }).catch(()=>{btn.disabled=false;btn.innerHTML='<i class="bi bi-plus-circle me-1"></i>Load 10 More Recordings';});
+});
+
+function appendEegdashRecordings(recordings){
+  const tb=document.getElementById('eegRecordingsBody');
+  const startIdx=tb.rows.length;
+  recordings.forEach((r,i)=>{
+    const chs=r.ch_names?r.ch_names.join(', '):'—';
+    const desc=r.description?JSON.stringify(r.description).substring(0,80):'—';
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      `<td>${startIdx+i}</td>`+
+      `<td>${r.n_channels||'?'}</td>`+
+      `<td>${r.sfreq||'?'}</td>`+
+      `<td>${r.duration_sec?r.duration_sec.toFixed(1):'?'}</td>`+
+      `<td>${r.n_times||'?'}</td>`+
+      `<td class="mono small">${esc(chs.substring(0,60))}</td>`+
+      `<td class="small text-muted">${esc(desc)}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('eegRecordingCount').textContent=tb.rows.length;
+}
+
+function renderEegdashResults(d){
+  const results=document.getElementById('eegdashResults');
+  results.classList.remove('d-none');
+
+  // Summary
+  const bc=d.braindecode_config||{};
+  document.getElementById('eegSummaryStats').innerHTML=
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-info">${d.n_recordings}</div><div class="stat-label">Recordings</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-primary">${bc.n_chans||'?'}</div><div class="stat-label">Channels</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-warning">${bc.sfreq||'?'}</div><div class="stat-label">Sampling Rate</div></div></div>`+
+    `<div class="col-6 col-md-3"><div class="stat-card"><div class="stat-num text-success">${bc.n_times||'?'}</div><div class="stat-label">Window (samples)</div></div></div>`;
+
+  // Dataset ID badge
+  const idBadge=document.createElement('div');idBadge.className='mb-3';
+  idBadge.innerHTML=`<span class="badge bg-success fs-6"><i class="bi bi-database me-1"></i>${d.dataset_id}</span>`;
+  document.getElementById('eegSummaryStats').parentNode.insertBefore(idBadge,document.getElementById('eegSummaryStats'));
+
+  // Recordings table
+  document.getElementById('eegRecordingCount').textContent=d.n_recordings;
+  const tb=document.getElementById('eegRecordingsBody');tb.innerHTML='';
+  if(d.recordings&&d.recordings.length){
+    d.recordings.forEach((r,i)=>{
+      const chs=r.ch_names?r.ch_names.join(', '):'—';
+      const desc=r.description?JSON.stringify(r.description).substring(0,80):'—';
+      tb.innerHTML+=`<tr>
+        <td>${i}</td>
+        <td>${r.n_channels||'?'}</td>
+        <td>${r.sfreq||'?'}</td>
+        <td>${r.duration_sec?r.duration_sec.toFixed(1):'?'}</td>
+        <td>${r.n_times||'?'}</td>
+        <td class="mono small">${esc(chs.substring(0,60))}</td>
+        <td class="small text-muted">${esc(desc)}</td>
+      </tr>`;
+    });
+  }else{tb.innerHTML='<tr><td colspan="7" class="text-muted text-center small py-3">No recordings loaded.</td></tr>';}
+
+  // Braindecode auto-configuration
+  const models=bc.model_params||{};
+  const modelNames=Object.keys(models);
+  document.getElementById('bdNChans').textContent=bc.n_chans||'?';
+  document.getElementById('bdNTimes').textContent=bc.n_times||'?';
+  document.getElementById('bdSfreq').textContent=bc.sfreq||'?';
+  document.getElementById('bdModelCount').textContent=modelNames.length;
+
+  const container=document.getElementById('braindecodeModels');
+  container.innerHTML='';
+  modelNames.forEach(name=>{
+    const chip=document.createElement('span');
+    chip.className='bd-model-chip';
+    chip.textContent=name;
+    chip.addEventListener('click',()=>showBDParams(name,models[name]));
+    container.appendChild(chip);
+  });
+
+  // Show first model by default
+  if(modelNames.length)showBDParams(modelNames[0],models[modelNames[0]]);
+}
+
+function showBDParams(name,params){
+  document.getElementById('bdModelParams').classList.remove('d-none');
+  document.getElementById('bdSelectedModelName').textContent=name+' Config';
+  const snippet=document.getElementById('bdParamsSnippet');
+  snippet.textContent=
+    `# Auto‑configured for dataset metadata\n`+
+    `# n_chans=${params.n_chans}, n_times=${params.n_times}, sfreq=${params.sfreq||'?'}\n\n`+
+    `import braindecode.models as bd_models\n\n`+
+    `model = bd_models.${name}(\n`+
+    Object.entries(params).map(([k,v])=>{
+      const val=typeof v==='string'?`"${v}"`:v;
+      return `    ${k}=${val},`;
+    }).join('\n')+
+    `\n)\n\n`+
+    `print(model)`;
+}
+
+document.getElementById('bdCopyParams').addEventListener('click',function(){
+  const text=document.getElementById('bdParamsSnippet').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    this.innerHTML='<i class="bi bi-check me-1"></i>Copied!';
+    setTimeout(()=>{this.innerHTML='<i class="bi bi-clipboard me-1"></i>Copy';},1500);
+  });
+});
+
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');}
+
+// ── BOOT ────────────────────────────────────────────────────────
+loadLocalDatasets();
+})();
+</script>
+{% endblock %}

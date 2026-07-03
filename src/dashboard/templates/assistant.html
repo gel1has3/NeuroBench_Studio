@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block title %}🤖 EEG Assistant - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<!-- ============================================================== -->
+<!-- Page Header -->
+<!-- ============================================================== -->
+<div class="vibe-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-robot text-primary fs-5"></i>
+    <div>
+      <h5 class="fw-semibold">EEG Assistant</h5>
+      <p class="text-muted mb-0">Context-aware AI assistant for pipelines, results, and EEG interpretation</p>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left Column: Chat Interface -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2"></i>Assistant Chat</h6>
+      </div>
+      <div class="card-body">
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="border rounded-3 p-3 mb-3" style="height: 400px; overflow-y: auto; background: rgba(255,255,255,.02);">
+          <div class="d-flex mb-3">
+            <div class="flex-shrink-0">
+              <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                <i class="bi bi-robot"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-2">
+              <div class="alert alert-info py-2 px-3 mb-0 small">
+                <strong>EEG Assistant</strong><br>
+                Hello! I'm your EEG research assistant. I can help you with:
+                <ul class="mb-0 mt-1 ps-3">
+                  <li>Suggesting preprocessing steps for your dataset</li>
+                  <li>Recommending models based on your data</li>
+                  <li>Explaining results and metrics</li>
+                  <li>Debugging training issues</li>
+                  <li>Interpreting EEG patterns and visualizations</li>
+                </ul>
+                What would you like to explore?
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Suggest preprocessing steps for my dataset')">
+            <i class="bi bi-gear me-1"></i>Preprocessing Help
+          </button>
+          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Which model should I use for my EEG data?')">
+            <i class="bi bi-cpu me-1"></i>Model Recommendation
+          </button>
+          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Explain my latest results')">
+            <i class="bi bi-bar-chart me-1"></i>Explain Results
+          </button>
+          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Why is my training unstable?')">
+            <i class="bi bi-bug me-1"></i>Debug Training
+          </button>
+        </div>
+
+        <!-- EEG Upload Section -->
+        <div class="card border-0 shadow-sm mb-3" style="background: rgba(255,255,255,.02);">
+          <div class="card-body py-3">
+            <h6 class="fw-semibold small mb-2"><i class="bi bi-upload me-1"></i>Upload EEG Data for Analysis</h6>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <div class="border border-dashed rounded-3 p-3 text-center" style="border-style: dashed !important; cursor: pointer;" onclick="document.getElementById('eegFileInput').click()">
+                  <i class="bi bi-file-earmark-medical display-6 text-muted"></i>
+                  <p class="text-muted small mb-1 mt-2">Click to upload EEG file</p>
+                  <small class="text-muted">.edf, .csv, .mat, .fif supported</small>
+                  <input type="file" id="eegFileInput" class="d-none" accept=".edf,.csv,.mat,.fif" onchange="handleFileUpload(this)">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div id="uploadedFileInfo" class="d-none">
+                  <div class="alert alert-success py-2 px-3 small mb-2">
+                    <i class="bi bi-check-circle me-1"></i>
+                    <span id="uploadedFileName"></span>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small text-muted">Analysis Type</label>
+                    <select id="analysisType" class="form-select form-select-sm">
+                      <option value="full">Full Analysis (Waveform + Spectrogram + Metrics)</option>
+                      <option value="waveform">Waveform Viewer Only</option>
+                      <option value="spectrogram">Spectrogram Analysis</option>
+                      <option value="quality">Data Quality Check</option>
+                      <option value="interpretation">AI Interpretation</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-sm btn-info w-100" onclick="analyzeUploadedFile()">
+                    <i class="bi bi-magic me-1"></i>Analyze
+                  </button>
+                </div>
+                <div id="uploadPlaceholder" class="text-center py-3">
+                  <i class="bi bi-cloud-upload display-5 text-muted"></i>
+                  <p class="text-muted small mb-0 mt-2">No file uploaded</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="input-group">
+          <input type="text" id="chatInput" class="form-control" placeholder="Ask about pipelines, models, results, or EEG interpretation..." onkeypress="if(event.key==='Enter') sendMessage()">
+          <button class="btn btn-info" type="button" onclick="sendMessage()">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context-Aware Suggestions -->
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-lightbulb me-2"></i>Context-Aware Suggestions</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <h6 class="fw-semibold small mb-2"><i class="bi bi-diagram-3 text-success me-1"></i>Pipeline Help</h6>
+              <p class="text-muted small mb-2">Get suggestions for preprocessing steps, validation strategies, and model selection based on your dataset.</p>
+              <button class="btn btn-sm btn-outline-success w-100" onclick="sendQuickMessage('Help me design a pipeline for seizure detection')">
+                Design Pipeline
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <h6 class="fw-semibold small mb-2"><i class="bi bi-graph-up text-warning me-1"></i>Results Explanation</h6>
+              <p class="text-muted small mb-2">Understand confusion matrices, interpret metrics, and diagnose overfitting or underfitting.</p>
+              <button class="btn btn-sm btn-outline-warning w-100" onclick="sendQuickMessage('Explain why my accuracy dropped in epoch 10')">
+                Explain Results
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <h6 class="fw-semibold small mb-2"><i class="bi bi-heart-pulse text-danger me-1"></i>EEG Interpretation</h6>
+              <p class="text-muted small mb-2">Learn about EEG patterns, important channels, and how to interpret spectrograms.</p>
+              <button class="btn btn-sm btn-outline-danger w-100" onclick="sendQuickMessage('What do alpha waves look like in my data?')">
+                Interpret EEG
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <h6 class="fw-semibold small mb-2"><i class="bi bi-journal-text text-info me-1"></i>Research Mode</h6>
+              <p class="text-muted small mb-2">Get literature recommendations, baseline comparisons, and improvement suggestions.</p>
+              <button class="btn btn-sm btn-outline-info w-100" onclick="sendQuickMessage('Compare my results with state-of-the-art for epilepsy detection')">
+                Research Help
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Info & Tips -->
+  <div class="col-lg-4">
+    <!-- How It Works -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-question-circle me-2"></i>How It Works</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="fw-semibold small">1. Ask Anything</h6>
+          <p class="text-muted small mb-0">Type questions about your pipeline, results, or EEG data in natural language.</p>
+        </div>
+        <div class="mb-3">
+          <h6 class="fw-semibold small">2. Get Context-Aware Help</h6>
+          <p class="text-muted small mb-0">The assistant knows your current dataset, model, and results to provide relevant advice.</p>
+        </div>
+        <div class="mb-0">
+          <h6 class="fw-semibold small">3. Apply Suggestions</h6>
+          <p class="text-muted small mb-0">Use the recommendations to improve your pipeline, fix issues, or optimize performance.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example Questions -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-chat-quote me-2"></i>Example Questions</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-2">
+          <span class="badge bg-secondary small">Pipeline</span>
+          <p class="text-muted small mt-1 mb-0">"What preprocessing steps should I use for motor imagery?"</p>
+        </div>
+        <div class="mb-2">
+          <span class="badge bg-secondary small">Models</span>
+          <p class="text-muted small mt-1 mb-0">"Which model works best for sleep stage classification?"</p>
+        </div>
+        <div class="mb-2">
+          <span class="badge bg-secondary small">Results</span>
+          <p class="text-muted small mt-1 mb-0">"Why is my F1 score lower than accuracy?"</p>
+        </div>
+        <div class="mb-0">
+          <span class="badge bg-secondary small">Debug</span>
+          <p class="text-muted small mt-1 mb-0">"My loss is NaN after epoch 5, what's wrong?"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-info-circle me-2"></i>System Info</h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="small text-muted">Status</span>
+          <span class="badge bg-success">Ready</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="small text-muted">Context</span>
+          <span class="small">Active session</span>
+        </div>
+        <div class="d-flex justify-content-between mb-0">
+          <span class="small text-muted">Version</span>
+          <span class="small">v1.0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  document.getElementById('uploadedFileName').textContent = file.name;
+  document.getElementById('uploadedFileInfo').classList.remove('d-none');
+  document.getElementById('uploadPlaceholder').classList.add('d-none');
+
+  addMessage('user', `📎 Uploaded file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+}
+
+function analyzeUploadedFile() {
+  const analysisType = document.getElementById('analysisType').value;
+  const fileName = document.getElementById('uploadedFileName').textContent;
+
+  addMessage('user', `🔍 Requesting ${analysisType} analysis for: ${fileName}`);
+
+  setTimeout(() => {
+    const analysisResponses = {
+      full: `📊 **Full EEG Analysis Complete**\n\n**File:** ${fileName}\n\n**Waveform Analysis:**\n- Channels detected: 19\n- Sampling rate: 250 Hz\n- Duration: 120.5 seconds\n- Signal quality: Good (SNR: 12.3 dB)\n\n**Spectrogram Analysis:**\n- Dominant frequencies: Alpha (8-12 Hz), Beta (13-30 Hz)\n- Artifacts detected: 2 eye blinks, 1 muscle artifact\n\n**Recommendations:**\n1. Apply bandpass filter (0.5-40 Hz)\n2. Remove eye blinks with ICA\n3. Consider downsampling to 128 Hz for faster processing`,
+      waveform: `📈 **Waveform Analysis**\n\n**File:** ${fileName}\n\n**Channel Overview:**\n- 19 channels in 10-20 system\n- Good signal quality across all channels\n- No flat channels detected\n\n**Key Observations:**\n- Alpha rhythm present in posterior channels (P3, P4, Pz, O1, O2)\n- Beta activity in frontal regions (F3, F4, Fz)\n- No epileptiform discharges detected`,
+      spectrogram: `🎨 **Spectrogram Analysis**\n\n**File:** ${fileName}\n\n**Frequency Bands:**\n- Delta (0.5-4 Hz): Present, normal amplitude\n- Theta (4-8 Hz): Mild increase in frontal channels\n- Alpha (8-12 Hz): Strong posterior dominance ✓\n- Beta (13-30 Hz): Normal levels\n- Gamma (30-100 Hz): Minimal activity\n\n**Interpretation:**\nNormal resting-state EEG pattern with good alpha rhythm.`,
+      quality: `✅ **Data Quality Report**\n\n**File:** ${fileName}\n\n**Quality Metrics:**\n- Signal-to-Noise Ratio: 12.3 dB (Good)\n- Flat channels: 0\n- Bad channels: 0\n- Missing data: 0.2%\n- Artifacts: 3 eye blinks, 1 muscle\n\n**Recommendations:**\n- Data is ready for analysis\n- Consider ICA for artifact removal\n- No need for channel interpolation`,
+      interpretation: `🧠 **AI Interpretation**\n\n**File:** ${fileName}\n\n**Clinical Interpretation:**\nThis appears to be a normal resting-state EEG recording with:\n\n1. **Normal Background:** Well-organized alpha rhythm posteriorly\n2. **No Abnormalities:** No epileptiform discharges or focal slowing\n3. **Artifacts:** Minor eye blinks and muscle activity (expected in resting state)\n\n**Suggested Next Steps:**\n1. Use for baseline comparison\n2. Suitable for motor imagery or cognitive tasks\n3. Good candidate for pretraining with self-supervised learning\n\n**Model Recommendation:**\nEEGNet or ShallowNet would work well for this data.`
+    };
+
+    const response = analysisResponses[analysisType] || analysisResponses.full;
+    addMessage('assistant', response);
+  }, 1500);
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Add user message
+  addMessage('user', message);
+  input.value = '';
+
+  // Simulate assistant response (in production, this would call an API)
+  setTimeout(() => {
+    const responses = [
+      "Based on your dataset characteristics, I recommend starting with EEGNet for binary classification tasks. It's lightweight and works well with limited data.",
+      "For preprocessing, consider these steps: 1) Bandpass filter (0.5-40 Hz), 2) Artifact removal with ICA, 3) Normalization per channel. This should improve your model's performance.",
+      "The drop in accuracy at epoch 10 suggests overfitting. Try: 1) Early stopping with patience=5, 2) Data augmentation, 3) Increase dropout to 0.5.",
+      "Your confusion matrix shows high performance on class 0 but lower on class 1. This indicates class imbalance. Consider using class weights or SMOTE.",
+    ];
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    addMessage('assistant', randomResponse);
+  }, 1000);
+}
+
+function sendQuickMessage(message) {
+  document.getElementById('chatInput').value = message;
+  sendMessage();
+}
+
+function addMessage(sender, text) {
+  const chatDiv = document.getElementById('chatMessages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'd-flex mb-3' + (sender === 'user' ? ' flex-row-reverse' : '');
+
+  const avatar = sender === 'user' 
+    ? '<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'
+    : '<div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-robot"></i></div>';
+
+  const alertClass = sender === 'user' ? 'alert-primary' : 'alert-info';
+
+  messageDiv.innerHTML = `
+    <div class="flex-shrink-0">${avatar}</div>
+    <div class="flex-grow-1 ${sender === 'user' ? 'me-2 text-end' : 'ms-2'}">
+      <div class="alert ${alertClass} py-2 px-3 mb-0 small d-inline-block text-start" style="max-width: 80%;">
+        ${text}
+      </div>
+    </div>
+  `;
+
+  chatDiv.appendChild(messageDiv);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+</script>
+{% endblock %}

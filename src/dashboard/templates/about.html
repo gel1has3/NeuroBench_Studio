@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}About - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center g-4">
+    <div class="col-lg-8">
+        <!-- Hero -->
+        <div class="card border-0 shadow-sm mb-4 position-relative">
+            <div class="card-body text-center py-5">
+                <div class="position-absolute top-0 start-0 m-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                </div>
+                <span class="display-1">🧠</span>
+                <h2 class="fw-bold mt-3">NeuroBench Studio</h2>
+                <p class="lead text-muted">Version 1.0 — EEG Foundation Model Platform</p>
+                <p class="text-muted">
+                    A comprehensive platform for EEG foundation model research, providing tools for
+                    exploring <strong>200+ EEG datasets</strong> (remote & local), discovering <strong>60+ braindecode models</strong>
+                    + foundation models, and building visual ML pipelines — all with local dataset support
+                    and real-time progress streaming.
+                </p>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-stars me-2"></i>Key Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-cpu text-info fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Multi-Model Comparison</h6>
+                                <p class="text-muted small mb-0">Evaluate MAE, JEPA, Contrastive, EEGNet, Deep4Net, and ShallowNet side-by-side</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-graph-up text-warning fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Representation Geometry</h6>
+                                <p class="text-muted small mb-0">Intrinsic dimensionality, CKA similarity, and manifold structure analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-heart-pulse text-danger fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Cross-Disease Analysis</h6>
+                                <p class="text-muted small mb-0">ADHD, Epilepsy, Sleep Disorders, Neonatal, and TUH EEG datasets</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-diagram-3 text-success fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Visual Pipeline Builder</h6>
+                                <p class="text-muted small mb-0">Drag-and-drop ML pipeline builder with preprocessing, model selection, split strategy, and SSE progress streaming</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-sliders text-orange fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Preprocessing Pipeline</h6>
+                                <p class="text-muted small mb-0">Temporal filtering, downsampling, bad channel detection, ICA artifact removal, re-referencing, segmentation, and baseline correction</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-shield-exclamation text-purple fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Fallback Model System</h6>
+                                <p class="text-muted small mb-0">Automatic fallback to SimpleEEGNet when braindecode models have compatibility issues, with numba JIT disabled for reliability</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-bar-chart-line text-teal fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Real-Time Progress Tracking</h6>
+                                <p class="text-muted small mb-0">Server-Sent Events (SSE) for streaming pipeline progress with live status updates, metrics, and run history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Models -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-cpu me-2"></i>Supported Models</h5>
+            </div>
+            <div class="card-body">
+                <!-- Traditional Braindecode Models -->
+                <h6 class="fw-bold mb-3">
+                    <span class="badge bg-warning text-dark me-2">BD</span>
+                    Braindecode Models <small class="text-muted">(60+ models auto-discovered)</small>
+                </h6>
+                <div class="mt-3">
+                    <div class="alert alert-warning py-2 px-3 small mb-0" role="alert">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Braindecode v1.5.2 is installed with <strong>60+ models</strong> auto-discovered from the <code>braindecode.models</code> package via the API. When compatibility issues arise, the system automatically falls back to a built-in <strong>SimpleEEGNet</strong> fallback model.
+                    </div>
+                </div>
+
+                <!-- Foundation Models -->
+                <h6 class="fw-bold mb-3">
+                    <span class="badge bg-primary me-2">FM</span>
+                    Foundation Models <small class="text-muted">(pre-trained checkpoints)</small>
+                </h6>
+                <div class="mt-3">
+                    <div class="alert alert-primary py-2 px-3 small mb-0" role="alert">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Foundation models are pretrained on large-scale EEG data and can be loaded for
+                        evaluation or used as feature extractors. Checkpoints are stored per experiment under <code>results/*/checkpoints/</code>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-stack me-2"></i>Technology Stack</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% set techs = [
+                        ('Flask', 'Python web framework', 'info'),
+                        ('Bootstrap 5', 'Responsive UI framework', 'primary'),
+                        ('Plotly.js', 'Interactive visualizations', 'success'),
+                        ('PyTorch', 'Deep learning framework', 'danger'),
+                        ('MNE-Python', 'EEG data processing', 'warning'),
+                        ('scikit-learn', 'ML evaluation metrics', 'secondary'),
+                        ('Braindecode', 'EEG deep learning library', 'dark'),
+                        ('EEGDash', 'OpenNeuro dataset streaming', 'success'),
+                    ] %}
+                    {% for name, desc, color in techs %}
+                    <div class="col-md-4 col-6">
+                        <span class="badge bg-{{ color }} bg-opacity-10 text-{{ color }} p-2 w-100 text-start">
+                            <strong>{{ name }}</strong>
+                            <br><small>{{ desc }}</small>
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Architecture -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2"></i>Pipeline Architecture</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <i class="bi bi-database text-primary fs-4 mb-2"></i>
+                            <h6 class="fw-bold mb-1">Data Loading</h6>
+                            <p class="text-muted small mb-0">Load local datasets from <code>data/raw/</code> directories or stream <strong>200+ remote datasets</strong> via EEGDash API from OpenNeuro — all unified under a single interface</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <i class="bi bi-funnel text-warning fs-4 mb-2"></i>
+                            <h6 class="fw-bold mb-1">Preprocessing</h6>
+                            <p class="text-muted small mb-0">Sequential pipeline: filtering → downsampling → bad channel detection → re-referencing → ICA → segmentation → baseline correction</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <i class="bi bi-cpu text-info fs-4 mb-2"></i>
+                            <h6 class="fw-bold mb-1">Model Training</h6>
+                            <p class="text-muted small mb-0">Choose from <strong>60+ braindecode models</strong> + 9 foundation models, trained with configurable epochs, batch size, learning rate, and automatic fallback to SimpleEEGNet</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100">
+                            <i class="bi bi-bar-chart text-success fs-4 mb-2"></i>
+                            <h6 class="fw-bold mb-1">Evaluation & Metrics</h6>
+                            <p class="text-muted small mb-0">Accuracy, balanced accuracy, F1, precision, recall, confusion matrix, AUC-ROC, with per-epoch training curves</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 bg-opacity-10 mb-0">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-lightning me-2"></i>Pipeline Execution Details</h6>
+                    <p class="mb-0 small">
+                        Pipelines run asynchronously in background threads. Progress is streamed via Server-Sent Events (SSE) and stored in <code>results/pipeline_runs.json</code>. Each run includes full metrics, training history, and model configuration for reproducibility. Supports both <strong>local datasets</strong> (from <code>data/raw/</code>) and <strong>remote datasets</strong> (streamed via EEGDash from OpenNeuro).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Updates -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-lightning-charge me-2"></i>Recent Updates</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="border-start border-3 border-info ps-3 mb-3">
+                        <h6 class="fw-bold mb-1">Pipeline Execution Overhaul</h6>
+                        <p class="text-muted small mb-1">Refactored pipeline executor with numba JIT disabled for braindecode compatibility, automatic fallback to SimpleEEGNet, SSE real-time progress streaming, and comprehensive error handling.</p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>Latest Update</small>
+                    </div>
+                    <div class="border-start border-3 border-success ps-3 mb-3">
+                        <h6 class="fw-bold mb-1">EEGDash Integration</h6>
+                        <p class="text-muted small mb-1">Integrated EEGDash API for streaming remote OpenNeuro datasets with automatic braindecode model configuration based on dataset characteristics.</p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>Enhanced</small>
+                    </div>
+                    <div class="border-start border-3 border-warning ps-3 mb-3">
+                        <h6 class="fw-bold mb-1">Foundation Model Support</h6>
+                        <p class="text-muted small mb-1">Added support for 9+ foundation models via braindecode v1.5+: REVE, CBraMod, CodeBrain, EEGPT, BIOT, LaBraM, BENDR, SignalJEPA, and LUNA.</p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>Expanded</small>
+                    </div>
+                    <div class="border-start border-3 border-primary ps-3 mb-3">
+                        <h6 class="fw-bold mb-1">Geometry Analysis Suite</h6>
+                        <p class="text-muted small mb-1">Implemented intrinsic dimensionality, manifold structure, CKA similarity, and geometry-performance correlation analysis.</p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>New Feature</small>
+                    </div>
+                    <div class="border-start border-3 border-danger ps-3">
+                        <h6 class="fw-bold mb-1">Visual Pipeline Builder</h6>
+                        <p class="text-muted small mb-1">Launched drag-and-drop MLOps pipeline builder for creating EEG ML workflows without coding, supporting preprocessing, model selection, and validation.</p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>Major Release</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-link-45deg me-2"></i>Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('api_health') }}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="bi bi-activity"></i> API Health
+                    </a>
+                    <a href="{{ url_for('api_experiments') }}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="bi bi-list"></i> API Experiments
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Page
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

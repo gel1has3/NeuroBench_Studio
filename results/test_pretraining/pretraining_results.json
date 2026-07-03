@@ -1,0 +1,100 @@
+{
+  "models": {
+    "mae": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.164365575077835,
+          "effective_rank": 7.549361040046713,
+          "mle_estimate": 5.626559585210528,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 6.977075658056543,
+          "effective_rank": 7.445567015228533,
+          "mle_estimate": 4.525023381481429,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.04930432603786,
+          "effective_rank": 7.512201336453791,
+          "mle_estimate": 5.173315734198265,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 7.239027737977183,
+          "effective_rank": 7.593011923702421,
+          "mle_estimate": 6.270443551045855,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 6.497583747773475,
+          "effective_rank": 7.158775275403267,
+          "mle_estimate": 4.23635481587091,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 6.985471408984578,
+        "std_pr": 0.2601820264851609
+      }
+    }
+  },
+  "cross_model_cka": {},
+  "intrinsic_dimensionality": {},
+  "manifold_structure": {
+    "mae": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.8024691358024691,
+          0.8271604938271604,
+          0.8024691358024691,
+          0.7777777777777778
+        ],
+        [
+          0.8024691358024691,
+          1.0,
+          0.7777777777777778,
+          0.8765432098765431,
+          0.8271604938271605
+        ],
+        [
+          0.8271604938271604,
+          0.7777777777777778,
+          1.0,
+          0.8024691358024691,
+          0.7777777777777778
+        ],
+        [
+          0.8024691358024691,
+          0.8765432098765431,
+          0.8024691358024691,
+          1.0,
+          0.8271604938271605
+        ],
+        [
+          0.7777777777777778,
+          0.8271604938271605,
+          0.7777777777777778,
+          0.8271604938271605,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.3111111111111111,
+      "disease_mixing_score": 0.19012345679012344,
+      "mean_knn_overlap": 0.8098765432098766
+    }
+  }
+}

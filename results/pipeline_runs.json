@@ -1,0 +1,3682 @@
+[
+  {
+    "run_id": "ce876771",
+    "timestamp": "2026-06-26T18:25:21.770973",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6586103439331055,
+          0.3520773649215698,
+          0.26102203130722046,
+          0.13091248273849487,
+          0.1007043719291687
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.03829256445169449,
+            0.961707353591919
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.13,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T18:25:21.770634",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "7d93053f",
+    "timestamp": "2026-06-26T18:40:15.526096",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6345950365066528,
+          0.426868736743927,
+          0.31792986392974854,
+          0.1397656500339508,
+          0.1213143989443779
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.04871895909309387,
+            0.9512810111045837
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.06,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T18:40:15.525030",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "1c60b0ce",
+    "timestamp": "2026-06-26T18:49:22.392497",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.634772777557373,
+          0.39451882243156433,
+          0.19556351006031036,
+          0.171212300658226,
+          0.05028456822037697
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.045742541551589966,
+            0.9542574286460876
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.09,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T18:49:22.391917",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "c13d12e0",
+    "timestamp": "2026-06-26T19:01:25.868243",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6461068987846375,
+          0.45352283120155334,
+          0.3060316741466522,
+          0.25158214569091797,
+          0.20768608152866364
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.08221108466386795,
+            0.9177889227867126
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.04,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T19:01:25.867599",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "48979dd0",
+    "timestamp": "2026-06-26T19:17:00.027966",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "status": "error",
+      "error": "'function' object has no attribute 'get_call_template'",
+      "error_type": "AttributeError",
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "total_time_seconds": 1.52,
+        "timestamp": "2026-06-26T19:17:00.027369",
+        "status": "failed"
+      }
+    }
+  },
+  {
+    "run_id": "7852e895",
+    "timestamp": "2026-06-26T19:21:07.385831",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "status": "error",
+      "error": "'function' object has no attribute 'get_call_template'",
+      "error_type": "AttributeError",
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "total_time_seconds": 0.92,
+        "timestamp": "2026-06-26T19:21:07.385087",
+        "status": "failed"
+      }
+    }
+  },
+  {
+    "run_id": "d5e3fbc4",
+    "timestamp": "2026-06-26T19:29:23.001209",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "status": "error",
+      "error": "'function' object has no attribute 'get_call_template'",
+      "error_type": "AttributeError",
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "total_time_seconds": 0.22,
+        "timestamp": "2026-06-26T19:29:23.000753",
+        "status": "failed"
+      }
+    }
+  },
+  {
+    "run_id": "5e5cfbb9",
+    "timestamp": "2026-06-26T19:33:50.126847",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6803484559059143,
+          0.40590670704841614,
+          0.2237623929977417,
+          0.17612262070178986,
+          0.07391052693128586
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.06681153178215027,
+            0.9331884384155273
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.1,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T19:33:50.126171",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "6a81a93a",
+    "timestamp": "2026-06-26T21:27:03.016749",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6673178672790527,
+          0.4343509078025818,
+          0.34272703528404236,
+          0.16547419130802155,
+          0.09913232177495956
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.08523896336555481,
+            0.9147610664367676
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 0.62,
+        "total_time_formatted": "0m 0s",
+        "timestamp": "2026-06-26T21:27:03.014566",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "1230d20b",
+    "timestamp": "2026-06-26T21:31:40.336668",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6667101383209229,
+          0.4712173640727997,
+          0.36532729864120483,
+          0.19881364703178406,
+          0.15884731709957123
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.07604160159826279,
+            0.9239583611488342
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.24,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-26T21:31:40.336094",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "ba5f920c",
+    "timestamp": "2026-06-26T21:42:14.358322",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.5924859642982483,
+          0.4682222008705139,
+          0.3717975318431854,
+          0.2147277295589447,
+          0.11813583225011826
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.07899702340364456,
+            0.9210029244422913
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.42,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-26T21:42:14.357590",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "67c791ef",
+    "timestamp": "2026-06-26T23:58:13.449260",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6826534867286682,
+          0.46817532181739807,
+          0.28087279200553894,
+          0.2960263192653656,
+          0.05924128741025925
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.056138716638088226,
+            0.9438613057136536
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.11,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-26T23:58:13.448442",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "ff121b3d",
+    "timestamp": "2026-06-27T00:04:08.355693",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.7569000124931335,
+          0.6756563782691956,
+          0.39010557532310486,
+          0.41598275303840637,
+          0.20952054858207703
+        ],
+        "train_acc": [
+          0.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.14869453012943268,
+            0.8513054251670837
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.34,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-27T00:04:08.355110",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "206e9b73",
+    "timestamp": "2026-06-27T00:18:30.939622",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6791810393333435,
+          0.4721677005290985,
+          0.29893630743026733,
+          0.24556803703308105,
+          0.11496350169181824
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.07005815207958221,
+            0.9299418330192566
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.36,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-27T00:18:30.938766",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "819495e6",
+    "timestamp": "2026-06-27T00:45:55.886452",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.668978214263916,
+          0.4977266788482666,
+          0.3035587966442108,
+          0.2379671037197113,
+          0.13242046535015106
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.06399393081665039,
+            0.9360060691833496
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.45,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-27T00:45:55.885232",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "d2384067",
+    "timestamp": "2026-06-27T00:46:29.737644",
+    "dataset_id": "adhd200",
+    "model": "EEGNeX",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6739601492881775,
+          0.5392269492149353,
+          0.39225858449935913,
+          0.30725589394569397,
+          0.2070010006427765
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNeX",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 142736,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.2126118689775467,
+            0.7873881459236145
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNeX",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 0.26,
+        "total_time_formatted": "0m 0s",
+        "timestamp": "2026-06-27T00:46:29.734353",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "b66370c5",
+    "timestamp": "2026-06-27T02:14:58.619016",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6733905673027039,
+          0.4354095160961151,
+          0.2966759204864502,
+          0.21887677907943726,
+          0.20105138421058655
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.05375860258936882,
+            0.9462414383888245
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 3.36,
+        "total_time_formatted": "0m 3s",
+        "timestamp": "2026-06-27T02:14:58.615756",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "4e098e12",
+    "timestamp": "2026-06-27T23:31:29.334635",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.7126240134239197,
+          0.5118302702903748,
+          0.3223200738430023,
+          0.18766753375530243,
+          0.12157559394836426
+        ],
+        "train_acc": [
+          0.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.08093634992837906,
+            0.9190636277198792
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.21,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-27T23:31:29.333505",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "18e4d576",
+    "timestamp": "2026-06-29T08:37:15.594171",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.7149685621261597,
+          0.449114054441452,
+          0.32270386815071106,
+          0.3129688799381256,
+          0.07689440995454788
+        ],
+        "train_acc": [
+          0.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.055788904428482056,
+            0.9442110657691956
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 1.57,
+        "total_time_formatted": "0m 1s",
+        "timestamp": "2026-06-29T08:37:15.590651",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "cc6794db",
+    "timestamp": "2026-06-29T14:59:40.843955",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6748389601707458,
+          0.4900906980037689,
+          0.33489349484443665,
+          0.17988596856594086,
+          0.12566789984703064
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.04932556301355362,
+            0.9506744742393494
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.46,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-06-29T14:59:40.841909",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "1260459c",
+    "timestamp": "2026-06-29T15:30:09.889435",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6155109405517578,
+          0.463148832321167,
+          0.45781728625297546,
+          0.21439212560653687,
+          0.11669047921895981
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.0696052834391594,
+            0.93039470911026
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 0.78,
+        "total_time_formatted": "0m 0s",
+        "timestamp": "2026-06-29T15:30:09.885997",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  },
+  {
+    "run_id": "ee88cbed",
+    "timestamp": "2026-07-03T13:58:08.737788",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.6222522854804993,
+          0.45963993668556213,
+          0.2869778573513031,
+          0.18937550485134125,
+          0.10548479855060577
+        ],
+        "train_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.051737044006586075,
+            0.9482629299163818
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 3.21,
+        "total_time_formatted": "0m 3s",
+        "timestamp": "2026-07-03T13:58:08.733298",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
+  }
+]

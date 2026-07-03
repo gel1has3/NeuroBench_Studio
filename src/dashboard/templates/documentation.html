@@ -1,0 +1,792 @@
+{% extends "base.html" %}
+{% block title %}Documentation - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center g-4">
+    <div class="col-lg-10">
+        <!-- Page Header -->
+        <div class="card border-0 shadow-sm mb-4 position-relative">
+            <div class="card-body text-center py-5">
+                <div class="position-absolute top-0 start-0 m-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                </div>
+                <span class="display-1">📘</span>
+                <h2 class="fw-bold mt-3">Documentation</h2>
+                <p class="lead text-muted">Guides, contributor onboarding, and project standards</p>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i>Table of Contents</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <a href="#quickstart" class="text-decoration-none">
+                            <span class="badge bg-primary bg-opacity-10 text-primary p-2 w-100 text-start d-block">
+                                <strong>🚀 Quick Start</strong><br><small>Install & launch in minutes</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#datasets" class="text-decoration-none">
+                            <span class="badge bg-info bg-opacity-10 text-info p-2 w-100 text-start d-block">
+                                <strong>🗂️ Dataset Explorer</strong><br><small>Local & remote EEG data</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#models" class="text-decoration-none">
+                            <span class="badge bg-warning bg-opacity-10 text-warning p-2 w-100 text-start d-block">
+                                <strong>🧠 Model Discovery</strong><br><small>60+ braindecode models</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#pipeline" class="text-decoration-none">
+                            <span class="badge bg-success bg-opacity-10 text-success p-2 w-100 text-start d-block">
+                                <strong>🔧 Pipeline Builder</strong><br><small>Visual ML workflow editor</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#evaluation" class="text-decoration-none">
+                            <span class="badge bg-danger bg-opacity-10 text-danger p-2 w-100 text-start d-block">
+                                <strong>📊 Evaluation & Results</strong><br><small>Metrics & benchmarking</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#api" class="text-decoration-none">
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary p-2 w-100 text-start d-block">
+                                <strong>🔌 REST API</strong><br><small>Programmatic access</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#contributing" class="text-decoration-none">
+                            <span class="badge bg-purple bg-opacity-10 text-purple p-2 w-100 text-start d-block">
+                                <strong>🤝 Contributing</strong><br><small>Developer onboarding</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#standards" class="text-decoration-none">
+                            <span class="badge bg-dark bg-opacity-10 text-dark p-2 w-100 text-start d-block">
+                                <strong>📏 Project Standards</strong><br><small>Code style & conventions</small>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#architecture" class="text-decoration-none">
+                            <span class="badge bg-teal bg-opacity-10 text-teal p-2 w-100 text-start d-block">
+                                <strong>🏗️ Architecture</strong><br><small>System design overview</small>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Start -->
+        <div class="card border-0 shadow-sm mb-4" id="quickstart">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-rocket-takeoff me-2 text-primary"></i>Quick Start</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Prerequisites</h6>
+                <ul>
+                    <li>Python 3.11+</li>
+                    <li>pip package manager</li>
+                    <li>Virtual environment (recommended)</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Installation</h6>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <code class="text-light">
+                        python3.11 -m venv venv<br>
+                        source venv/bin/activate<br>
+                        pip install -r requirements.txt
+                    </code>
+                </div>
+
+                <h6 class="fw-bold mt-3">Launch the Platform</h6>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <code class="text-light">
+                        python src/dashboard/flask_app.py
+                    </code>
+                </div>
+                <p class="text-muted small">Open <a href="http://localhost:5000" target="_blank">http://localhost:5000</a> in your browser.</p>
+
+                <h6 class="fw-bold mt-3">Available Endpoints</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Path</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/</code></td><td>Home dashboard</td></tr>
+                            <tr><td><code>/datasets</code></td><td>Dataset explorer (local + EEGDash remote)</td></tr>
+                            <tr><td><code>/braindecode</code></td><td>Braindecode model discovery (60+ models)</td></tr>
+                            <tr><td><code>/pipeline</code></td><td>Visual pipeline builder</td></tr>
+                            <tr><td><code>/results</code></td><td>Results & benchmark hub</td></tr>
+                            <tr><td><code>/about</code></td><td>Platform overview</td></tr>
+                            <tr><td><code>/api/health</code></td><td>REST API health check</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dataset Explorer -->
+        <div class="card border-0 shadow-sm mb-4" id="datasets">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-database me-2 text-info"></i>Dataset Explorer</h5>
+            </div>
+            <div class="card-body">
+                <p>The Dataset Explorer provides a unified interface for two data sources:</p>
+
+                <h6 class="fw-bold">🏠 Local Datasets</h6>
+                <ul>
+                    <li>Scans the <code>data/raw/</code> directory for locally stored EEG datasets</li>
+                    <li>Displays subject count, channel configurations, sampling rates, and data size</li>
+                    <li>Supported datasets: ADHD-200, TUH EEG, CHB-MIT, Helsinki Neonatal, Sleep EDF</li>
+                    <li>Each subject must have a <code>metadata.json</code> file and <code>.edf</code> recording</li>
+                </ul>
+
+                <h6 class="fw-bold">☁️ EEGDash Remote Streaming</h6>
+                <ul>
+                    <li>Stream <strong>200+ OpenNeuro datasets</strong> via the EEGDash API</li>
+                    <li>Browse curated catalog organized by disease/area (ADHD, Epilepsy, Sleep, etc.)</li>
+                    <li>Auto-configure braindecode models based on dataset characteristics (channels, sampling rate)</li>
+                    <li>Metadata and recordings are cached locally for fast re-access</li>
+                    <li>Use the <strong>Streamed Locally</strong> section for previously accessed datasets</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Dataset Architecture</h6>
+                <p class="small text-muted mb-0">Each dataset in <code>data/raw/</code> follows this structure:</p>
+                <div class="bg-dark rounded-3 p-3 mt-2">
+                    <code class="text-light">
+                        data/raw/<dataset_name>/<br>
+                        ├── sub-001/<br>
+                        │   ├── sub-001_task-rest_eeg.edf<br>
+                        │   └── metadata.json<br>
+                        ├── sub-002/<br>
+                        │   ├── sub-002_task-rest_eeg.edf<br>
+                        │   └── metadata.json<br>
+                        └── ...
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Discovery -->
+        <div class="card border-0 shadow-sm mb-4" id="models">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-cpu me-2 text-warning"></i>Model Discovery</h5>
+            </div>
+            <div class="card-body">
+                <p>The Braindecode Models page automatically discovers and inspects all models from the installed <code>braindecode.models</code> package.</p>
+
+                <h6 class="fw-bold">Features</h6>
+                <ul>
+                    <li><strong>Automatic Discovery</strong> — Scans the installed braindecode version for all available model classes (60+ models)</li>
+                    <li><strong>Parameter Inspection</strong> — View required and optional parameters with default values for each model</li>
+                    <li><strong>Code Generation</strong> — Generate ready-to-use Python instantiation code snippets with one click</li>
+                    <li><strong>Filtering</strong> — Filter models by architecture type (Transformer, CNN, Sleep, etc.)</li>
+                    <li><strong>Fallback System</strong> — When braindecode models have compatibility issues, the system automatically falls back to a built-in <strong>SimpleEEGNet</strong></li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Model Categories</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Examples</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Braindecode CNN</td><td>EEGNet, Deep4Net, ShallowFBCSPNet, EEGResNet</td><td>Traditional deep learning models for EEG</td></tr>
+                            <tr><td>Braindecode Temporal</td><td>TCN, HybridNet</td><td>Temporal convolution and hybrid architectures</td></tr>
+                            <tr><td>Foundation (pretrained)</td><td>REVE, CBraMod, CodeBrain, EEGPT, BIOT, LaBraM, BENDR, SignalJEPA, LUNA</td><td>Pretrained on large-scale EEG for feature extraction or fine-tuning</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Builder -->
+        <div class="card border-0 shadow-sm mb-4" id="pipeline">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2 text-success"></i>Pipeline Builder</h5>
+            </div>
+            <div class="card-body">
+                <p>The visual MLOps pipeline builder enables both coders and non-coders to create complete EEG ML pipelines through a drag-and-drop interface.</p>
+
+                <h6 class="fw-bold">How It Works</h6>
+                <ol>
+                    <li><strong>Add Dataset Node</strong> — Select a local dataset or stream one via EEGDash</li>
+                    <li><strong>Configure Preprocessing</strong> — Add and chain preprocessing steps (filtering, ICA, segmentation, etc.)</li>
+                    <li><strong>Add Split Strategy</strong> — Configure train/validation/test split or leave-one-subject-out</li>
+                    <li><strong>Select Model</strong> — Choose a braindecode architecture with auto-configured parameters</li>
+                    <li><strong>Configure Validation</strong> — Set evaluation metrics and statistical testing options</li>
+                    <li><strong>Connect & Execute</strong> — Wire nodes together and run the pipeline with real-time progress</li>
+                </ol>
+
+                <h6 class="fw-bold mt-3">Pipeline Node Reference</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Node Type</th>
+                                <th>Description</th>
+                                <th>Configuration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>📂 Dataset</td>
+                                <td>Select data source</td>
+                                <td>Local path or EEGDash dataset ID</td>
+                            </tr>
+                            <tr>
+                                <td>🔽 Filtering</td>
+                                <td>Frequency band filtering</td>
+                                <td>High-pass, low-pass, notch filter frequencies</td>
+                            </tr>
+                            <tr>
+                                <td>📉 Downsampling</td>
+                                <td>Reduce sampling rate</td>
+                                <td>Target frequency in Hz</td>
+                            </tr>
+                            <tr>
+                                <td>⚠️ Bad Channel Detection</td>
+                                <td>Detect and interpolate bad channels</td>
+                                <td>Threshold and interpolation method</td>
+                            </tr>
+                            <tr>
+                                <td>🔗 Re-referencing</td>
+                                <td>Change reference scheme</td>
+                                <td>Average, REST, bipolar, etc.</td>
+                            </tr>
+                            <tr>
+                                <td>🧹 ICA</td>
+                                <td>Artifact removal</td>
+                                <td>ICA method, eye/muscle component removal</td>
+                            </tr>
+                            <tr>
+                                <td>✂️ Segmentation</td>
+                                <td>Epoching / windowing</td>
+                                <td>Window size, overlap percentage</td>
+                            </tr>
+                            <tr>
+                                <td>📏 Baseline Correction</td>
+                                <td>Baseline normalization</td>
+                                <td>Baseline period in ms (e.g. -200:0)</td>
+                            </tr>
+                            <tr>
+                                <td>📊 Data Splitting</td>
+                                <td>Train/val/test split</td>
+                                <td>Split ratios, stratification, subject-level splitting</td>
+                            </tr>
+                            <tr>
+                                <td>🧠 Model</td>
+                                <td>Braindecode architecture</td>
+                                <td>Model name, hyperparameters, training config</td>
+                            </tr>
+                            <tr>
+                                <td>📈 Validation</td>
+                                <td>Evaluation metrics</td>
+                                <td>Accuracy, F1, AUC-ROC, confusion matrix</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold mt-3">Execution & Progress</h6>
+                <ul>
+                    <li>Pipelines run <strong>asynchronously</strong> in background threads</li>
+                    <li>Progress is streamed in real-time via <strong>Server-Sent Events (SSE)</strong></li>
+                    <li>Run history is persisted to <code>results/pipeline_runs.json</code></li>
+                    <li>Each run stores full metrics, training curves, and model configuration for reproducibility</li>
+                    <li>Supports both <strong>local datasets</strong> and <strong>remote EEGDash streams</strong></li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Preprocessing Step Details</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Parameters</th>
+                                <th>Default</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Filtering</td><td><code>highpass_freq</code>, <code>lowpass_freq</code>, <code>notch_freq</code></td><td>0.5 Hz, 45 Hz, 50/60 Hz</td></tr>
+                            <tr><td>Downsampling</td><td><code>downsample_freq</code></td><td>128 Hz</td></tr>
+                            <tr><td>Bad Channel</td><td><code>threshold</code>, <code>interpolation</code></td><td>3 std, spherical</td></tr>
+                            <tr><td>Re-referencing</td><td><code>method</code></td><td>average</td></tr>
+                            <tr><td>ICA</td><td><code>ica_method</code>, <code>remove_eye</code>, <code>remove_muscle</code></td><td>fastica, true, false</td></tr>
+                            <tr><td>Segmentation</td><td><code>window_size</code>, <code>overlap</code></td><td>4.0s, 0%</td></tr>
+                            <tr><td>Baseline</td><td><code>baseline</code>, <code>baseline_period</code></td><td>True, -200:0 ms</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation & Results -->
+        <div class="card border-0 shadow-sm mb-4" id="evaluation">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2 text-danger"></i>Evaluation & Results</h5>
+            </div>
+            <div class="card-body">
+                <p>The Results & Benchmark Hub provides comprehensive model evaluation and comparison.</p>
+
+                <h6 class="fw-bold">Available Metrics</h6>
+                <ul>
+                    <li><strong>Classification Metrics</strong> — Accuracy, balanced accuracy, F1-score, precision, recall</li>
+                    <li><strong>Confusion Matrix</strong> — Per-class performance visualization</li>
+                    <li><strong>AUC-ROC</strong> — Area under the receiver operating characteristic curve</li>
+                    <li><strong>Training Curves</strong> — Per-epoch loss and accuracy plots</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Representation Geometry Analysis</h6>
+                <ul>
+                    <li><strong>Intrinsic Dimensionality</strong> — Participation ratio, effective rank, MLE estimate per model per disease</li>
+                    <li><strong>CKA Similarity</strong> — Centered Kernel Alignment between model representations</li>
+                    <li><strong>Manifold Structure</strong> — Disease mixing score, cluster purity, k-nearest neighbor overlap</li>
+                    <li><strong>Geometry-Performance Correlation</strong> — Analysis linking representation geometry to downstream task performance</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Results Storage</h6>
+                <div class="bg-dark rounded-3 p-3">
+                    <code class="text-light">
+                        results/<br>
+                        ├── <experiment_name>/<br>
+                        │   ├── pretraining_results.json      # Full metrics per model per disease<br>
+                        │   ├── checkpoints/                   # Model .pt files<br>
+                        │   │   ├── eegnet_checkpoint.pt<br>
+                        │   │   └── ...<br>
+                        │   └── geometry_analysis/<br>
+                        │       └── geometry_analysis.json     # Dimensionality & CKA data<br>
+                        └── pipeline_runs.json                 # Pipeline execution history
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- REST API -->
+        <div class="card border-0 shadow-sm mb-4" id="api">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-plugin me-2 text-secondary"></i>REST API Reference</h5>
+            </div>
+            <div class="card-body">
+                <p>All API endpoints return JSON responses. Prepend <code>/api/</code> to all paths.</p>
+
+                <h6 class="fw-bold">System</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/api/health</code></td><td>GET</td><td>Health check with experiment count</td></tr>
+                            <tr><td><code>/api/refresh</code></td><td>GET</td><td>Clear all caches and force refresh</td></tr>
+                            <tr><td><code>/api/stream/experiments</code></td><td>GET</td><td>SSE stream for experiment updates</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold">Datasets</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/api/datasets</code></td><td>GET</td><td>List all local datasets</td></tr>
+                            <tr><td><code>/api/datasets/<name></code></td><td>GET</td><td>Detailed dataset info with subjects</td></tr>
+                            <tr><td><code>/api/eegdash/catalog</code></td><td>GET</td><td>EEGDash remote dataset catalog</td></tr>
+                            <tr><td><code>/api/eegdash/connect</code></td><td>POST</td><td>Stream an EEGDash dataset</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold">Models</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/api/braindecode/models</code></td><td>GET</td><td>List all braindecode models with params</td></tr>
+                            <tr><td><code>/api/braindecode/models/<name></code></td><td>GET</td><td>Single model parameter details</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold">Experiments</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/api/experiments</code></td><td>GET</td><td>List all experiments</td></tr>
+                            <tr><td><code>/api/experiments/<name>/summary</code></td><td>GET</td><td>Experiment summary with metrics</td></tr>
+                            <tr><td><code>/api/experiments/<name>/dimensionality</code></td><td>GET</td><td>Intrinsic dimensionality data</td></tr>
+                            <tr><td><code>/api/experiments/<name>/cka</code></td><td>GET</td><td>Cross-model CKA similarity</td></tr>
+                            <tr><td><code>/api/experiments/<name>/manifold</code></td><td>GET</td><td>Manifold structure analysis</td></tr>
+                            <tr><td><code>/api/experiments/<name>/checkpoints</code></td><td>GET</td><td>Checkpoint files list</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="fw-bold">Pipelines</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-dark table-striped mb-0">
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/api/run-pipeline</code></td><td>POST</td><td>Execute a pipeline graph (JSON body)</td></tr>
+                            <tr><td><code>/api/pipeline/progress/<run_id></code></td><td>GET</td><td>SSE stream for pipeline progress</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contributing -->
+        <div class="card border-0 shadow-sm mb-4" id="contributing">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-people me-2 text-purple"></i>Contributing Guide</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Getting Started as a Contributor</h6>
+                <ol>
+                    <li><strong>Fork the repository</strong> on GitHub</li>
+                    <li><strong>Clone your fork</strong> and set up the development environment</li>
+                    <li><strong>Create a feature branch</strong> from <code>main</code></li>
+                    <li><strong>Make changes</strong> following the project standards (see below)</li>
+                    <li><strong>Test your changes</strong> using the existing test suite</li>
+                    <li><strong>Submit a pull request</strong> with a clear description of changes</li>
+                </ol>
+
+                <h6 class="fw-bold mt-3">Development Setup</h6>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <code class="text-light">
+                        git clone https://github.com/<your-username>/NeuroBench_Studio.git<br>
+                        cd NeuroBench_Studio<br>
+                        python3.11 -m venv venv<br>
+                        source venv/bin/activate<br>
+                        pip install -r requirements.txt<br>
+                        pip install pytest  # For running tests<br>
+                        python src/dashboard/flask_app.py  # Launch for manual testing
+                    </code>
+                </div>
+
+                <h6 class="fw-bold mt-3">Where to Contribute</h6>
+                <ul>
+                    <li><strong>New Dataset Loaders</strong> — Add support for new EEG datasets in <code>src/preprocessing/dataset_loaders.py</code></li>
+                    <li><strong>New Models</strong> — Implement or wrap additional EEG models in <code>src/models/</code></li>
+                    <li><strong>Preprocessing Steps</strong> — Extend the preprocessing pipeline in <code>src/preprocessing/pipeline.py</code></li>
+                    <li><strong>Evaluation Metrics</strong> — Add new metrics in <code>src/evaluation/metrics.py</code></li>
+                    <li><strong>Dashboard UI</strong> — Improve the Flask templates, CSS, or JavaScript</li>
+                    <li><strong>Documentation</strong> — Update this documentation or the README</li>
+                    <li><strong>Bug Fixes</strong> — Check the Issues tab for reported bugs</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Pull Request Checklist</h6>
+                <ul>
+                    <li>Code compiles and runs without errors</li>
+                    <li>Changes follow the project coding standards</li>
+                    <li>New features include appropriate tests</li>
+                    <li>Documentation is updated if needed</li>
+                    <li>PR title is clear and descriptive</li>
+                    <li>PR description explains <em>what</em> and <em>why</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Project Standards -->
+        <div class="card border-0 shadow-sm mb-4" id="standards">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-rulers me-2"></i>Project Standards</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Code Style</h6>
+                <ul>
+                    <li><strong>Python</strong> — Follow <a href="https://peps.python.org/pep-0008/" target="_blank">PEP 8</a> guidelines</li>
+                    <li><strong>Imports</strong> — Group imports: standard library, third-party, local. Use absolute imports.</li>
+                    <li><strong>Type Hints</strong> — Use Python type hints for all function signatures</li>
+                    <li><strong>Docstrings</strong> — Use Google-style docstrings for all public modules, classes, and functions</li>
+                    <li><strong>Naming</strong> — <code>snake_case</code> for functions/variables, <code>PascalCase</code> for classes, <code>UPPER_CASE</code> for constants</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Project Structure Conventions</h6>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <code class="text-light">
+                        src/<br>
+                        ├── dashboard/        # Flask web app (templates, static files, routes)<br>
+                        │   ├── flask_app.py           # Route definitions only<br>
+                        │   ├── pipeline_executor.py   # Pipeline execution logic<br>
+                        │   ├── templates/             # Jinja2 HTML templates<br>
+                        │   └── static/                # CSS & JS assets<br>
+                        ├── models/           # Model architectures<br>
+                        │   ├── foundation.py          # Foundation model wrappers<br>
+                        │   ├── braindecode_models.py  # Braindecode integrations<br>
+                        │   └── ...<br>
+                        ├── preprocessing/    # EEG data processing<br>
+                        │   ├── dataset_loaders.py     # Dataset loader registry<br>
+                        │   ├── pipeline.py            # Preprocessing pipeline steps<br>
+                        │   └── ...<br>
+                        ├── evaluation/       # Model evaluation<br>
+                        │   ├── metrics.py             # Classification metrics<br>
+                        │   ├── cka.py                 # CKA similarity analysis<br>
+                        │   └── geometry_analysis.py   # Dimensionality analysis<br>
+                        └── reporting/        # Report generation<br>
+                            ├── figures.py             # Plot generation<br>
+                            ├── tables.py              # LaTeX/HTML tables<br>
+                            └── statistical_tests.py   # Statistical testing
+                    </code>
+                </div>
+
+                <h6 class="fw-bold mt-3">Numba JIT Compatibility</h6>
+                <p>To avoid compatibility issues with braindecode models, the platform <strong>disables numba JIT compilation</strong> at startup:</p>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <code class="text-light">
+                        os.environ['NUMBA_DISABLE_JIT'] = '1'<br>
+                        os.environ['NUMBA_CACHE_DIR'] = '/tmp/numba_cache_disabled'
+                    </code>
+                </div>
+                <p class="text-muted small">This is the first thing executed in both <code>flask_app.py</code> and <code>pipeline_executor.py</code>, before any other imports.</p>
+
+                <h6 class="fw-bold mt-3">Version Control</h6>
+                <ul>
+                    <li>Branch from <code>main</code> for all changes</li>
+                    <li>Use descriptive branch names: <code>feature/add-dataset-loader</code>, <code>fix/pipeline-crash</code></li>
+                    <li>Write clear commit messages in the present tense: "Add ADHD-200 dataset loader"</li>
+                    <li>Keep commits focused on a single logical change</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="card border-0 shadow-sm mb-4" id="faq">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-question-circle me-2 text-info"></i>Frequently Asked Questions</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq1Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false">
+                                <strong>How do I add a new dataset?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Place your EEG files (EDF, FIF, etc.) in <code>data/raw/&lt;dataset_id&gt;/</code> with subject subdirectories. The platform auto-discovers datasets from the <code>data/raw/</code> folder. If you need a custom loader, add one in <code>src/preprocessing/dataset_loaders.py</code> following the existing pattern.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq2Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false">
+                                <strong>Why is numba JIT disabled?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Numba JIT compilation is disabled globally (<code>NUMBA_DISABLE_JIT=1</code>) to ensure full compatibility with the braindecode model zoo. Some braindecode models use dynamic code paths that conflict with numba's compilation. This is set before any imports in both <code>flask_app.py</code> and <code>pipeline_executor.py</code>.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq3Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false">
+                                <strong>How do I run the dashboard?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Activate your virtual environment and run: <code>python src/dashboard/flask_app.py</code>. This starts the Flask development server on <code>http://localhost:5000</code>. Ensure all dependencies are installed via <code>pip install -r requirements.txt</code> first.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq4Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false">
+                                <strong>What file formats are supported for EEG data?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                The platform uses <strong>MNE-Python</strong> for data loading, supporting: <code>.edf</code> (European Data Format), <code>.fif</code> (MNE native), <code>.set</code> (EEGLAB), <code>.bdf</code> (Biosemi), <code>.cnt</code> (Neuroscan), <code>.egi</code> (EGI), and more. Files are auto-detected from the <code>data/raw/&lt;dataset_id&gt;/</code> directory.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq5Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false">
+                                <strong>How do I enable GPU training?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                The platform automatically detects CUDA-capable GPUs via PyTorch. Ensure you have <code>torch</code> with CUDA support: <code>pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118</code>. Check GPU status on the home dashboard System Status panel.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq6Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false">
+                                <strong>Where are results stored?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                All pipeline results are stored as JSON files in the <code>results/</code> directory. Each experiment gets its own subdirectory with <code>pretraining_results.json</code>, <code>checkpoints/</code> for model weights, and <code>geometry_analysis/</code> for dimensionality/CKA data. Pipeline execution history is stored in <code>results/pipeline_runs.json</code>.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq7Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" aria-expanded="false">
+                                <strong>Why did my pipeline fail?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Common causes: (1) Dataset not found — ensure files are in <code>data/raw/&lt;dataset_id&gt;/</code>, (2) Model compatibility — try using SimpleEEGNet as a fallback, (3) Out of memory — reduce batch size or max subjects, (4) Missing dependencies — run <code>pip install -r requirements.txt</code>. Check the run panel for detailed error messages.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq8Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq8" aria-expanded="false">
+                                <strong>Can I use EEGDash without an internet connection?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                No — EEGDash requires an active internet connection to stream datasets from OpenNeuro. However, all <strong>local datasets</strong> placed in <code>data/raw/</code> work fully offline. Toggle between sources using the "Local Datasets" / "EEG Dash Datasets" buttons in the Datasets Explorer.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq9Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq9" aria-expanded="false">
+                                <strong>How do I contribute a new model architecture?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Add your model class in <code>src/models/</code> following the existing patterns (e.g., <code>cnn.py</code>, <code>transformer.py</code>). Register it in <code>src/models/foundation.py</code> if it's a foundation model. Ensure it accepts standard parameters (<code>n_chans</code>, <code>n_times</code>, <code>n_outputs</code>) and can be trained via the pipeline executor.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="faq10Head">
+                            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq10" aria-expanded="false">
+                                <strong>How do I clear cached data and refresh the dashboard?</strong>
+                            </button>
+                        </h6>
+                        <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small text-muted">
+                                Click the <strong>Refresh</strong> button in the top-right navbar, or directly call <code>GET /api/refresh</code> to clear all server-side caches. The dashboard automatically polls for updates every 30 seconds (configurable via the <code>REFRESH_INTERVAL</code> environment variable).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture -->
+        <div class="card border-0 shadow-sm mb-4" id="architecture">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-boxes me-2 text-teal"></i>System Architecture</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">High-Level Architecture</h6>
+                <div class="bg-dark rounded-3 p-3 mb-3">
+                    <pre class="text-light mb-0" style="font-family: monospace; font-size: 0.8rem;">
+┌────────────────────────────────────────────────────────────┐
+│                    User Browser (Bootstrap 5.3)             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐  │
+│  │ Datasets │ │  Models  │ │ Pipeline │ │  Results     │  │
+│  │ Explorer │ │ Discover │ │  Builder │ │  Dashboard   │  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘  │
+└───────┼─────────────┼────────────┼──────────────┼──────────┘
+        │             │            │              │
+┌───────┼─────────────┼────────────┼──────────────┼──────────┐
+│       ▼             ▼            ▼              ▼          │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │              Flask Web Server (HTTP/SSE)            │    │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌───────────┐  │    │
+│  │  │ REST API    │  │ SSE Stream   │  │ Template  │  │    │
+│  │  │ Endpoints   │  │ Real-time    │  │ Rendering │  │    │
+│  │  └──────┬──────┘  └──────┬───────┘  └─────┬─────┘  │    │
+│  └─────────┼────────────────┼─────────────────┼────────┘    │
+│            │                │                 │             │
+│  ┌─────────▼────────────────▼─────────────────▼────────┐    │
+│  │              Pipeline Execution Engine               │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐  │    │
+│  │  │ Dataset  │ │ Preproc  │ │ Model  │ │ Eval &   │  │    │
+│  │  │ Loading  │ │ Pipeline │ │Training│ │ Metrics  │  │    │
+│  │  └────┬─────┘ └────┬─────┘ └───┬────┘ └────┬─────┘  │    │
+│  └───────┼────────────┼───────────┼───────────┼─────────┘    │
+│          │            │           │           │              │
+│  ┌───────▼────────────▼───────────▼───────────▼─────────┐    │
+│  │               Core Libraries                          │    │
+│  │  MNE-Python  │  PyTorch  │ Braindecode  │ scikit-learn│   │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │               Data Sources                            │    │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌───────────┐  │    │
+│  │  │ data/raw/    │  │ EEGDash API  │  │ results/  │  │    │
+│  │  │ Local EDFs   │  │ OpenNeuro    │  │ outputs   │  │    │
+│  │  └──────────────┘  └──────────────┘  └───────────┘  │    │
+│  └──────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
+                    </pre>
+                </div>
+
+                <h6 class="fw-bold">Key Design Decisions</h6>
+                <ul>
+                    <li><strong>Flask over FastAPI</strong> — Simpler setup for template-rendered dashboards with SSE</li>
+                    <li><strong>Async via Threading</strong> — Pipeline execution uses daemon threads with SSE for real-time progress</li>
+                    <li><strong>No Database</strong> — Results stored as JSON files on disk for simplicity and reproducibility</li>
+                    <li><strong>Numba JIT Disabled</strong> — Ensures compatibility with the full braindecode model zoo</li>
+                    <li><strong>Fallback Model</strong> — SimpleEEGNet provides a reliable baseline when braindecode models fail</li>
+                    <li><strong>Dataset Registry</strong> — Pluggable loader architecture for adding new datasets</li>
+                </ul>
+
+                <h6 class="fw-bold mt-3">Data Flow</h6>
+                <ol>
+                    <li>User configures pipeline in the visual builder (browser)</li>
+                    <li>Pipeline graph (JSON) is sent to <code>/api/run-pipeline</code></li>
+                    <li>Server validates the graph and starts execution in a background thread</li>
+                    <li>Dataset is loaded from local disk or streamed via EEGDash</li>
+                    <li>Preprocessing steps are applied sequentially to the raw EEG data</li>
+                    <li>Processed data is split into train/val/test sets</li>
+                    <li>Selected model is trained with the configured hyperparameters</li>
+                    <li>Evaluation metrics are computed and stored to <code>results/pipeline_runs.json</code></li>
+                    <li>Progress events are streamed to the browser via SSE throughout the process</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

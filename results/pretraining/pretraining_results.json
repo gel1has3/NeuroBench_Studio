@@ -1,0 +1,879 @@
+{
+  "models": {
+    "mae": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.063292948823924,
+          "effective_rank": 7.5045727078231685,
+          "mle_estimate": 5.159269832116321,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 7.262822653685185,
+          "effective_rank": 7.610538238619829,
+          "mle_estimate": 5.3260467133042875,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.421616400886015,
+          "effective_rank": 7.685302582523266,
+          "mle_estimate": 5.1253788163930665,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 6.909379494132524,
+          "effective_rank": 7.39125971010458,
+          "mle_estimate": 4.898200483537257,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 7.124757545824236,
+          "effective_rank": 7.510508710232638,
+          "mle_estimate": 5.722424588198374,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 7.156373808670376,
+        "std_pr": 0.17455933964723472
+      }
+    },
+    "contrastive": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 3.74534120576958,
+          "effective_rank": 5.009637621279324,
+          "mle_estimate": 1.78456774659319,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 3.001334971789651,
+          "effective_rank": 4.492241885104163,
+          "mle_estimate": 1.5046339170442335,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 3.715224513412207,
+          "effective_rank": 4.856622028335615,
+          "mle_estimate": 1.5299651757816417,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 2.747503590250937,
+          "effective_rank": 4.030362019132628,
+          "mle_estimate": 1.2463969011128515,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 3.358874579108482,
+          "effective_rank": 4.683218518859532,
+          "mle_estimate": 1.5110979086439302,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 3.3136557720661712,
+        "std_pr": 0.39184871659041715
+      }
+    },
+    "jepa": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.184427299091256,
+          "effective_rank": 7.564359013500181,
+          "mle_estimate": 5.910382694136928,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 7.009830349216541,
+          "effective_rank": 7.4526788164824405,
+          "mle_estimate": 4.7455571403614165,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.15835391098659,
+          "effective_rank": 7.546833478179341,
+          "mle_estimate": 4.870142017102418,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 7.340406531012099,
+          "effective_rank": 7.641531883522074,
+          "mle_estimate": 5.533260282587886,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 7.387466141115547,
+          "effective_rank": 7.679060572927357,
+          "mle_estimate": 6.610131979112069,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 7.216096846284406,
+        "std_pr": 0.13542777228980418
+      }
+    },
+    "shallow_net": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 1.0412452964188472,
+          "effective_rank": 1.1100353562754157,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 1.0593301580854084,
+          "effective_rank": 1.1512214470485893,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 1.1490673473550532,
+          "effective_rank": 1.3448914718256606,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 1.099417917931134,
+          "effective_rank": 1.240066566860321,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 1.1925054573778568,
+          "effective_rank": 1.4054730961094535,
+          "mle_estimate": 1.0,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 1.10831323543366,
+        "std_pr": 0.05608173474148697
+      }
+    },
+    "deep4_net": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 2.723900931875049,
+          "effective_rank": 3.973220460802754,
+          "mle_estimate": 1.3263754168808495,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 2.8457527341483524,
+          "effective_rank": 4.19232268225109,
+          "mle_estimate": 1.1407764773960056,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 2.3801407421717156,
+          "effective_rank": 3.648950221552515,
+          "mle_estimate": 1.156716323575485,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 2.1779300089141125,
+          "effective_rank": 3.394693933551807,
+          "mle_estimate": 1.0890045894812046,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 3.0693542030500316,
+          "effective_rank": 4.329561986067853,
+          "mle_estimate": 1.3229751610709692,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 2.639415724031852,
+        "std_pr": 0.32085896880246195
+      }
+    },
+    "eegnet": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 4.2427940501927015,
+          "effective_rank": 5.44925000553516,
+          "mle_estimate": 1.6080106578582527,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 4.223532244844731,
+          "effective_rank": 4.978790441206667,
+          "mle_estimate": 1.8071753361425715,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 4.146420845313675,
+          "effective_rank": 5.421734760054178,
+          "mle_estimate": 1.8722281123854314,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 3.2789445454910533,
+          "effective_rank": 3.6819231156255574,
+          "mle_estimate": 2.9989615391085245,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 4.000794606916914,
+          "effective_rank": 4.799498575949558,
+          "mle_estimate": 3.3383727240217334,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 3.9784972585518146,
+        "std_pr": 0.3599901219936432
+      }
+    },
+    "codebrain": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.058570091629864,
+          "effective_rank": 1.3607611391587222,
+          "mle_estimate": 2.7090468645955018e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 6.639775656100156,
+          "effective_rank": 1.3748262784848546,
+          "mle_estimate": 2.859870723794838e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.0276821296682535,
+          "effective_rank": 1.3786911547430571,
+          "mle_estimate": 2.8708975954608905e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 7.10092856474231,
+          "effective_rank": 1.3645436335174026,
+          "mle_estimate": 2.740491824708849e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 7.0208091198161835,
+          "effective_rank": 1.4120496844013692,
+          "mle_estimate": 3.1689139033260754e-14,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 6.969553112391354,
+        "std_pr": 0.16729785635074537
+      }
+    },
+    "eegpt": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.245197888429578,
+          "effective_rank": 1.255200178150479,
+          "mle_estimate": 1.8043492142524144e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 7.309371737778275,
+          "effective_rank": 1.267090128711942,
+          "mle_estimate": 1.9002680476743656e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.277968135009508,
+          "effective_rank": 1.2588169046248114,
+          "mle_estimate": 1.8333508103323848e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 7.267927977676331,
+          "effective_rank": 1.2847320154518884,
+          "mle_estimate": 2.0481850659698153e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 7.237136883360808,
+          "effective_rank": 1.2781058760771984,
+          "mle_estimate": 1.993185462199367e-14,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 7.267520524450902,
+        "std_pr": 0.02562150802088231
+      }
+    },
+    "biot": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 7.231075796071182,
+          "effective_rank": 1.402201561245715,
+          "mle_estimate": 3.064315771374267e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 6.9593420438939475,
+          "effective_rank": 1.3643628482268215,
+          "mle_estimate": 2.7462142844504553e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 6.94819070266572,
+          "effective_rank": 1.3675842868532062,
+          "mle_estimate": 2.777018156942707e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 7.0303944729955665,
+          "effective_rank": 1.38760536288308,
+          "mle_estimate": 2.9466350058526374e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 6.677859151876836,
+          "effective_rank": 1.38424757264527,
+          "mle_estimate": 2.9440000151733235e-14,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 6.96937243350065,
+        "std_pr": 0.1776184714970564
+      }
+    },
+    "reve": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 1.608135834969533e-13,
+          "effective_rank": 1.2255459874116301,
+          "mle_estimate": 1.5664675384331453e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 1.7427068104119456e-13,
+          "effective_rank": 1.2337438209787153,
+          "mle_estimate": 1.6306929698094212e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 1.5997136279769094e-13,
+          "effective_rank": 1.2250223684508605,
+          "mle_estimate": 1.5623601636532725e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 1.923799633125298e-13,
+          "effective_rank": 1.2443122037875802,
+          "mle_estimate": 1.713325795065684e-14,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 1.5089088831153916e-13,
+          "effective_rank": 1.220168905022167,
+          "mle_estimate": 1.5173701711181323e-14,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 1.6766529579198156e-13,
+        "std_pr": 1.443585271160772e-14
+      }
+    },
+    "luna": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 4.325398200247047,
+          "effective_rank": 5.441320205176681,
+          "mle_estimate": 5.352643919638438e-07,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 3.247359541783273,
+          "effective_rank": 4.391415181300829,
+          "mle_estimate": 5.75619276518807e-07,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 4.655041765743327,
+          "effective_rank": 5.724650905052708,
+          "mle_estimate": 5.171177295943714e-07,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 3.4528257540526757,
+          "effective_rank": 4.359860499618635,
+          "mle_estimate": 6.476789761534771e-07,
+          "n_samples": 9,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 3.7423636820247568,
+          "effective_rank": 4.899153502699006,
+          "mle_estimate": 5.751590790301551e-07,
+          "n_samples": 9,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 3.8845977887702157,
+        "std_pr": 0.5292672555375183
+      }
+    },
+    "cbramod": {
+      "diseases": {
+        "adhd200": {
+          "participation_ratio": 1.218224395975723e-11,
+          "effective_rank": 1.6934181774851875,
+          "mle_estimate": 1.3634012281460046e-13,
+          "n_samples": 3,
+          "n_features": 256
+        },
+        "chb_mit": {
+          "participation_ratio": 8.158628204483353e-12,
+          "effective_rank": 1.6274253966193197,
+          "mle_estimate": 1.1157543941750262e-13,
+          "n_samples": 3,
+          "n_features": 256
+        },
+        "helsinki_neonatal": {
+          "participation_ratio": 7.763811044364618e-12,
+          "effective_rank": 1.6152740735008242,
+          "mle_estimate": 1.0884225054984044e-13,
+          "n_samples": 3,
+          "n_features": 256
+        },
+        "sleep_edf": {
+          "participation_ratio": 8.980271584939071e-12,
+          "effective_rank": 1.6233283056970396,
+          "mle_estimate": 1.1705898933411072e-13,
+          "n_samples": 3,
+          "n_features": 256
+        },
+        "tuh_eeg": {
+          "participation_ratio": 1.2140705151950005e-11,
+          "effective_rank": 1.6745982023109776,
+          "mle_estimate": 1.3610747921582037e-13,
+          "n_samples": 3,
+          "n_features": 256
+        }
+      },
+      "avg_dimensionality": {
+        "mean_pr": 9.845131989098856e-12,
+        "std_pr": 1.931627496107485e-12
+      }
+    }
+  },
+  "cross_model_cka": {
+    "mae_vs_contrastive": {
+      "cka": 9.106557521953995e-12,
+      "n_samples": 45
+    },
+    "mae_vs_jepa": {
+      "cka": 6.4909358270248685e-12,
+      "n_samples": 45
+    },
+    "mae_vs_shallow_net": {
+      "cka": 3.219388236175291e-05,
+      "n_samples": 45
+    },
+    "mae_vs_deep4_net": {
+      "cka": 5.7650075685478086e-11,
+      "n_samples": 45
+    },
+    "mae_vs_eegnet": {
+      "cka": 1.190663817540738e-10,
+      "n_samples": 45
+    },
+    "contrastive_vs_jepa": {
+      "cka": 1.0251497567503876e-11,
+      "n_samples": 45
+    },
+    "contrastive_vs_shallow_net": {
+      "cka": 0.192643940448761,
+      "n_samples": 45
+    },
+    "contrastive_vs_deep4_net": {
+      "cka": 3.3846820901572983e-09,
+      "n_samples": 45
+    },
+    "contrastive_vs_eegnet": {
+      "cka": 1.4628603883792834e-10,
+      "n_samples": 45
+    },
+    "jepa_vs_shallow_net": {
+      "cka": 4.484640885493718e-05,
+      "n_samples": 45
+    },
+    "jepa_vs_deep4_net": {
+      "cka": 5.479500533867032e-11,
+      "n_samples": 45
+    },
+    "jepa_vs_eegnet": {
+      "cka": 1.1318966597340108e-10,
+      "n_samples": 45
+    },
+    "shallow_net_vs_deep4_net": {
+      "cka": 0.012243873439729214,
+      "n_samples": 45
+    },
+    "shallow_net_vs_eegnet": {
+      "cka": 0.00032214209204539657,
+      "n_samples": 45
+    },
+    "deep4_net_vs_eegnet": {
+      "cka": 1.004806904347788e-09,
+      "n_samples": 45
+    }
+  },
+  "intrinsic_dimensionality": {},
+  "manifold_structure": {
+    "mae": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.8024691358024691,
+          0.8271604938271604
+        ],
+        [
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.8024691358024691
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0,
+          0.8271604938271604,
+          0.8024691358024691
+        ],
+        [
+          0.8024691358024691,
+          0.7777777777777778,
+          0.8271604938271604,
+          1.0,
+          0.8024691358024691
+        ],
+        [
+          0.8271604938271604,
+          0.8024691358024691,
+          0.8024691358024691,
+          0.8024691358024691,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.35555555555555557,
+      "disease_mixing_score": 0.20246913580246917,
+      "mean_knn_overlap": 0.7975308641975308
+    },
+    "contrastive": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778,
+          0.9012345679012346,
+          0.8024691358024691
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0,
+          0.8024691358024691,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.9012345679012346,
+          0.8024691358024691,
+          1.0,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.8024691358024691,
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.37777777777777777,
+      "disease_mixing_score": 0.20493827160493827,
+      "mean_knn_overlap": 0.7950617283950617
+    },
+    "jepa": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.7777777777777778,
+          0.8518518518518517,
+          0.7777777777777778,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778,
+          0.8271604938271605,
+          0.8024691358024691
+        ],
+        [
+          0.8518518518518517,
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.8271604938271605,
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.8024691358024691,
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.35555555555555557,
+      "disease_mixing_score": 0.20740740740740748,
+      "mean_knn_overlap": 0.7925925925925925
+    },
+    "shallow_net": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.8271604938271604,
+          0.8024691358024691,
+          0.9012345679012346,
+          0.7777777777777778
+        ],
+        [
+          0.8271604938271604,
+          1.0,
+          0.7777777777777778,
+          0.8271604938271604,
+          0.7777777777777778
+        ],
+        [
+          0.8024691358024691,
+          0.7777777777777778,
+          1.0,
+          0.8518518518518517,
+          0.8518518518518517
+        ],
+        [
+          0.9012345679012346,
+          0.8271604938271604,
+          0.8518518518518517,
+          1.0,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          0.8518518518518517,
+          0.7777777777777778,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.4666666666666667,
+      "disease_mixing_score": 0.18271604938271602,
+      "mean_knn_overlap": 0.817283950617284
+    },
+    "deep4_net": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.8271604938271604,
+          0.9753086419753088
+        ],
+        [
+          0.7777777777777778,
+          1.0,
+          0.7777777777777778,
+          0.7777777777777778,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0,
+          0.8518518518518517,
+          0.8024691358024691
+        ],
+        [
+          0.8271604938271604,
+          0.7777777777777778,
+          0.8518518518518517,
+          1.0,
+          0.8518518518518517
+        ],
+        [
+          0.9753086419753088,
+          0.7777777777777778,
+          0.8024691358024691,
+          0.8518518518518517,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.3333333333333333,
+      "disease_mixing_score": 0.18024691358024703,
+      "mean_knn_overlap": 0.819753086419753
+    },
+    "eegnet": {
+      "knn_overlap_matrix": [
+        [
+          1.0,
+          0.8024691358024691,
+          0.7777777777777778,
+          0.8518518518518517,
+          0.7777777777777778
+        ],
+        [
+          0.8024691358024691,
+          1.0,
+          0.7777777777777778,
+          0.8024691358024691,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0,
+          0.8271604938271604,
+          0.8024691358024691
+        ],
+        [
+          0.8518518518518517,
+          0.8024691358024691,
+          0.8271604938271604,
+          1.0,
+          0.7777777777777778
+        ],
+        [
+          0.7777777777777778,
+          0.7777777777777778,
+          0.8024691358024691,
+          0.7777777777777778,
+          1.0
+        ]
+      ],
+      "diseases": [
+        "adhd200",
+        "chb_mit",
+        "helsinki_neonatal",
+        "sleep_edf",
+        "tuh_eeg"
+      ],
+      "cluster_purity": 0.37777777777777777,
+      "disease_mixing_score": 0.20246913580246917,
+      "mean_knn_overlap": 0.7975308641975308
+    }
+  }
+}

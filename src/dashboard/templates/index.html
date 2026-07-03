@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}🏠 Home - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<!-- ============================================================== -->
+<!-- Welcome Banner -->
+<!-- ============================================================== -->
+<div class="vibe-hero page-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-house-door text-info fs-5"></i>
+    <div>
+      <span class="page-kicker">Workspace overview</span>
+      <h5 class="fw-semibold mb-1">Home Dashboard</h5>
+      <p class="text-muted mb-0">Track recent experiments, monitor availability, and jump into the next step of your workflow.</p>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('pipeline_builder') }}" class="btn btn-sm btn-success"><i class="bi bi-plus-lg me-1"></i>New Pipeline</a>
+    <button class="btn btn-sm btn-outline-info" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Quick Actions Cards -->
+<!-- ============================================================== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <a href="{{ url_for('pipeline_builder') }}" class="text-decoration-none">
+      <div class="card border-0 shadow-sm h-100 hover-card action-card">
+        <div class="card-body text-center py-3">
+          <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-2 d-inline-block mb-2">
+            <i class="bi bi-diagram-3 text-success fs-4"></i>
+          </div>
+          <h6 class="fw-bold mb-0">➕ New Pipeline</h6>
+          <small class="text-muted">Build & run experiments</small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('datasets_explorer') }}" class="text-decoration-none">
+      <div class="card border-0 shadow-sm h-100 hover-card action-card">
+        <div class="card-body text-center py-3">
+          <div class="stat-icon bg-primary bg-opacity-10 rounded-3 p-2 d-inline-block mb-2">
+            <i class="bi bi-database text-primary fs-4"></i>
+          </div>
+          <h6 class="fw-bold mb-0">📂 Import Dataset</h6>
+          <small class="text-muted">Browse & stream EEG data</small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('braindecode_explorer') }}" class="text-decoration-none">
+      <div class="card border-0 shadow-sm h-100 hover-card action-card">
+        <div class="card-body text-center py-3">
+          <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-2 d-inline-block mb-2">
+            <i class="bi bi-cpu text-info fs-4"></i>
+          </div>
+          <h6 class="fw-bold mb-0">🧠 Browse Models</h6>
+          <small class="text-muted">Discover braindecode models</small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('results_dashboard') }}" class="text-decoration-none">
+      <div class="card border-0 shadow-sm h-100 hover-card action-card">
+        <div class="card-body text-center py-3">
+          <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-2 d-inline-block mb-2">
+            <i class="bi bi-bar-chart text-warning fs-4"></i>
+          </div>
+          <h6 class="fw-bold mb-0">📊 View Results</h6>
+          <small class="text-muted">Benchmark & reports</small>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm workflow-help-card">
+      <div class="card-body py-3">
+        <div class="row align-items-center g-3">
+          <div class="col-lg-8">
+            <h6 class="fw-bold mb-1"><i class="bi bi-lightning-charge me-2"></i>Recommended flow</h6>
+            <p class="text-muted mb-0 small">Start by discovering datasets, build a pipeline, then review results to iterate quickly.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a href="{{ url_for('datasets_explorer') }}" class="btn btn-sm btn-outline-info me-2"><i class="bi bi-database me-1"></i>Explore</a>
+            <a href="{{ url_for('results_dashboard') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-bar-chart me-1"></i>Review</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Main Content: Recent Projects + System Status -->
+<!-- ============================================================== -->
+<div class="row g-3">
+  <!-- Recent Projects -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Recent Projects</h6>
+        {% if experiments %}
+        <span class="badge bg-secondary rounded-pill">{{ experiments|length }} experiments</span>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        {% if experiments %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th class="ps-4">Project</th>
+                <th class="text-center">Models</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Checkpoints</th>
+                <th class="text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for exp in experiments[:5] %}
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-{% if exp.has_results %}check-circle-fill text-success{% else %}circle text-muted{% endif %} me-2"></i>
+                    <div>
+                      <strong>{{ exp.name }}</strong>
+                      {% if exp.models %}
+                      <br><small class="text-muted">{{ exp.models[:3]|join(', ') }}{% if exp.models|length > 3 %}...{% endif %}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="badge bg-info text-dark rounded-pill">{{ exp.n_models }}</span></td>
+                <td class="text-center">
+                  {% if exp.has_results %}
+                  <span class="badge bg-success">Success</span>
+                  {% elif exp.has_checkpoints %}
+                  <span class="badge bg-warning text-dark">Running</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  {% if exp.has_checkpoints %}
+                  <i class="bi bi-check-circle-fill text-success" title="Available"></i>
+                  {% else %}
+                  <i class="bi bi-x-circle text-muted" title="None"></i>
+                  {% endif %}
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('results_dashboard') }}#{{ exp.name }}" class="btn btn-outline-info btn-sm"><i class="bi bi-eye"></i></a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 empty-state mx-3 my-3">
+          <i class="bi bi-inbox display-4 text-muted"></i>
+          <h6 class="mt-3 text-muted">No Projects Yet</h6>
+          <p class="text-muted small mb-3">Run a pipeline or pretraining to see results here.</p>
+          <a href="{{ url_for('pipeline_builder') }}" class="btn btn-sm btn-success"><i class="bi bi-plus-lg me-1"></i>Create Pipeline</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recent Results Snapshot -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-trophy me-2"></i>Recent Results Snapshot</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-4">
+            <div class="stat-card summary-card">
+              <div class="stat-num text-success">{{ latest_accuracy|default('—') }}</div>
+              <div class="stat-label">Best Avg PR</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card summary-card">
+              <div class="stat-num text-info">{{ total_models }}</div>
+              <div class="stat-label">Models Trained</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card summary-card">
+              <div class="stat-num text-warning">{{ experiments_with_results }}</div>
+              <div class="stat-label">Completed Runs</div>
+            </div>
+          </div>
+        </div>
+        {% if best_model %}
+        <div class="mt-2 text-center">
+          <small class="text-muted">🏆 Best Model: <strong class="text-info">{{ best_model }}</strong></small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: System Status -->
+  <div class="col-lg-4">
+    <!-- System Status -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-activity me-2"></i>System Status</h6>
+      </div>
+      <div class="card-body">
+        <div id="systemStatus">
+          <div class="d-flex align-items-center mb-2">
+            <span class="status-dot status-dot-ok me-2" id="apiStatusDot"></span>
+            <span class="small">API Server</span>
+            <span class="ms-auto text-success small" id="apiStatusText">Connected</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <span class="status-dot status-dot-ok me-2" id="gpuStatusDot"></span>
+            <span class="small">GPU Available</span>
+            <span class="ms-auto text-muted small" id="gpuStatusText">—</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <span class="status-dot status-dot-ok me-2" id="storageStatusDot"></span>
+            <span class="small">Storage</span>
+            <span class="ms-auto text-muted small" id="storageStatusText">{{ experiments|length }} experiments</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="status-dot {{ 'status-dot-ok' if experiments else 'status-dot-warn' }} me-2"></span>
+            <span class="small">Data Available</span>
+            <span class="ms-auto text-muted small">{% if experiments %}Ready{% else %}No data{% endif %}</span>
+          </div>
+        </div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between small text-muted mb-1">
+          <span>Auto-refresh</span>
+          <span>{{ refresh_interval }}s</span>
+        </div>
+        <div class="d-flex justify-content-between small text-muted">
+          <span>Last refresh</span>
+          <span id="lastRefreshTime">just now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest Checkpoints -->
+    {% if latest_checkpoints %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-binary me-2"></i>Latest Checkpoints</h6>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for ckpt in latest_checkpoints %}
+          <li class="list-group-item bg-transparent d-flex align-items-center py-2">
+            <i class="bi bi-file-earmark-binary text-warning me-2"></i>
+            <div class="text-truncate">
+              <small class="fw-medium">{{ ckpt.name }}</small>
+              <br><small class="text-muted">{{ "%.1f"|format(ckpt.size_mb) }} MB</small>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Check GPU availability
+  fetch('/api/health')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('apiStatusDot').className = 'status-dot status-dot-ok me-2';
+      document.getElementById('apiStatusText').textContent = 'Connected';
+    })
+    .catch(() => {
+      document.getElementById('apiStatusDot').className = 'status-dot status-dot-err me-2';
+      document.getElementById('apiStatusText').textContent = 'Disconnected';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Error - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+            <h3 class="fw-bold mt-3">Something went wrong</h3>
+            <p class="text-muted mb-4">{{ message }}</p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{{ url_for('datasets_explorer') }}" class="btn btn-info">
+                    <i class="bi bi-database"></i> Browse Datasets
+                </a>
+                <button class="btn btn-outline-secondary" onclick="window.history.back()">
+                    <i class="bi bi-arrow-left"></i> Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

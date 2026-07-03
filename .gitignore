@@ -1,0 +1,20 @@
+venv/
+__pycache__/
+eeg_cache/
+results/pretraining/checkpoints/
+results/archives/
+*.pt
+.DS_Store
+
+# Python artifacts
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+env/
+venv/
+
+# macOS
+.Spotlight-V100
+.Trashes

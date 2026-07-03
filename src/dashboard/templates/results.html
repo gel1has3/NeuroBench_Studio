@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}📊 Results - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<!-- ============================================================== -->
+<!-- Page Header -->
+<!-- ============================================================== -->
+<div class="vibe-hero page-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-bar-chart text-warning fs-5"></i>
+    <div>
+      <span class="page-kicker">Evaluation workspace</span>
+      <h5 class="fw-semibold mb-1">Pipeline Results</h5>
+      <p class="text-muted mb-0">Review run history, compare metrics, and monitor model performance from the pipeline workflow.</p>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+    <button class="btn btn-sm btn-outline-info" onclick="location.reload()">
+      <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+    </button>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left Column -->
+  <div class="col-lg-8">
+    <!-- Run History -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Run History</h6>
+        <span class="badge bg-secondary rounded-pill">{{ pipeline_runs|length }} runs</span>
+      </div>
+      <div class="card-body p-0">
+        {% if pipeline_runs %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th class="ps-4">Run ID</th>
+                <th>Dataset</th>
+                <th>Model</th>
+                <th class="text-center">Status</th>
+                <th class="text-end">Time</th>
+                <th class="text-end pe-4">Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for run in pipeline_runs[-10:] %}
+              {% set results = run.get('results', {}) %}
+              {% set metrics = results.get('metrics', {}) %}
+              {% set meta = results.get('pipeline_metadata', {}) %}
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-{% if meta.get('status') == 'completed' %}check-circle-fill text-success{% else %}exclamation-circle-fill text-danger{% endif %} me-2"></i>
+                    <strong>{{ run.run_id[:8] }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <small class="text-muted">{{ meta.get('dataset_id', '—') }}</small>
+                </td>
+                <td>
+                  {% set model_name = results.get('model_info', {}).get('architecture', '—') %}
+                  <small>{{ model_name }}</small>
+                </td>
+                <td class="text-center">
+                  {% if meta.get('status') == 'completed' %}
+                  <span class="badge bg-success">Success</span>
+                  {% else %}
+                  <span class="badge bg-danger">Failed</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <small class="text-muted">{{ meta.get('total_time_formatted', '—') }}</small>
+                </td>
+                <td class="text-end pe-4">
+                  {% if metrics.get('accuracy') %}
+                  <strong>{{ "%.1f"|format(metrics.accuracy * 100) }}%</strong>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 empty-state mx-3 my-3">
+          <i class="bi bi-inbox display-4 text-muted"></i>
+          <h6 class="mt-3 text-muted">No Pipeline Runs Yet</h6>
+          <p class="text-muted small mb-0">Run a pipeline from the Pipeline Builder to see results here.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Training Curves & Visualization -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Training Curves & Visualization</h6>
+      </div>
+      <div class="card-body">
+        {% if pipeline_runs %}
+        {% set latest_run = pipeline_runs[-1] %}
+        {% set latest_results = latest_run.get('results', {}) %}
+        {% set training_history = latest_results.get('training_history', {}) %}
+        {% if training_history %}
+        <div class="mb-3">
+          <h6 class="fw-semibold small text-muted text-uppercase mb-2">Latest Run: {{ latest_run.run_id[:8] }}</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Epoch</th>
+                  <th>Train Loss</th>
+                  <th>Train Acc</th>
+                  <th>Val Acc</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for epoch in range(1, training_history.n_epochs + 1) %}
+                {% set idx = epoch - 1 %}
+                <tr>
+                  <td>{{ epoch }}</td>
+                  <td>{{ "%.4f"|format(training_history.train_loss[idx]) if training_history.train_loss[idx] else "—" }}</td>
+                  <td>{{ "%.1f"|format(training_history.train_acc[idx]) if training_history.train_acc[idx] else "—" }}%</td>
+                  <td>{{ "%.1f"|format(training_history.val_acc[idx]) if training_history.val_acc[idx] else "—" }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info py-2 px-3 small mb-0" role="alert">
+          <i class="bi bi-info-circle me-2"></i>
+          Training curves will appear here after running pipelines.
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-4 empty-state">
+          <i class="bi bi-bar-chart-line display-5 text-muted"></i>
+          <p class="text-muted small mt-2 mb-0">Run a pipeline to generate training curves and visualizations.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Metrics Dashboard -->
+    {% if pipeline_runs %}
+    {% set latest_run = pipeline_runs[-1] %}
+    {% set latest_metrics = latest_run.get('results', {}).get('metrics', {}) %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>Metrics Dashboard</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center">
+              <small class="fw-medium d-block text-muted">Accuracy</small>
+              <strong class="text-primary">{{ "%.1f"|format(latest_metrics.accuracy * 100) if latest_metrics.accuracy else "—" }}%</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center">
+              <small class="fw-medium d-block text-muted">Balanced Acc</small>
+              <strong class="text-info">{{ "%.1f"|format(latest_metrics.balanced_accuracy * 100) if latest_metrics.balanced_accuracy else "—" }}%</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center">
+              <small class="fw-medium d-block text-muted">F1 Score</small>
+              <strong class="text-success">{{ "%.3f"|format(latest_metrics.f1_score) if latest_metrics.f1_score else "—" }}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center">
+              <small class="fw-medium d-block text-muted">Samples</small>
+              <strong class="text-warning">{{ latest_metrics.n_samples if latest_metrics.n_samples else "—" }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-4">
+    <!-- Benchmark Table -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-trophy me-2"></i>🏆 Benchmark</h6>
+      </div>
+      <div class="card-body p-0">
+        {% if pipeline_runs %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th class="ps-3">#</th>
+                <th>Run ID</th>
+                <th>Model</th>
+                <th class="text-end pe-3">Acc</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for run in pipeline_runs[-10:] %}
+              {% set metrics = run.get('results', {}).get('metrics', {}) %}
+              <tr>
+                <td class="ps-3"><span class="badge bg-secondary">{{ loop.index }}</span></td>
+                <td><small>{{ run.run_id[:8] }}</small></td>
+                <td>
+                  {% set model_name = run.get('results', {}).get('model_info', {}).get('architecture', '—') %}
+                  <small>{{ model_name }}</small>
+                </td>
+                <td class="text-end pe-3">
+                  {% if metrics.get('accuracy') %}
+                  <strong>{{ "%.1f"|format(metrics.accuracy * 100) }}%</strong>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="bi bi-trophy display-5 text-muted"></i>
+          <p class="text-muted small mt-2 mb-0 px-3">No benchmark data yet. Run pipelines to populate the leaderboard.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Benchmark Filters -->
+    <div class="card border-0 shadow-sm mb-3 filter-card">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-funnel me-2"></i>Benchmark Filters</h6>
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">Refine the leaderboard by dataset, model, or evaluation method.</p>
+        <div class="mb-2">
+          <label class="form-label small text-muted">Dataset</label>
+          <select class="form-select form-select-sm" name="dataset_filter">
+            <option value="">All Datasets</option>
+            {% for dataset in unique_datasets %}
+            <option value="{{ dataset }}">{{ dataset }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small text-muted">Model</label>
+          <select class="form-select form-select-sm" name="model_filter">
+            <option value="">All Models</option>
+            {% for model in unique_models %}
+            <option value="{{ model }}">{{ model }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-0">
+          <label class="form-label small text-muted">Method</label>
+          <select class="form-select form-select-sm" name="method_filter">
+            <option value="">All Methods</option>
+            <option value="LOSO">LOSO</option>
+            <option value="K-Fold">K-Fold</option>
+            <option value="Nested CV">Nested CV</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-2"></i>Reports</h6>
+      </div>
+      <div class="card-body text-center py-4">
+        <i class="bi bi-file-earmark-pdf display-5 text-muted"></i>
+        <p class="text-muted small mt-2 mb-0">Export paper-ready reports with methods section, tables, and reproducibility checklist.</p>
+        <button class="btn btn-sm btn-outline-info mt-3" disabled><i class="bi bi-download me-1"></i>Export Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

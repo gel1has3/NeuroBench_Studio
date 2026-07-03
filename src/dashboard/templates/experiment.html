@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+{% block title %}{{ experiment_name }} - NeuroBench Studio{% endblock %}
+
+{% block content %}
+<!-- ============================================================== -->
+<!-- Page Header -->
+<!-- ============================================================== -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold mb-0">
+            <i class="bi bi-flask me-2"></i>{{ experiment_name }}
+        </h3>
+        <p class="text-muted small mb-0">
+            <span class="me-3"><i class="bi bi-cpu me-1"></i>{{ summary.n_models }} models</span>
+            <span class="me-3"><i class="bi bi-graph-up me-1"></i>{% if summary.has_geometry %}Geometry available{% else %}No geometry{% endif %}</span>
+            <span><i class="bi bi-file-earmark-binary me-1"></i>{{ summary.n_checkpoints }} checkpoints</span>
+        </p>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href='{{ url_for('results_dashboard') }}'">
+        <i class="bi bi-arrow-left me-1"></i>Back to Results
+    </button>
+</div>
+
+<!-- ============================================================== -->
+<!-- Tab Navigation -->
+<!-- ============================================================== -->
+<ul class="nav nav-tabs nav-fill mb-4" id="experimentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                data-bs-target="#overview" type="button" role="tab">
+            <i class="bi bi-speedometer2 me-1"></i> Overview
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dimensionality-tab" data-bs-toggle="tab" 
+                data-bs-target="#dimensionality" type="button" role="tab">
+            <i class="bi bi-layers me-1"></i> Intrinsic Dimensionality
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="cka-tab" data-bs-toggle="tab" 
+                data-bs-target="#cka" type="button" role="tab">
+            <i class="bi bi-arrows-expand me-1"></i> CKA Similarity
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="manifold-tab" data-bs-toggle="tab" 
+                data-bs-target="#manifold" type="button" role="tab">
+            <i class="bi bi-graph-up me-1"></i> Manifold Structure
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="checkpoints-tab" data-bs-toggle="tab" 
+                data-bs-target="#checkpoints" type="button" role="tab">
+            <i class="bi bi-file-earmark-binary me-1"></i> Checkpoints
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="training-tab" data-bs-toggle="tab" 
+                data-bs-target="#training" type="button" role="tab">
+            <i class="bi bi-graph-up-arrow me-1"></i> Training Progress
+        </button>
+    </li>
+</ul>
+
+<!-- ============================================================== -->
+<!-- Tab Content -->
+<!-- ============================================================== -->
+<div class="tab-content" id="experimentTabsContent">
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: Overview -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row g-3">
+            <!-- Summary Cards -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-cpu text-info fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold">{{ summary.n_models }}</h3>
+                        <p class="text-muted small mb-0">Models Trained</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-heart-pulse text-success fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold" id="overviewDiseases">0</h3>
+                        <p class="text-muted small mb-0">Diseases</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-graph-up text-warning fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold">{{ summary.n_checkpoints }}</h3>
+                        <p class="text-muted small mb-0">Checkpoints</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-arrows-expand text-danger fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold" id="overviewAvgDim">—</h3>
+                        <p class="text-muted small mb-0">Avg Dimensionality</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foundation Model Comparison Table (braindecode 1.5+) -->
+            <div class="col-12 mt-2">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-table me-2"></i>🧬 Foundation Model Comparison (Braindecode 1.5+)
+                        </h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            Comprehensive comparison of <strong>{{ foundation_model_reference|length }}</strong> foundation models: 
+                            {% for m in foundation_model_reference %}
+                            <span class="badge bg-info text-dark me-1">{{ m.model_name }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="foundationComparisonTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-4">Model</th>
+                                        <th>Type</th>
+                                        <th>Architecture</th>
+                                        <th class="text-center">Year</th>
+                                        <th class="text-center">Pretrained</th>
+                                        <th class="text-center">Diseases</th>
+                                        <th class="text-center">Avg PR</th>
+                                        <th class="text-center">Eff. Rank</th>
+                                        <th class="text-center">Cluster Purity</th>
+                                        <th class="text-center">Disease Mixing</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if model_comparison_stats %}
+                                    {# Show only foundation models in the Foundation Model Comparison table #}
+                                    {% for stat in model_comparison_stats if 'Foundation' in stat.type %}
+                                    {% set cluster_pur = "%.3f"|format(stat.cluster_purity) if stat.cluster_purity and stat.cluster_purity > 0 else '—' %}
+                                    {% set disease_mix = "%.3f"|format(stat.disease_mixing_score) if stat.disease_mixing_score is not none else '—' %}
+                                    <tr class="{% if not stat.has_results %}table-secondary opacity-75{% endif %}">
+                                        <td class="ps-4">
+                                            <strong>{{ stat.model_name }}</strong>
+                                            <br><small class="text-muted">{{ stat.model_key }}</small>
+                                            {% if not stat.has_results %}
+                                            <span class="badge bg-warning text-dark ms-1">Not trained</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge bg-info text-dark">{{ stat.type }}</span></td>
+                                        <td>{{ stat.architecture }}</td>
+                                        <td class="text-center">{{ stat.year }}</td>
+                                        <td class="text-center">
+                                            {% if stat.pretrained %}
+                                            <span class="badge bg-success">✅</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">❌</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ stat.n_diseases if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ "%.2f"|format(stat.avg_participation_ratio) if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ "%.2f"|format(stat.avg_effective_rank) if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ cluster_pur if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ disease_mix if stat.has_results else '—' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="10" class="text-center py-4 text-muted">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Run pretraining with foundation models to see comparison data.
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foundation Model Reference (collapsible) -->
+            <div class="col-12 mt-2">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3" data-bs-toggle="collapse" data-bs-target="#foundationRef" style="cursor: pointer;">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-book me-2"></i>📖 Foundation Model Reference
+                            <small class="text-muted ms-2">(click to expand)</small>
+                        </h5>
+                    </div>
+                    <div class="collapse" id="foundationRef">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="ps-4">Model</th>
+                                            <th>Type</th>
+                                            <th>Architecture</th>
+                                            <th>Year</th>
+                                            <th>Description</th>
+                                            <th>Paper</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for m in foundation_model_reference %}
+                                        <tr>
+                                            <td class="ps-4"><strong>{{ m.model_name }}</strong></td>
+                                            <td><span class="badge bg-info text-dark">{{ m.type }}</span></td>
+                                            <td>{{ m.architecture }}</td>
+                                            <td>{{ m.year }}</td>
+                                            <td><small>{{ m.description }}</small></td>
+                                            <td><a href="{{ m.paper }}" target="_blank" class="text-info text-decoration-none small">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>Paper
+                                            </a></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent text-muted small text-center">
+                            All models imported from <code>braindecode.models</code> v1.5+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="col-12 mt-2">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Results Summary</h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            Showing all <strong>{{ model_comparison_stats|length }}</strong> models 
+                            ({{ model_comparison_stats|selectattr('has_results')|list|length }} with results, 
+                            {{ model_comparison_stats|rejectattr('has_results')|list|length }} registered)
+                        </p>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="modelComparisonTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-4">Model</th>
+                                        <th class="text-center">Type</th>
+                                        <th class="text-center">Diseases</th>
+                                        <th class="text-center">Avg PR</th>
+                                        <th class="text-center">Std PR</th>
+                                        <th class="text-center">Cluster Purity</th>
+                                        <th class="text-center">Disease Mixing</th>
+                                        <th class="text-center">KNN Overlap</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in model_comparison_stats %}
+                                    {% set cluster_pur = "%.3f"|format(stat.cluster_purity * 100) if stat.cluster_purity and stat.has_results else '—' %}
+                                    {% set disease_mix = "%.3f"|format(stat.disease_mixing_score) if stat.disease_mixing_score is not none and stat.has_results else '—' %}
+                                    {% set knn_ov = "%.3f"|format(stat.mean_knn_overlap) if stat.mean_knn_overlap is not none and stat.has_results else '—' %}
+                                    <tr class="{% if not stat.has_results %}table-secondary opacity-75{% endif %}">
+                                        <td class="ps-4">
+                                            <strong>{{ stat.model_name }}</strong>
+                                            {% if not stat.has_results %}
+                                            <span class="badge bg-warning text-dark ms-1">Not trained</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center"><span class="badge {% if 'Foundation' in stat.type %}bg-info text-dark{% else %}bg-secondary{% endif %}">{{ stat.type }}</span></td>
+                                        <td class="text-center">{{ stat.n_diseases if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ "%.2f"|format(stat.avg_participation_ratio) if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ "%.2f"|format(stat.std_pr) if stat.has_results else '—' }}</td>
+                                        <td class="text-center">{{ cluster_pur }}</td>
+                                        <td class="text-center">{{ disease_mix }}</td>
+                                        <td class="text-center">{{ knn_ov }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimensionality Bar Chart -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Intrinsic Dimensionality by Model</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="overviewDimChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manifold Structure Comparison -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-activity me-2"></i>Manifold Structure Comparison</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="overviewManifoldChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: Intrinsic Dimensionality -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade" id="dimensionality" role="tabpanel">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-layers me-2"></i>Intrinsic Dimensionality by Model and Disease
+                        </h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            Participation Ratio, Effective Rank, and MLE Estimates for each model-disease combination.
+                            Higher values indicate more complex representations.
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Dimensionality bar chart -->
+                        <div id="dimBarChart" style="height: 450px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Dimensionality Data</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0" id="dimDataTable">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th class="ps-3">Model</th>
+                                        <th>Disease</th>
+                                        <th class="text-end">PR</th>
+                                        <th class="text-end">Eff. Rank</th>
+                                        <th class="text-end pe-3">MLE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for model_name, model_info in data.get('models', {}).items() %}
+                                    {% for disease, disease_info in model_info.get('diseases', {}).items() %}
+                                    <tr>
+                                        <td class="ps-3">{{ model_name }}</td>
+                                        <td>{{ disease }}</td>
+                                        <td class="text-end">{{ "%.2f"|format(disease_info.get('participation_ratio', 0)) }}</td>
+                                        <td class="text-end">{{ "%.2f"|format(disease_info.get('effective_rank', 0)) }}</td>
+                                        <td class="text-end pe-3">{{ "%.2f"|format(disease_info.get('mle_estimate', 0)) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-heat me-2"></i>Dimensionality Heatmap</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="dimHeatmap" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: CKA Similarity -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade" id="cka" role="tabpanel">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-arrows-expand me-2"></i>Cross-Model Similarity (Centered Kernel Alignment)
+                        </h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            CKA measures representational similarity between models. Values range from 0 (completely different)
+                            to 1 (identical representations). This reveals which models learn similar features.
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <div id="ckaBarChart" style="height: 450px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>CKA Values</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0" id="ckaTable">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th class="ps-3">Model Pair</th>
+                                        <th class="text-end">CKA</th>
+                                        <th class="text-end pe-3">N Samples</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pair_key, pair_info in data.get('cross_model_cka', {}).items() %}
+                                    <tr>
+                                        <td class="ps-3">{{ pair_key.replace('_vs_', ' vs ') }}</td>
+                                        <td class="text-end">{{ "%.6f"|format(pair_info.get('cka', 0)) }}</td>
+                                        <td class="text-end pe-3">{{ pair_info.get('n_samples', 0) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-heat me-2"></i>CKA Heatmap</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="ckaHeatmap" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: Manifold Structure -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade" id="manifold" role="tabpanel">
+        {% if geometry and geometry.get('manifold_structure') %}
+        <div class="row g-3">
+            <!-- Radar Chart -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-activity me-2"></i>Manifold Structure Radar</h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            Multi-dimensional comparison of disease mixing, cluster purity, and KNN overlap.
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <div id="manifoldRadarChart" style="height: 450px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KNN Matrix Heatmap -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-grid-3x3 me-2"></i>KNN Overlap Matrix</h5>
+                        <p class="text-muted small mb-0 mt-1">
+                            Select a model to view its disease overlap matrix.
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <select class="form-select form-select-sm" id="knnModelSelect" onchange="updateKNNHeatmap()">
+                                {% for model_name in geometry.get('manifold_structure', {}).keys() %}
+                                <option value="{{ model_name }}" {% if loop.first %}selected{% endif %}>{{ model_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="knnHeatmap" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manifold Data Table -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Manifold Metrics</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-4">Model</th>
+                                        <th class="text-center">Disease Mixing Score</th>
+                                        <th class="text-center">Cluster Purity</th>
+                                        <th class="text-center text-end pe-4">Mean KNN Overlap</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for model_name, ms in geometry.get('manifold_structure', {}).items() %}
+                                    <tr>
+                                        <td class="ps-4"><strong>{{ model_name }}</strong></td>
+                                        <td class="text-center">{{ "%.3f"|format(ms.get('disease_mixing_score', ms.get('Disease Mixing Score', 0))) }}</td>
+                                        <td class="text-center">{{ "%.3f"|format(ms.get('cluster_purity', ms.get('Cluster Purity', 0))) }}</td>
+                                        <td class="text-center text-end pe-4">{{ "%.3f"|format(ms.get('mean_knn_overlap', ms.get('Mean KNN Overlap', 0))) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-graph-up display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No Manifold Data Available</h5>
+            <p class="text-muted">Run geometry analysis to generate manifold structure data.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: Checkpoints -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade" id="checkpoints" role="tabpanel">
+        {% if checkpoints %}
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-binary me-2"></i>Available Checkpoints</h5>
+                        <span class="badge bg-info text-dark">{{ checkpoints|length }} files</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-4">Filename</th>
+                                        <th class="text-end">Size</th>
+                                        <th class="text-end">Modified</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ckpt in checkpoints %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <i class="bi bi-file-earmark-binary text-warning me-2"></i>
+                                            <strong>{{ ckpt.name }}</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-secondary">{{ "%.2f"|format(ckpt.size_mb) }} MB</span>
+                                        </td>
+                                        <td class="text-end text-muted small">
+                                            {{ ckpt.modified[:19] | replace('T', ' ') }}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-info" title="View details"
+                                                        onclick="showCheckpointDetails('{{ ckpt.name }}', '{{ ckpt.size_mb }}', '{{ ckpt.modified }}', '{{ ckpt.path }}')">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Copy path"
+                                                        onclick="navigator.clipboard.writeText('{{ ckpt.path }}')">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Checkpoint Stats -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-file-earmark-binary text-warning fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold">{{ checkpoints|length }}</h3>
+                        <p class="text-muted small mb-0">Total Checkpoints</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-hdd-stack text-info fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold">{{ "%.1f"|format(checkpoints|sum(attribute='size_mb')) }} MB</h3>
+                        <p class="text-muted small mb-0">Total Size</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3 d-inline-block mb-2">
+                            <i class="bi bi-clock text-success fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold small">{{ (checkpoints|last).modified[:10] if checkpoints else '—' }}</h3>
+                        <p class="text-muted small mb-0">Latest Checkpoint</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark-binary display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No Checkpoints Found</h5>
+            <p class="text-muted">Checkpoints will appear here after model training.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 6: Training Progress (MLflow Integration) -->
+    <!-- ============================================================== -->
+    <div class="tab-pane fade" id="training" role="tabpanel">
+        <div class="row g-3">
+            <!-- MLflow Setup Guide -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Training Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info d-flex align-items-start" role="alert">
+                            <i class="bi bi-info-circle-fill me-3 fs-4 flex-shrink-0"></i>
+                            <div>
+                                <strong>MLflow Integration</strong><br>
+                                Training progress visualization requires MLflow or TensorBoard logging.
+                                Enable it in your config to see real-time loss curves and metrics.
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-lg-6">
+                                <div class="card border h-100">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold"><i class="bi bi-gear me-2"></i>1. Enable MLflow in Config</h6>
+                                        <p class="text-muted small">Update <code>configs/pretraining_config.yaml</code>:</p>
+                                        <pre class="bg-dark text-light p-3 rounded small"><code>reporting:
+  use_mlflow: true
+  mlflow_tracking_uri: mlruns/</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card border h-100">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold"><i class="bi bi-terminal me-2"></i>2. Start MLflow UI</h6>
+                                        <p class="text-muted small">Run in a separate terminal:</p>
+                                        <pre class="bg-dark text-light p-3 rounded small"><code>cd eeg_benchmark
+mlflow ui --backend-store-uri mlruns/</code></pre>
+                                        <p class="text-muted small mt-2">
+                                            <i class="bi bi-arrow-right me-1"></i>
+                                            View at: <a href="http://localhost:5000" target="_blank" class="text-info">http://localhost:5000</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- MLflow iframe embed -->
+                        <div class="mt-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>MLflow Dashboard
+                                </h6>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-info" onclick="document.getElementById('mlflowFrame').src = document.getElementById('mlflowFrame').src">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                    <a href="http://localhost:5000" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right"></i> Open MLflow
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="border rounded overflow-hidden" style="height: 600px;">
+                                <iframe id="mlflowFrame" src="http://localhost:5000" 
+                                        style="width: 100%; height: 100%; border: none;"
+                                        title="MLflow Dashboard"
+                                        onerror="this.style.display='none'; document.getElementById('mlflowFallback').style.display='block';">
+                                </iframe>
+                                <div id="mlflowFallback" class="text-center py-5 d-none">
+                                    <i class="bi bi-plug display-4 text-muted"></i>
+                                    <h6 class="mt-3 text-muted">MLflow Not Running</h6>
+                                    <p class="text-muted small">Start MLflow UI to see training progress here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Results Summary (matching Streamlit's expanders) -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-journal-text me-2"></i>Current Results Summary</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if data and data.get('models') %}
+                        <div class="accordion accordion-flush" id="modelResultsAccordion">
+                            {% for model_name, model_info in data.get('models', {}).items() %}
+                            <div class="accordion-item bg-transparent">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed bg-transparent" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#model-{{ loop.index }}" 
+                                            aria-expanded="false">
+                                        <div class="d-flex align-items-center w-100 me-3">
+                                            <i class="bi bi-cpu me-2 text-info"></i>
+                                            <strong>{{ model_name }}</strong>
+                                            <span class="ms-auto">
+                                                <span class="badge bg-info text-dark me-2">
+                                                    {{ model_info.get('diseases', {})|length }} diseases
+                                                </span>
+                                                <span class="badge bg-secondary">
+                                                    PR: {{ "%.2f"|format(model_info.get('avg_dimensionality', {}).get('mean_pr', 0)) }}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="model-{{ loop.index }}" class="accordion-collapse collapse" 
+                                     data-bs-parent="#modelResultsAccordion">
+                                    <div class="accordion-body p-0">
+                                        <pre class="bg-dark text-light p-3 mb-0 rounded-bottom small" style="max-height: 400px; overflow-y: auto;"><code>{{ model_info | tojson(indent=2) }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No model results available yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Checkpoint Details Modal -->
+<!-- ============================================================== -->
+<div class="modal fade" id="checkpointModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-binary me-2"></i>Checkpoint Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Filename:</td>
+                        <td class="fw-medium" id="ckptName">—</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Size:</td>
+                        <td class="fw-medium" id="ckptSize">—</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Modified:</td>
+                        <td class="fw-medium" id="ckptModified">—</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Path:</td>
+                        <td><code id="ckptPath" class="small">—</code></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Pass data to JavaScript -->
+<script>
+window.EXPERIMENT_NAME = "{{ experiment_name }}";
+window.DIM_DATA = {{ dim_data | tojson | safe }};
+window.CKA_DATA = {{ cka_data | tojson | safe }};
+window.MANIFOLD_DATA = {{ manifold_data | tojson | safe }};
+window.MODEL_NAMES = {{ model_names | tojson | safe }};
+window.DISEASE_LIST = {{ disease_list | tojson | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

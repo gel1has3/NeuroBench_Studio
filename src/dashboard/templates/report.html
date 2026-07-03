@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}📄 Export Report - NeuroBench Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        .navbar, .workflow-bar, .footer, .no-print, #loadingOverlay { display: none !important; }
+        body { font-size: 11pt; color: #000 !important; background: #fff !important; }
+        .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; break-inside: avoid; }
+        .page-break { page-break-before: always; }
+        .badge { border: 1px solid #dee2e6 !important; }
+        @page { size: A4; margin: 1.2cm; }
+    }
+    .report-header { border-bottom: 3px solid #0dcaf0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .report-header h1 { font-size: 1.6rem; font-weight: 700; }
+    .report-meta {
+        display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem;
+        padding: 1rem; background: rgba(255,255,255,0.04); border-radius: 0.5rem;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .report-meta dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #8888aa; }
+    .report-meta dd { font-size: 0.95rem; font-weight: 600; margin: 0; }
+    .metric-card {
+        text-align: center; padding: 1rem;
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem;
+        background: rgba(255,255,255,0.03); height: 100%;
+    }
+    .metric-card .metric-value { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
+    .metric-card .metric-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; }
+    .metric-card.good .metric-value { color: #48bb78; }
+    .metric-card.warn .metric-value { color: #ecc94b; }
+    .metric-card.bad .metric-value { color: #fc8181; }
+    .section-title {
+        font-size: 1rem; font-weight: 700;
+        border-bottom: 2px solid #0dcaf0; padding-bottom: 0.4rem;
+        margin-bottom: 1rem; margin-top: 1.5rem;
+    }
+    .footer-note {
+        margin-top: 2rem; padding-top: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.75rem; opacity: 0.65; text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-print d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-pdf me-2"></i>Pipeline Report</h5>
+    <div>
+        <button class="btn btn-info btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Print / Save as PDF
+        </button>
+        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="window.close()">
+            <i class="bi bi-x me-1"></i>Close
+        </button>
+    </div>
+</div>
+
+<div class="report-header d-flex justify-content-between align-items-start">
+    <div>
+        <h1>🧠 Pipeline Execution Report</h1>
+        <p class="text-muted small mb-0">NeuroBench Studio — Reproducible EEG AI Benchmarking</p>
+    </div>
+    <div class="text-end">
+        <div class="small fw-bold">Report ID</div>
+        <div class="font-monospace small">{{ run.run_id }}</div>
+    </div>
+</div>
+
+<!-- Metadata -->
+<dl class="report-meta">
+    <div><dt>Dataset</dt><dd>{{ dataset_id or run.dataset_id or '—' }}</dd></div>
+    <div><dt>Model</dt><dd>{{ architecture or run.model or '—' }}</dd></div>
+    <div><dt>Status</dt><dd><span class="badge bg-success">{{ status|capitalize }}</span></dd></div>
+    <div><dt>Executed</dt><dd>{{ run.timestamp[:10] if run.timestamp else '—' }}</dd></div>
+    <div><dt>Duration</dt><dd>{{ total_time_formatted or '—' }}</dd></div>
+    <div><dt>Device</dt><dd>{{ device or 'cpu' }}</dd></div>
+</dl>
+
+<!-- Metrics -->
+<h5 class="section-title">📊 Performance Metrics</h5>
+{% if metrics %}
+<div class="row g-2 mb-3">
+    {% set acc = metrics.get('accuracy', 0) %}
+    {% if acc <= 1 %}{% set acc = acc * 100 %}{% endif %}
+    <div class="col-6 col-md-3">
+        <div class="metric-card {% if acc >= 80 %}good{% elif acc >= 50 %}warn{% else %}bad{% endif %}">
+            <div class="metric-value">{{ "%.1f"|format(acc) }}%</div>
+            <div class="metric-label">Accuracy</div>
+        </div>
+    </div>
+    {% set prec = (metrics.get('precision', 0) or 0) %}
+    {% if prec <= 1 %}{% set prec = prec * 100 %}{% endif %}
+    <div class="col-6 col-md-3">
+        <div class="metric-card {% if prec >= 80 %}good{% elif prec >= 50 %}warn{% else %}bad{% endif %}">
+            <div class="metric-value">{{ "%.1f"|format(prec) }}%</div>
+            <div class="metric-label">Precision</div>
+        </div>
+    </div>
+    {% set rec = (metrics.get('recall', 0) or 0) %}
+    {% if rec <= 1 %}{% set rec = rec * 100 %}{% endif %}
+    <div class="col-6 col-md-3">
+        <div class="metric-card {% if rec >= 80 %}good{% elif rec >= 50 %}warn{% else %}bad{% endif %}">
+            <div class="metric-value">{{ "%.1f"|format(rec) }}%</div>
+            <div class="metric-label">Recall</div>
+        </div>
+    </div>
+    {% set f1 = (metrics.get('f1_score', 0) or 0) %}
+    {% if f1 <= 1 %}{% set f1 = f1 * 100 %}{% endif %}
+    <div class="col-6 col-md-3">
+        <div class="metric-card {% if f1 >= 80 %}good{% elif f1 >= 50 %}warn{% else %}bad{% endif %}">
+            <div class="metric-value">{{ "%.1f"|format(f1) }}%</div>
+            <div class="metric-label">F1 Score</div>
+        </div>
+    </div>
+</div>
+{% if metrics and (metrics.get('balanced_accuracy') is not none or metrics.get('n_train') is not none) %}
+<div class="row g-2 mb-3">
+    {% if metrics.get('balanced_accuracy') is not none %}
+    <div class="col-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.1f"|format(metrics.balanced_accuracy * 100) }}%</div>
+            <div class="metric-label">Balanced Acc</div>
+        </div>
+    </div>
+    {% endif %}
+    {% if metrics.get('n_train') is not none %}
+    <div class="col-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.n_train }}</div>
+            <div class="metric-label">Train Samples</div>
+        </div>
+    </div>
+    {% endif %}
+    {% if metrics.get('n_test') is not none %}
+    <div class="col-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.n_test }}</div>
+            <div class="metric-label">Test Samples</div>
+        </div>
+    </div>
+    {% endif %}
+    {% if metrics.get('n_classes') is not none %}
+    <div class="col-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.n_classes }}</div>
+            <div class="metric-label">Classes</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if training_history and training_history.get('train_loss') %}
+<h5 class="section-title">📈 Training Progress</h5>
+<div class="table-responsive mb-3">
+    <table class="table table-bordered table-sm">
+        <thead><tr><th>Epoch</th><th>Train Loss</th><th>Train Acc (%)</th>{% if training_history.get('val_acc') %}<th>Val Acc (%)</th>{% endif %}</tr></thead>
+        <tbody>
+            {% for epoch in range(training_history.train_loss|length) %}
+            <tr>
+                <td>{{ epoch + 1 }}</td>
+                <td>{{ "%.4f"|format(training_history.train_loss[epoch]) }}</td>
+                <td>{{ "%.1f"|format(training_history.train_acc[epoch]) }}</td>
+                {% if training_history.get('val_acc') and epoch < training_history.val_acc|length %}
+                <td>{{ "%.1f"|format(training_history.val_acc[epoch]) }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if confusion_matrix %}
+<h5 class="section-title">📋 Confusion Matrix</h5>
+<div class="table-responsive mb-3" style="max-width: 400px;">
+    <table class="table table-bordered table-sm text-center">
+        <thead><tr><th></th><th colspan="2" class="text-center">Predicted</th></tr></thead>
+        <tbody>
+            {% for i in range(confusion_matrix|length) %}
+            <tr>
+                {% if i == 0 %}<th rowspan="{{ confusion_matrix|length }}" class="align-middle">Actual</th>{% endif %}
+                {% for j in range(confusion_matrix[i]|length) %}
+                <td style="background: {{ 'rgba(72,187,120,0.15)' if i == j else 'rgba(252,129,129,0.1)' }};">
+                    {{ confusion_matrix[i][j] }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if classification_report %}
+<h5 class="section-title">📑 Per-Class Metrics</h5>
+<div class="table-responsive mb-3" style="max-width: 550px;">
+    <table class="table table-bordered table-sm">
+        <thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead>
+        <tbody>
+            {% for cls, cm in classification_report.items() %}
+            {% if cls not in ('accuracy', 'macro avg', 'weighted avg') %}
+            <tr>
+                <td><strong>{{ cls }}</strong></td>
+                <td>{{ "%.2f"|format(cm.get('precision', 0)) }}</td>
+                <td>{{ "%.2f"|format(cm.get('recall', 0)) }}</td>
+                <td>{{ "%.2f"|format(cm.get('f1-score', 0)) }}</td>
+                <td>{{ cm.get('support', 0)|int }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if data_summary %}
+<h5 class="section-title">🔬 Data Summary</h5>
+<table class="table table-bordered table-sm" style="max-width: 450px;">
+    <tbody>
+        <tr><th style="width: 180px;">Channels</th><td>{{ data_summary.n_channels }}</td></tr>
+        <tr><th>Sampling Rate</th><td>{{ data_summary.sfreq }} Hz</td></tr>
+        <tr><th>Duration</th><td>{{ "%.2f"|format(data_summary.duration_sec) }} s</td></tr>
+        <tr><th>Samples</th><td>{{ data_summary.n_samples }}</td></tr>
+    </tbody>
+</table>
+{% endif %}
+
+<h5 class="section-title">⚙️ Pipeline Configuration</h5>
+<table class="table table-bordered table-sm" style="max-width: 450px;">
+    <tbody>
+        <tr><th style="width: 180px;">Architecture</th><td>{{ architecture or '—' }}</td></tr>
+        <tr><th>Batch Size</th><td>{{ batch_size or '—' }}</td></tr>
+        <tr><th>Epochs</th><td>{{ n_epochs or '—' }}</td></tr>
+        <tr><th>Learning Rate</th><td>{{ learning_rate or '—' }}</td></tr>
+        {% if n_params %}<tr><th>Parameters</th><td>{{ "{:,}".format(n_params) }}</td></tr>{% endif %}
+        <tr><th>Preprocessing Steps</th><td>{{ preprocessing_steps or '—' }}</td></tr>
+        <tr><th>Subjects</th><td>{{ n_subjects or '—' }}</td></tr>
+    </tbody>
+</table>
+
+<div class="footer-note">
+    <p>Generated by <strong>NeuroBench Studio</strong> on <span id="genDate"></span></p>
+    <p>Run ID: {{ run.run_id }} | Dataset: {{ dataset_id or run.dataset_id }} | Model: {{ architecture or run.model }}</p>
+    <p style="font-size: 0.65rem;">NeuroBench Studio: An Open-Source Platform for Reproducible EEG AI.</p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('genDate').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    {% if auto_print %}
+    window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+    {% endif %}
+</script>
+{% endblock %}
