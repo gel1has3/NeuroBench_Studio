@@ -3678,5 +3678,196 @@
         "n_samples": 1025
       }
     }
+  },
+  {
+    "run_id": "235c8ac1",
+    "timestamp": "2026-07-08T13:02:11.149361",
+    "dataset_id": "adhd200",
+    "model": "EEGNet",
+    "results": {
+      "metrics": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "n_samples": 1,
+        "n_classes": 2,
+        "n_train": 1,
+        "n_test": 1
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "classification_report": {
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1.0
+        }
+      },
+      "class_names": [
+        "Class 0",
+        "Class 1"
+      ],
+      "training_history": {
+        "train_loss": [
+          0.7962651252746582,
+          0.5389012098312378,
+          0.4370582401752472,
+          0.296010285615921,
+          0.13199307024478912
+        ],
+        "train_acc": [
+          0.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "val_acc": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n_epochs": 5
+      },
+      "model_info": {
+        "architecture": "EEGNet",
+        "n_channels": 19,
+        "n_times": 1025,
+        "n_params": 69506,
+        "device": "cpu"
+      },
+      "predictions": {
+        "y_true": [
+          1
+        ],
+        "y_pred": [
+          1
+        ],
+        "y_prob": [
+          [
+            0.10341726243495941,
+            0.8965827226638794
+          ]
+        ]
+      },
+      "dataset_metadata": {
+        "dataset_id": "adhd200",
+        "disease": "adhd",
+        "n_subjects": 1,
+        "loader": "ADHDDatasetLoader",
+        "subject_metadata": {
+          "subject_id": "sub-001",
+          "disease": "adhd",
+          "age": 25,
+          "sex": "M",
+          "site": "site_0",
+          "montage": [
+            "Fp1",
+            "Fp2",
+            "F7",
+            "F3",
+            "Fz",
+            "F4",
+            "F8",
+            "T3",
+            "C3",
+            "Cz",
+            "C4",
+            "T4",
+            "T5",
+            "P3",
+            "Pz",
+            "P4",
+            "T6",
+            "O1",
+            "O2"
+          ],
+          "n_channels": 19,
+          "sfreq": 256.0,
+          "duration_sec": 9.99609375
+        },
+        "subject_id": "sub-001",
+        "age": 25,
+        "sex": "M",
+        "site": "site_0",
+        "montage": [
+          "Fp1",
+          "Fp2",
+          "F7",
+          "F3",
+          "Fz",
+          "F4",
+          "F8",
+          "T3",
+          "C3",
+          "Cz",
+          "C4",
+          "T4",
+          "T5",
+          "P3",
+          "Pz",
+          "P4",
+          "T6",
+          "O1",
+          "O2"
+        ],
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 9.99609375
+      },
+      "label_map": {
+        "1": 1
+      },
+      "pipeline_metadata": {
+        "dataset_id": "adhd200",
+        "model_config": {
+          "architecture": "EEGNet",
+          "n_chans": 129,
+          "n_times": 200,
+          "n_outputs": 2,
+          "sfreq": 100,
+          "batch_size": 32,
+          "n_epochs": 5
+        },
+        "total_time_seconds": 2.07,
+        "total_time_formatted": "0m 2s",
+        "timestamp": "2026-07-08T13:02:11.148610",
+        "n_subjects": 1,
+        "preprocessing_steps": 7,
+        "status": "completed"
+      },
+      "data_summary": {
+        "n_channels": 19,
+        "sfreq": 256.0,
+        "duration_sec": 4.0,
+        "n_samples": 1025
+      }
+    }
   }
 ]

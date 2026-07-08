@@ -17,6 +17,12 @@
     --stat-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     --nav-bg: #0a0a1a;
     --section-bg: rgba(255, 255, 255, 0.03);
+    --settings-bg: rgba(13, 202, 240, 0.04);
+    --settings-hover: rgba(13, 202, 240, 0.08);
+    --chip-bg: rgba(13, 202, 240, 0.12);
+    --chip-border: rgba(13, 202, 240, 0.25);
+    --chip-checked-bg: rgba(13, 202, 240, 0.25);
+    --chip-checked-border: rgba(13, 202, 240, 0.5);
 }
 
 [data-bs-theme="light"] {
@@ -29,6 +35,12 @@
     --stat-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --nav-bg: #212529;
     --section-bg: rgba(0, 0, 0, 0.02);
+    --settings-bg: rgba(13, 202, 240, 0.03);
+    --settings-hover: rgba(13, 202, 240, 0.06);
+    --chip-bg: rgba(13, 202, 240, 0.08);
+    --chip-border: rgba(13, 202, 240, 0.2);
+    --chip-checked-bg: rgba(13, 202, 240, 0.15);
+    --chip-checked-border: rgba(13, 202, 240, 0.4);
 }
 
 /* ------------------------------------------------------------------ */
@@ -464,6 +476,214 @@ main {
 .experiment-row:nth-child(10) { animation-delay: 0.20s; }
 
 /* ------------------------------------------------------------------ */
+/* EEG Assistant - Model Select & Preprocessing Settings              */
+/* ------------------------------------------------------------------ */
+
+/* Model Selection Badge */
+.model-badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.6em;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    color: var(--text-primary);
+}
+
+.model-badge-info {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+}
+
+/* Settings Section in Modal */
+.settings-section {
+    background: var(--settings-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.settings-section:hover {
+    border-color: rgba(13, 202, 240, 0.2);
+}
+
+.settings-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.settings-section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: rgba(13, 202, 240, 0.15);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0dcaf0;
+    flex-shrink: 0;
+}
+
+.settings-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.settings-section-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Multiselect Chips */
+.chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.chip:hover {
+    background: var(--chip-checked-bg);
+    border-color: var(--chip-checked-border);
+}
+
+.chip.checked {
+    background: var(--chip-checked-bg);
+    border-color: var(--chip-checked-border);
+    color: #0dcaf0;
+}
+
+.chip .chip-check {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    transition: all 0.2s ease;
+}
+
+.chip.checked .chip-check {
+    background: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+}
+
+/* Radio button group styling */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.radio-option:hover {
+    background: var(--settings-hover);
+}
+
+.radio-option input[type="radio"] {
+    margin-top: 0.15rem;
+    accent-color: #0dcaf0;
+}
+
+.radio-option .radio-label {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+.radio-option .radio-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* Conditional visibility */
+.conditional-field {
+    padding: 0.6rem;
+    margin-top: 0.5rem;
+    border-left: 2px solid rgba(13, 202, 240, 0.3);
+    border-radius: 0 0.4rem 0.4rem 0;
+    background: rgba(13, 202, 240, 0.03);
+}
+
+/* Modal sizing */
+.settings-modal-xl {
+    max-width: 900px;
+}
+
+/* Slider styling */
+.form-range::-webkit-slider-thumb {
+    background: #0dcaf0;
+}
+
+.form-range::-moz-range-thumb {
+    background: #0dcaf0;
+}
+
+.form-range::-webkit-slider-runnable-track {
+    height: 6px;
+}
+
+/* Model profile quick info */
+.model-profile-card {
+    background: rgba(13, 202, 240, 0.06);
+    border: 1px solid rgba(13, 202, 240, 0.15);
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.model-profile-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.model-profile-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive Tweaks                                                  */
 /* ------------------------------------------------------------------ */
 @media (max-width: 768px) {
@@ -482,6 +702,11 @@ main {
 
     .card-body {
         padding: 1rem;
+    }
+    
+    .settings-modal-xl {
+        max-width: 100%;
+        margin: 0.5rem;
     }
 }
 

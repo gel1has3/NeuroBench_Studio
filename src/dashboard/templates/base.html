@@ -55,22 +55,6 @@
         </div>
     </nav>
 
-    <div class="workflow-bar">
-        <div class="container-fluid">
-            <div class="workflow-strip">
-                <a class="workflow-pill {% if request.endpoint in ['datasets_explorer', 'home'] %}active{% endif %}" href="{{ url_for('datasets_explorer') }}">
-                    <span class="workflow-step">1</span>
-                    <span>Discover</span>
-                </a>
-                <a class="workflow-pill {% if request.endpoint == 'pipeline_builder' %}active{% endif %}" href="{{ url_for('pipeline_builder') }}">
-                    <span class="workflow-step">2</span>
-                    <span>Build</span>
-                </a>
-                <a class="workflow-pill {% if request.endpoint == 'results_dashboard' %}active{% endif %}" href="{{ url_for('results_dashboard') }}">
-                    <span class="workflow-step">3</span>
-                    <span>Evaluate</span>
-                </a>
-            </div>
         </div>
     </div>
 

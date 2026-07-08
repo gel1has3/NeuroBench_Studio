@@ -5,29 +5,57 @@
 <!-- ============================================================== -->
 <!-- Page Header -->
 <!-- ============================================================== -->
-<div class="vibe-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+<div class="vibe-hero d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3" style="padding: 0.5rem 0.8rem;">
   <div class="d-flex align-items-center gap-2">
     <i class="bi bi-robot text-primary fs-5"></i>
     <div>
-      <h5 class="fw-semibold">EEG Assistant</h5>
-      <p class="text-muted mb-0">Context-aware AI assistant for pipelines, results, and EEG interpretation</p>
+      <h5 class="fw-semibold mb-0">EEG Assistant</h5>
+      <p class="text-muted mb-0" style="font-size:0.75rem;">Context-aware AI assistant for pipelines, results, and EEG interpretation</p>
     </div>
   </div>
-  <div class="d-flex gap-2">
-    <button class="btn btn-sm btn-outline-secondary" onclick="window.history.back()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+  <div class="d-flex align-items-center gap-2">
+    <span class="badge bg-success small px-2 py-1" id="statusBadge" title="System ready"><i class="bi bi-check-circle me-1"></i>Ready</span>
+    <span class="badge bg-secondary small px-2 py-1" id="modelStatusBadge" style="display:none;" title="Active model context"><i class="bi bi-cpu me-1"></i><span id="statusModelName">None</span></span>
+    <button class="btn btn-sm btn-outline-info py-1 px-2" data-bs-toggle="modal" data-bs-target="#preprocessingSettingsModal" title="Configure EEG preprocessing settings">
+      <i class="bi bi-sliders"></i>
+    </button>
+    <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="window.history.back()" title="Go back">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    <div class="dropdown d-inline-block">
+      <button class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="dropdown" title="Help & tips">
+        <i class="bi bi-question-circle"></i>
+      </button>
+      <div class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 260px; font-size:0.75rem;">
+        <h6 class="dropdown-header px-0 py-1"><i class="bi bi-chat-quote me-1"></i>Example Questions</h6>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('What preprocessing steps should I use for motor imagery?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Pipeline</span>"What preprocessing steps should I use?"</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Which model works best for sleep stage classification?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Models</span>"Which model for sleep stages?"</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Why is my F1 score lower than accuracy?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Results</span>"Why is F1 lower than accuracy?"</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('My loss is NaN after epoch 5, what\'s wrong?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Debug</span>"Loss is NaN after epoch 5"</button>
+        <div class="dropdown-divider"></div>
+        <h6 class="dropdown-header px-0 py-1"><i class="bi bi-info-circle me-1"></i>How It Works</h6>
+        <div class="px-2 small text-muted">1. Select a model above → 2. Configure preprocessing → 3. Upload & visualize EEG → 4. Ask questions</div>
+      </div>
+    </div>
   </div>
 </div>
 
+
 <div class="row g-3">
-  <!-- Left Column: Chat Interface -->
-  <div class="col-lg-8">
+  <div class="col-12">
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-transparent border-bottom py-3">
+      <div class="card-header bg-transparent border-bottom py-2 d-flex align-items-center justify-content-between">
         <h6 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2"></i>Assistant Chat</h6>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-info text-dark d-none" id="contextBadge" style="font-size:0.65rem;">
+            <i class="bi bi-cpu me-1"></i><span id="contextBadgeName">—</span>
+          </span>
+          <span class="text-muted" style="font-size:0.65rem;" id="sessionIdDisplay">v1.0</span>
+        </div>
       </div>
-      <div class="card-body">
+      <div class="card-body d-flex flex-column" style="height: 600px; padding: 1rem;">
         <!-- Chat Messages -->
-        <div id="chatMessages" class="border rounded-3 p-3 mb-3" style="height: 400px; overflow-y: auto; background: rgba(255,255,255,.02);">
+        <div id="chatMessages" class="flex-grow-1 overflow-y-auto mb-3" style="background: rgba(255,255,255,.02); border-radius: 6px; padding: 1rem;">
           <div class="d-flex mb-3">
             <div class="flex-shrink-0">
               <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -37,72 +65,102 @@
             <div class="flex-grow-1 ms-2">
               <div class="alert alert-info py-2 px-3 mb-0 small">
                 <strong>EEG Assistant</strong><br>
-                Hello! I'm your EEG research assistant. I can help you with:
+                Hello! I'm your EEG research assistant. Here's how I can help:
                 <ul class="mb-0 mt-1 ps-3">
-                  <li>Suggesting preprocessing steps for your dataset</li>
-                  <li>Recommending models based on your data</li>
-                  <li>Explaining results and metrics</li>
-                  <li>Debugging training issues</li>
-                  <li>Interpreting EEG patterns and visualizations</li>
+                  <li><strong>Upload an EEG file</strong> — I'll identify the format, plot signals, explain channels, detect artifacts, and summarize findings</li>
+                  <li><strong>Suggest preprocessing</strong> — Recommend filtering, normalization, and cleaning steps for your data</li>
+                  <li><strong>Recommend models</strong> — Suggest the best foundation model for your task and data</li>
+                  <li><strong>Explain results</strong> — Interpret metrics, confusion matrices, and training curves</li>
+                  <li><strong>Debug training</strong> — Diagnose overfitting, NaN loss, class imbalance, and convergence issues</li>
+                  <li><strong>Interpret EEG</strong> — Explain brain rhythms, channel patterns, and spectrogram features</li>
                 </ul>
+                <span id="modelContextMsg" class="d-none mt-1 d-block"><i class="bi bi-cpu me-1"></i>Model context: <strong id="contextModelName">—</strong></span>
                 What would you like to explore?
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="d-flex flex-wrap gap-2 mb-3">
-          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Suggest preprocessing steps for my dataset')">
-            <i class="bi bi-gear me-1"></i>Preprocessing Help
+        <!-- Compact Action Row -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Suggest preprocessing steps for my dataset')" title="Get preprocessing suggestions">
+            <i class="bi bi-gear"></i>
           </button>
-          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Which model should I use for my EEG data?')">
-            <i class="bi bi-cpu me-1"></i>Model Recommendation
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Which model should I use for my EEG data?')" title="Model recommendation">
+            <i class="bi bi-cpu"></i>
           </button>
-          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Explain my latest results')">
-            <i class="bi bi-bar-chart me-1"></i>Explain Results
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Explain my latest results')" title="Explain results">
+            <i class="bi bi-bar-chart"></i>
           </button>
-          <button class="btn btn-sm btn-outline-info" onclick="sendQuickMessage('Why is my training unstable?')">
-            <i class="bi bi-bug me-1"></i>Debug Training
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Why is my training unstable?')" title="Debug training">
+            <i class="bi bi-bug"></i>
+          </button>
+          <div class="vr mx-1" style="height:18px; opacity:0.2;"></div>
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Help me design a pipeline for seizure detection')" title="Pipeline design help">
+            <i class="bi bi-diagram-3 text-success"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Explain why my accuracy dropped in epoch 10')" title="Results explanation">
+            <i class="bi bi-graph-up text-warning"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('What do alpha waves look like in my data?')" title="EEG interpretation">
+            <i class="bi bi-heart-pulse text-danger"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-info py-1 px-2" onclick="sendQuickMessage('Compare my results with state-of-the-art for epilepsy detection')" title="Research help">
+            <i class="bi bi-journal-text"></i>
+          </button>
+          <div class="vr mx-1" style="height:18px; opacity:0.2;"></div>
+          <button class="btn btn-sm btn-outline-secondary py-1 px-2" id="uploadToggleBtn" onclick="toggleUploadSection()" title="Upload EEG data for visualization">
+            <i class="bi bi-upload"></i>
           </button>
         </div>
 
-        <!-- EEG Upload Section -->
-        <div class="card border-0 shadow-sm mb-3" style="background: rgba(255,255,255,.02);">
-          <div class="card-body py-3">
-            <h6 class="fw-semibold small mb-2"><i class="bi bi-upload me-1"></i>Upload EEG Data for Analysis</h6>
-            <div class="row g-2">
-              <div class="col-md-6">
-                <div class="border border-dashed rounded-3 p-3 text-center" style="border-style: dashed !important; cursor: pointer;" onclick="document.getElementById('eegFileInput').click()">
-                  <i class="bi bi-file-earmark-medical display-6 text-muted"></i>
-                  <p class="text-muted small mb-1 mt-2">Click to upload EEG file</p>
-                  <small class="text-muted">.edf, .csv, .mat, .fif supported</small>
-                  <input type="file" id="eegFileInput" class="d-none" accept=".edf,.csv,.mat,.fif" onchange="handleFileUpload(this)">
+        <!-- Collapsible EEG Upload Section -->
+        <div id="uploadSection" class="d-none mb-3">
+          <div class="card border-0 shadow-sm" style="background: rgba(255,255,255,.02);">
+            <div class="card-body py-2">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                  <div class="border border-dashed rounded-3 p-2 text-center" style="border-style: dashed !important; cursor: pointer;" onclick="document.getElementById('eegFileInput').click()">
+                    <p class="text-muted small mb-0"><i class="bi bi-file-earmark-medical me-1"></i>Click to upload</p>
+                    <small class="text-muted">.edf, .csv, .mat, .fif (multiple supported)</small>
+                    <input type="file" id="eegFileInput" class="d-none" accept=".edf,.csv,.mat,.fif" multiple onchange="handleFileUpload(this)">
+                  </div>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div id="uploadedFileInfo" class="d-none">
-                  <div class="alert alert-success py-2 px-3 small mb-2">
-                    <i class="bi bi-check-circle me-1"></i>
-                    <span id="uploadedFileName"></span>
+                <div class="col-md-5">
+                  <div id="uploadedFilesList" class="d-none">
+                    <div class="d-flex flex-wrap gap-1 mb-1" id="uploadedFilesBadges"></div>
+                    <div class="d-flex align-items-center gap-2">
+                      <label class="small text-muted mb-0" style="white-space:nowrap;">Mode:</label>
+                      <select id="analysisType" class="form-select form-select-sm" style="width:auto;" onchange="onAnalysisTypeChange()">
+                        <option value="waveform">Waveform</option>
+                        <option value="spectrogram">Spectrogram</option>
+                        <option value="channels">Multi-Channel</option>
+                        <option value="quality">Quality</option>
+                      </select>
+                      <label class="small text-muted mb-0" style="white-space:nowrap;">Grid:</label>
+                      <select id="gridColumns" class="form-select form-select-sm" style="width:auto;">
+                        <option value="auto">Auto</option>
+                        <option value="1">1 col</option>
+                        <option value="2">2 cols</option>
+                        <option value="3">3 cols</option>
+                        <option value="4">4 cols</option>
+                      </select>
+                      <button class="btn btn-sm btn-info py-0 px-2" onclick="analyzeUploadedFiles()" id="viewAllButton">
+                        <i class="bi bi-magic me-1"></i><span id="viewAllButtonText">View All</span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="mb-2">
-                    <label class="form-label small text-muted">Analysis Type</label>
-                    <select id="analysisType" class="form-select form-select-sm">
-                      <option value="full">Full Analysis (Waveform + Spectrogram + Metrics)</option>
-                      <option value="waveform">Waveform Viewer Only</option>
-                      <option value="spectrogram">Spectrogram Analysis</option>
-                      <option value="quality">Data Quality Check</option>
-                      <option value="interpretation">AI Interpretation</option>
-                    </select>
+                  <div id="uploadPlaceholder">
+                    <p class="text-muted small mb-0 py-1"><i class="bi bi-cloud-upload me-1"></i>Upload one or more EEG files for grid visualization</p>
                   </div>
-                  <button class="btn btn-sm btn-info w-100" onclick="analyzeUploadedFile()">
-                    <i class="bi bi-magic me-1"></i>Analyze
+                </div>
+                <div class="col-md-3 text-end">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="clearUploadedFiles()">
+                    <i class="bi bi-trash me-1"></i>Clear
                   </button>
-                </div>
-                <div id="uploadPlaceholder" class="text-center py-3">
-                  <i class="bi bi-cloud-upload display-5 text-muted"></i>
-                  <p class="text-muted small mb-0 mt-2">No file uploaded</p>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="toggleUploadSection()">
+                    <i class="bi bi-x"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -118,121 +176,192 @@
         </div>
       </div>
     </div>
-
-    <!-- Context-Aware Suggestions -->
-    <div class="card border-0 shadow-sm mt-3">
-      <div class="card-header bg-transparent border-bottom py-3">
-        <h6 class="fw-bold mb-0"><i class="bi bi-lightbulb me-2"></i>Context-Aware Suggestions</h6>
-      </div>
-      <div class="card-body">
-        <div class="row g-2">
-          <div class="col-md-6">
-            <div class="border rounded-3 p-3">
-              <h6 class="fw-semibold small mb-2"><i class="bi bi-diagram-3 text-success me-1"></i>Pipeline Help</h6>
-              <p class="text-muted small mb-2">Get suggestions for preprocessing steps, validation strategies, and model selection based on your dataset.</p>
-              <button class="btn btn-sm btn-outline-success w-100" onclick="sendQuickMessage('Help me design a pipeline for seizure detection')">
-                Design Pipeline
-              </button>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="border rounded-3 p-3">
-              <h6 class="fw-semibold small mb-2"><i class="bi bi-graph-up text-warning me-1"></i>Results Explanation</h6>
-              <p class="text-muted small mb-2">Understand confusion matrices, interpret metrics, and diagnose overfitting or underfitting.</p>
-              <button class="btn btn-sm btn-outline-warning w-100" onclick="sendQuickMessage('Explain why my accuracy dropped in epoch 10')">
-                Explain Results
-              </button>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="border rounded-3 p-3">
-              <h6 class="fw-semibold small mb-2"><i class="bi bi-heart-pulse text-danger me-1"></i>EEG Interpretation</h6>
-              <p class="text-muted small mb-2">Learn about EEG patterns, important channels, and how to interpret spectrograms.</p>
-              <button class="btn btn-sm btn-outline-danger w-100" onclick="sendQuickMessage('What do alpha waves look like in my data?')">
-                Interpret EEG
-              </button>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="border rounded-3 p-3">
-              <h6 class="fw-semibold small mb-2"><i class="bi bi-journal-text text-info me-1"></i>Research Mode</h6>
-              <p class="text-muted small mb-2">Get literature recommendations, baseline comparisons, and improvement suggestions.</p>
-              <button class="btn btn-sm btn-outline-info w-100" onclick="sendQuickMessage('Compare my results with state-of-the-art for epilepsy detection')">
-                Research Help
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
+</div>
 
-  <!-- Right Column: Info & Tips -->
-  <div class="col-lg-4">
-    <!-- How It Works -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-transparent border-bottom py-3">
-        <h6 class="fw-bold mb-0"><i class="bi bi-question-circle me-2"></i>How It Works</h6>
+<!-- Settings Modal -->
+<div class="modal fade" id="preprocessingSettingsModal" tabindex="-1" aria-labelledby="preprocessingSettingsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg settings-modal-xl">
+    <div class="modal-content">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="preprocessingSettingsLabel">
+          <i class="bi bi-sliders me-2"></i>EEG Preprocessing Settings
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="card-body">
-        <div class="mb-3">
-          <h6 class="fw-semibold small">1. Ask Anything</h6>
-          <p class="text-muted small mb-0">Type questions about your pipeline, results, or EEG data in natural language.</p>
-        </div>
-        <div class="mb-3">
-          <h6 class="fw-semibold small">2. Get Context-Aware Help</h6>
-          <p class="text-muted small mb-0">The assistant knows your current dataset, model, and results to provide relevant advice.</p>
-        </div>
-        <div class="mb-0">
-          <h6 class="fw-semibold small">3. Apply Suggestions</h6>
-          <p class="text-muted small mb-0">Use the recommendations to improve your pipeline, fix issues, or optimize performance.</p>
-        </div>
-      </div>
-    </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="row g-3">
+          <!-- Model Checkpoint -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Model Checkpoint</label>
+            <select id="settingsModelCheckpoint" class="form-select form-select-sm">
+              <option value="">— Use default —</option>
+              <option value="codebrain-pretrained">CodeBrain</option>
+              <option value="REVE">REVE</option>
+              <option value="labram-pretrained">LaBraM</option>
+              <option value="biot-pretrained">BIOT</option>
+              <option value="eegpt-pretrained">EEGPT</option>
+              <option value="signal-jepa">SignalJEPA</option>
+              <option value="braindecode-bendr">BENDR</option>
+            </select>
+          </div>
 
-    <!-- Example Questions -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-transparent border-bottom py-3">
-        <h6 class="fw-bold mb-0"><i class="bi bi-chat-quote me-2"></i>Example Questions</h6>
-      </div>
-      <div class="card-body">
-        <div class="mb-2">
-          <span class="badge bg-secondary small">Pipeline</span>
-          <p class="text-muted small mt-1 mb-0">"What preprocessing steps should I use for motor imagery?"</p>
-        </div>
-        <div class="mb-2">
-          <span class="badge bg-secondary small">Models</span>
-          <p class="text-muted small mt-1 mb-0">"Which model works best for sleep stage classification?"</p>
-        </div>
-        <div class="mb-2">
-          <span class="badge bg-secondary small">Results</span>
-          <p class="text-muted small mt-1 mb-0">"Why is my F1 score lower than accuracy?"</p>
-        </div>
-        <div class="mb-0">
-          <span class="badge bg-secondary small">Debug</span>
-          <p class="text-muted small mt-1 mb-0">"My loss is NaN after epoch 5, what's wrong?"</p>
-        </div>
-      </div>
-    </div>
+          <!-- Neurodevelopmental Condition -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Neurodevelopmental Condition</label>
+            <select id="settingsCondition" class="form-select form-select-sm">
+              <option value="">— Select condition (optional) —</option>
+              <option value="ADHD">ADHD</option>
+              <option value="Alzheimer's Disease">Alzheimer's Disease</option>
+              <option value="Autism Spectrum Disorder">Autism Spectrum Disorder</option>
+              <option value="Brain Death Evaluation">Brain Death Evaluation</option>
+              <option value="Brain Tumor">Brain Tumor</option>
+              <option value="Coma">Coma</option>
+              <option value="Creutzfeldt-Jakob Disease (CJD)">Creutzfeldt-Jakob Disease (CJD)</option>
+              <option value="Dementia">Dementia</option>
+              <option value="Encephalitis">Encephalitis</option>
+              <option value="Encephalopathy (Metabolic/Toxic)">Encephalopathy (Metabolic/Toxic)</option>
+              <option value="Epilepsy">Epilepsy</option>
+              <option value="Insomnia">Insomnia</option>
+              <option value="Meningitis">Meningitis</option>
+              <option value="Narcolepsy">Narcolepsy</option>
+              <option value="Psychogenic Nonepileptic Seizures (PNES)">Psychogenic Nonepileptic Seizures (PNES)</option>
+              <option value="REM Sleep Behavior Disorder">REM Sleep Behavior Disorder</option>
+              <option value="Sleep Apnea">Sleep Apnea</option>
+              <option value="Stroke / TIA">Stroke / TIA</option>
+              <option value="Traumatic Brain Injury (TBI) / Concussion">Traumatic Brain Injury (TBI) / Concussion</option>
+            </select>
+            <small class="text-muted">Used for context-aware analysis</small>
+          </div>
 
-    <!-- System Info -->
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-transparent border-bottom py-3">
-        <h6 class="fw-bold mb-0"><i class="bi bi-info-circle me-2"></i>System Info</h6>
+          <!-- Sampling Frequency -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Sampling Frequency (Hz)</label>
+            <input type="number" id="settingsSfreq" class="form-control form-control-sm" placeholder="Auto-detect" min="50" max="1000" step="1">
+            <small class="text-muted">Leave empty for auto-detection</small>
+          </div>
+
+          <!-- Channel Count -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Channel Count</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" id="settingsChannelCount" class="form-range" min="1" max="1024" value="21" oninput="document.getElementById('settingsChannelCountVal').textContent=this.value">
+              <span class="badge bg-info text-dark" id="settingsChannelCountVal">21</span>
+            </div>
+          </div>
+
+          <!-- Signal Types -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Signal Types</label>
+            <div class="d-flex flex-wrap gap-1">
+              <div class="chip checked" data-value="EEG" onclick="toggleChip(this)" style="cursor:pointer; padding:4px 10px; border-radius:12px; background:rgba(13,202,240,0.15); border:1px solid #0dcaf0; font-size:0.75rem;">
+                <span class="chip-check">✓</span> EEG
+              </div>
+              <div class="chip" data-value="STIM" onclick="toggleChip(this)" style="cursor:pointer; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid #444; font-size:0.75rem;">
+                <span class="chip-check"></span> STIM
+              </div>
+              <div class="chip" data-value="EOG" onclick="toggleChip(this)" style="cursor:pointer; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid #444; font-size:0.75rem;">
+                <span class="chip-check"></span> EOG
+              </div>
+              <div class="chip" data-value="ECG" onclick="toggleChip(this)" style="cursor:pointer; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid #444; font-size:0.75rem;">
+                <span class="chip-check"></span> ECG
+              </div>
+              <div class="chip" data-value="EMG" onclick="toggleChip(this)" style="cursor:pointer; padding:4px 10px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid #444; font-size:0.75rem;">
+                <span class="chip-check"></span> EMG
+              </div>
+            </div>
+          </div>
+
+          <!-- Normalization Algorithm -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Normalization Algorithm</label>
+            <select id="settingsNormAlgo" class="form-select form-select-sm" onchange="onNormAlgoChange(this.value)">
+              <option value="exp_moving_std">Exponential Moving Std</option>
+              <option value="zscore">Z-Score</option>
+              <option value="minmax">Min-Max</option>
+              <option value="norm_divide">Normalize Divide</option>
+            </select>
+            <div id="expMovingDecayField" class="mt-2">
+              <label class="form-label small text-muted">Decay Factor</label>
+              <input type="number" id="settingsDecayFactor" class="form-control form-control-sm" value="0.001" step="0.0001" min="0.0001" max="0.1" oninput="document.getElementById('settingsDecayFactorVal').textContent=this.value">
+              <span class="badge bg-secondary" id="settingsDecayFactorVal">0.001</span>
+            </div>
+          </div>
+
+          <!-- Trial Window Size -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Trial Window Size (samples)</label>
+            <input type="number" id="settingsTrialWindowSize" class="form-control form-control-sm" placeholder="Auto" min="50" max="2000" step="50">
+            <small class="text-muted">Leave empty for model default</small>
+          </div>
+
+          <!-- Window Stride -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Window Stride (%)</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" id="settingsWindowStride" class="form-range" min="10" max="100" value="50" oninput="document.getElementById('settingsWindowStrideVal').textContent=this.value+'%'">
+              <span class="badge bg-info text-dark" id="settingsWindowStrideVal">50%</span>
+            </div>
+          </div>
+
+          <!-- Amplitude Scaling -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Amplitude Scaling</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="amplitudeScale" id="ampVolts" value="volts_to_microvolts" checked>
+              <label class="form-check-label small" for="ampVolts">Volts to Microvolts (µV)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="amplitudeScale" id="ampRaw" value="raw">
+              <label class="form-check-label small" for="ampRaw">Raw (no scaling)</label>
+            </div>
+          </div>
+
+          <!-- Preprocessing Pipeline -->
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Preprocessing Pipeline</label>
+            <div class="card border-0 shadow-sm" style="background: rgba(255,255,255,0.03);">
+              <div class="card-body py-2">
+                <div class="row g-2">
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="prepFilter" checked>
+                      <label class="form-check-label small" for="prepFilter">Bandpass Filter</label>
+                    </div>
+                    <small class="text-muted" style="font-size:0.7rem;">1-45 Hz FIR</small>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="prepNotch">
+                      <label class="form-check-label small" for="prepNotch">Notch Filter</label>
+                    </div>
+                    <small class="text-muted" style="font-size:0.7rem;">50/60 Hz</small>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="prepBadChannels" checked>
+                      <label class="form-check-label small" for="prepBadChannels">Bad Channel Removal</label>
+                    </div>
+                    <small class="text-muted" style="font-size:0.7rem;">Auto-detect & interpolate</small>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="prepReref" checked>
+                      <label class="form-check-label small" for="prepReref">Re-referencing</label>
+                    </div>
+                    <small class="text-muted" style="font-size:0.7rem;">Average reference</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between mb-2">
-          <span class="small text-muted">Status</span>
-          <span class="badge bg-success">Ready</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span class="small text-muted">Context</span>
-          <span class="small">Active session</span>
-        </div>
-        <div class="d-flex justify-content-between mb-0">
-          <span class="small text-muted">Version</span>
-          <span class="small">v1.0</span>
-        </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-info" onclick="applySettings()">
+          <i class="bi bi-check-lg me-1"></i>Apply Settings
+        </button>
       </div>
     </div>
   </div>
@@ -241,57 +370,877 @@
 
 {% block extra_scripts %}
 <script>
-function handleFileUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
+// Model Profiles
+const MODEL_PROFILES = {
+  'codebrain-pretrained': { name: 'CodeBrain', sfreq: 200, channels: 19, window: '2s (400 samples)', windowSamples: 400, normHint: 'exp_moving_std', amplitudeHint: 'volts_to_microvolts' },
+  'REVE': { name: 'REVE', sfreq: 200, channels: 62, window: '2s (400 samples)', windowSamples: 400, normHint: 'exp_moving_std', amplitudeHint: 'volts_to_microvolts' },
+  'labram-pretrained': { name: 'LaBraM', sfreq: 200, channels: 19, window: '2s (400 samples)', windowSamples: 400, normHint: 'exp_moving_std', amplitudeHint: 'volts_to_microvolts' },
+  'biot-pretrained': { name: 'BIOT', sfreq: 200, channels: 16, window: '2s (400 samples)', windowSamples: 400, normHint: 'exp_moving_std', amplitudeHint: 'volts_to_microvolts' },
+  'eegpt-pretrained': { name: 'EEGPT', sfreq: 250, channels: 19, window: '3s (750 samples)', windowSamples: 750, normHint: 'zscore', amplitudeHint: 'volts_to_microvolts' },
+  'signal-jepa': { name: 'SignalJEPA', sfreq: 200, channels: 19, window: '2s (400 samples)', windowSamples: 400, normHint: 'zscore', amplitudeHint: 'volts_to_microvolts' },
+  'braindecode-bendr': { name: 'BENDR', sfreq: 100, channels: 66, window: '2s (200 samples)', windowSamples: 200, normHint: 'minmax', amplitudeHint: 'volts_to_microvolts' },
+  'CBraMod': { name: 'CBraMod', sfreq: 100, channels: 21, window: '2s (200 samples)', windowSamples: 200, normHint: 'norm_divide', amplitudeHint: 'volts_to_microvolts' },
+  'LUNA': { name: 'LUNA', sfreq: 256, channels: 19, window: '2s (512 samples)', windowSamples: 512, normHint: 'minmax', amplitudeHint: 'volts_to_microvolts' },
+  'STEEGFormer': { name: 'STEEGFormer', sfreq: 200, channels: 19, window: '2s (400 samples)', windowSamples: 400, normHint: 'exp_moving_std', amplitudeHint: 'volts_to_microvolts' },
+};
 
-  document.getElementById('uploadedFileName').textContent = file.name;
-  document.getElementById('uploadedFileInfo').classList.remove('d-none');
-  document.getElementById('uploadPlaceholder').classList.add('d-none');
+const CHANNEL_10_20 = ['Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2','F7','F8','T3','T4','T5','T6','Fz','Cz','Pz'];
 
-  addMessage('user', `📎 Uploaded file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+let currentModel = '';
+let currentSettings = {};
+let uploadedFiles = [];
+let parsedFileData = {}; // Store parsed EEG data from backend
+
+// Model Selection
+function onModelChange(modelKey) {
+  currentModel = modelKey;
+  const profile = MODEL_PROFILES[modelKey];
+  if (profile) {
+    document.getElementById('modelProfileInfo').classList.remove('d-none');
+    document.getElementById('modelSelectPlaceholder').classList.add('d-none');
+    document.getElementById('modelSfreq').textContent = profile.sfreq + ' Hz';
+    document.getElementById('modelChannels').textContent = profile.channels + ' ch';
+    document.getElementById('modelWindow').textContent = profile.window;
+    document.getElementById('activeModelBadge').style.display = 'inline-block';
+    document.getElementById('activeModelName').textContent = profile.name;
+    document.getElementById('contextBadge').classList.remove('d-none');
+    document.getElementById('contextBadgeName').textContent = profile.name;
+  } else {
+    document.getElementById('modelProfileInfo').classList.add('d-none');
+    document.getElementById('modelSelectPlaceholder').classList.remove('d-none');
+    document.getElementById('activeModelBadge').style.display = 'none';
+  }
 }
 
-function analyzeUploadedFile() {
-  const analysisType = document.getElementById('analysisType').value;
-  const fileName = document.getElementById('uploadedFileName').textContent;
+function applyModelToChat() {
+  if (!currentModel) {
+    addMessage('assistant', '⚠️ Please select a model first from the dropdown above before chatting.');
+    return;
+  }
+  const profile = MODEL_PROFILES[currentModel];
+  document.getElementById('modelContextMsg').classList.remove('d-none');
+  document.getElementById('contextModelName').textContent = profile.name;
+  addMessage('assistant', '✅ **Model & Settings Applied**\n\n**Model:** ' + profile.name + '\n**Target sfreq:** ' + profile.sfreq + ' Hz\n**Channels:** ' + profile.channels + '\n\nI\'m now context-aware of your configuration. How can I help you with this setup?');
+}
 
-  addMessage('user', `🔍 Requesting ${analysisType} analysis for: ${fileName}`);
+// Settings Modal
+function toggleChip(el) {
+  if (el.dataset.value === 'EEG') return;
+  el.classList.toggle('checked');
+  const checkSpan = el.querySelector('.chip-check');
+  checkSpan.textContent = el.classList.contains('checked') ? '✓' : '';
+}
+
+function onNormAlgoChange(value) {
+  document.getElementById('expMovingDecayField').style.display = value === 'exp_moving_std' ? 'block' : 'none';
+}
+
+function resetSettings() {
+  document.getElementById('settingsModelCheckpoint').value = '';
+  document.getElementById('settingsCondition').value = '';
+  document.getElementById('settingsSfreq').value = '';
+  document.getElementById('settingsChannelCount').value = 21;
+  document.getElementById('settingsChannelCountVal').textContent = '21';
+  document.getElementById('settingsNormAlgo').value = 'exp_moving_std';
+  document.getElementById('settingsDecayFactor').value = 0.001;
+  document.getElementById('settingsDecayFactorVal').textContent = '0.001';
+  document.getElementById('settingsTrialWindowSize').value = '';
+  document.getElementById('settingsWindowStride').value = 50;
+  document.getElementById('settingsWindowStrideVal').textContent = '50%';
+  document.querySelector('input[name="amplitudeScale"][value="volts_to_microvolts"]').checked = true;
+  document.querySelectorAll('.chip').forEach(chip => {
+    if (chip.dataset.value === 'EEG') { chip.classList.add('checked'); chip.querySelector('.chip-check').textContent = '✓'; }
+    else { chip.classList.remove('checked'); chip.querySelector('.chip-check').textContent = ''; }
+  });
+  onNormAlgoChange('exp_moving_std');
+  onModelChange(currentModel);
+}
+
+function applySettings() {
+  const selectedChips = [];
+  document.querySelectorAll('.chip.checked').forEach(chip => selectedChips.push(chip.dataset.value));
+  currentSettings = {
+    modelCheckpoint: document.getElementById('settingsModelCheckpoint').value,
+    condition: document.getElementById('settingsCondition').value,
+    sfreq: document.getElementById('settingsSfreq').value,
+    signalTypes: selectedChips,
+    channelCount: document.getElementById('settingsChannelCount').value,
+    normAlgo: document.getElementById('settingsNormAlgo').value,
+    trialWindowSize: document.getElementById('settingsTrialWindowSize').value,
+    windowStride: document.getElementById('settingsWindowStride').value,
+  };
+  if (currentSettings.modelCheckpoint) {
+    document.getElementById('modelSelect').value = currentSettings.modelCheckpoint;
+    onModelChange(currentSettings.modelCheckpoint);
+  }
+  let settingsMsg = '⚙️ **Preprocessing settings applied**\n\n';
+  if (currentSettings.condition) {
+    settingsMsg += '- **Condition:** ' + currentSettings.condition + '\n';
+  }
+  settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%';
+  addMessage('assistant', settingsMsg);
+  const modal = bootstrap.Modal.getInstance(document.getElementById('preprocessingSettingsModal'));
+  if (modal) modal.hide();
+}
+
+// EEG Viewer
+function toggleUploadSection() {
+  const section = document.getElementById('uploadSection');
+  section.classList.toggle('d-none');
+}
+
+function handleFileUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  
+  addMessage('assistant', '📤 **Uploading ' + files.length + ' file(s) for analysis...**');
+  
+  // Upload each file to backend for parsing
+  files.forEach((file, index) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/parse-eeg', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        parsedFileData[file.name] = data;
+        
+        // Build comprehensive analysis message
+        let analysisMsg = '✅ **Analyzed: ' + file.name + '**\n\n' +
+          '**Format:** ' + data.format + '\n' +
+          '**Size:** ' + (data.size_bytes / (1024*1024)).toFixed(1) + ' MB\n' +
+          '**Channels:** ' + data.n_channels + '\n' +
+          '**Channel Names:** ' + data.channel_names.slice(0, 10).join(', ') + (data.n_channels > 10 ? '...' : '') + '\n' +
+          '**Sampling Rate:** ' + data.sfreq + ' Hz\n' +
+          '**Duration:** ' + data.duration_sec.toFixed(1) + 's\n' +
+          '**Montage:** ' + data.montage + '\n\n';
+        
+        // Add preprocessing info
+        if (data.preprocessing) {
+          analysisMsg += '**🔧 Preprocessing Applied:**\n' +
+            '- Bandpass Filter: ' + data.preprocessing.bandpass_filter + '\n' +
+            '- Method: ' + data.preprocessing.method + '\n' +
+            '- Reason: ' + data.preprocessing.reason + '\n\n';
+        }
+        
+        // Add channel summary
+        if (data.channel_summary) {
+          analysisMsg += '**📊 Channel Summary:**\n' +
+            '- EEG: ' + data.channel_summary.eeg + '\n' +
+            '- Stimulus: ' + data.channel_summary.stim + '\n' +
+            '- EOG (eye): ' + data.channel_summary.eog + '\n' +
+            '- ECG (heart): ' + data.channel_summary.ecg + '\n' +
+            '- Other: ' + data.channel_summary.other + '\n\n';
+        }
+        
+        // Add bad channels info
+        if (data.n_bad_channels > 0) {
+          analysisMsg += '⚠️ **Bad Channels Detected:** ' + data.n_bad_channels + '\n' +
+            'Channels: ' + data.bad_channels.slice(0, 5).join(', ') + (data.n_bad_channels > 5 ? '...' : '') + '\n\n';
+        } else {
+          analysisMsg += '✅ **Signal Quality:** All channels look good (no bad channels detected)\n\n';
+        }
+        
+        // Add events/epoching info
+        if (data.has_events) {
+          analysisMsg += '📅 **Events Detected:** ' + data.n_events + ' events\n' +
+            'Event Types: ' + Object.keys(data.event_types).slice(0, 5).join(', ') + '\n';
+          
+          if (data.epoching) {
+            analysisMsg += '\n**⏱️ Epoching:**\n' +
+              '- Epochs: ' + data.epoching.n_epochs + '\n' +
+              '- Time window: ' + (data.epoching.tmin * 1000) + 'ms to ' + (data.epoching.tmax * 1000) + 'ms\n' +
+              '- Per class: ' + JSON.stringify(data.epoching.n_epochs_per_class).slice(0, 50) + '...\n';
+          }
+          
+          if (data.evoked) {
+            analysisMsg += '\n**🧠 Evoked Response (ERP):**\n' +
+              '- Peak Amplitude: ' + data.evoked.peak_amplitude.toFixed(2) + ' µV\n' +
+              '- Peak Latency: ' + (data.evoked.peak_latency * 1000).toFixed(1) + 'ms\n';
+          }
+        } else {
+          analysisMsg += 'ℹ️ **No events/annotations found** in the file\n';
+        }
+        
+        addMessage('assistant', analysisMsg);
+      } else {
+        addMessage('assistant', '❌ **Failed to parse ' + file.name + ':** ' + data.message);
+      }
+    })
+    .catch(error => {
+      addMessage('assistant', '❌ **Error uploading ' + file.name + ':** ' + error.message);
+    });
+  });
+  
+  uploadedFiles = uploadedFiles.concat(files);
+  updateUploadedFilesUI();
+}
+
+function updateUploadedFilesUI() {
+  const badgesContainer = document.getElementById('uploadedFilesBadges');
+  const listDiv = document.getElementById('uploadedFilesList');
+  const placeholder = document.getElementById('uploadPlaceholder');
+  const buttonText = document.getElementById('viewAllButtonText');
+  
+  if (!uploadedFiles.length) {
+    listDiv.classList.add('d-none');
+    placeholder.classList.remove('d-none');
+    if (buttonText) buttonText.textContent = 'View All';
+    return;
+  }
+  listDiv.classList.remove('d-none');
+  placeholder.classList.add('d-none');
+  if (buttonText) buttonText.textContent = uploadedFiles.length === 1 ? 'View' : 'View All';
+  badgesContainer.innerHTML = uploadedFiles.map((f, i) => '<span class="badge bg-success small">' + (i + 1) + '. ' + f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)</span>').join('');
+}
+
+function clearUploadedFiles() {
+  uploadedFiles = [];
+  document.getElementById('eegFileInput').value = '';
+  updateUploadedFilesUI();
+}
+
+function onAnalysisTypeChange() {
+  if (uploadedFiles.length > 0) analyzeUploadedFiles();
+}
+
+function analyzeUploadedFiles() {
+  if (!uploadedFiles.length) return;
+  const displayMode = document.getElementById('analysisType').value;
+  let gridCols = parseInt(document.getElementById('gridColumns').value);
+  if (isNaN(gridCols) || gridCols === 'auto' || gridCols <= 0) {
+    const nFiles = uploadedFiles.length;
+    if (nFiles === 1) gridCols = 1;
+    else if (nFiles <= 2) gridCols = 2;
+    else if (nFiles <= 4) gridCols = 2;
+    else if (nFiles <= 6) gridCols = 3;
+    else gridCols = 4;
+  }
+  const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
+  addMessage('user', '🔍 Loading EEG grid viewer: ' + uploadedFiles.length + ' files · Mode: ' + displayMode + ' · Grid: ' + gridCols + ' cols');
+  
+  const promises = uploadedFiles.map((file, idx) => {
+    return new Promise((resolve) => {
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      
+      // Check if we have parsed data from backend
+      const parsedBackend = parsedFileData[file.name];
+      
+      if (fileExt === 'csv') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const parsed = parseCSVasEEG(e.target.result);
+            resolve({ fileName: file.name, displayMode, profile, parsed: parsed || null, index: idx, backendData: parsedBackend });
+          } catch(err) { resolve({ fileName: file.name, displayMode, profile, parsed: null, index: idx, backendData: parsedBackend }); }
+        };
+        reader.readAsText(file);
+      } else if (parsedBackend && parsedBackend.sample_data) {
+        // Use backend parsed data for EDF and other formats
+        const parsed = {
+          channels: parsedBackend.channel_names,
+          data: parsedBackend.sample_data,
+          nTimes: parsedBackend.n_times,
+          sfreq: parsedBackend.sfreq
+        };
+        resolve({ fileName: file.name, displayMode, profile, parsed: parsed, index: idx, backendData: parsedBackend });
+      } else {
+        resolve({ fileName: file.name, displayMode, profile, parsed: null, index: idx, backendData: parsedBackend });
+      }
+    });
+  });
+  
+  Promise.all(promises).then(results => addMessageWithEEGGrid(results, gridCols));
+}
+
+function parseCSVasEEG(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 3) return null;
+  const header = lines[0].split(',').map(h => h.trim());
+  const nCols = header.length;
+  if (nCols < 2) return null;
+  const chNames = header.slice(1, Math.min(20, nCols));
+  const nCh = chNames.length;
+  const data = [];
+  for (let i = 1; i < Math.min(lines.length, 3001); i++) {
+    const vals = lines[i].split(',').map(v => parseFloat(v.trim()));
+    if (vals.length >= nCols && !isNaN(vals[1])) data.push(vals.slice(1, nCh + 1));
+  }
+  if (data.length < 10) return null;
+  const chData = [];
+  for (let ch = 0; ch < nCh; ch++) { const series = []; for (let t = 0; t < data.length; t++) series.push(data[t][ch] || 0); chData.push(series); }
+  return { channels: chNames, data: chData, nTimes: data.length, sfreq: 250 };
+}
+
+function addMessageWithEEGViewer(fileName, displayMode, profile, parsedData) {
+  const chatDiv = document.getElementById('chatMessages');
+  const modelName = profile ? profile.name : 'Generic';
+  const sfreq = profile ? profile.sfreq : 250;
+  const nChannels = profile ? profile.channels : 19;
+  let eegData, channelNames, nTimes;
+  if (parsedData) {
+    eegData = parsedData.data;
+    channelNames = parsedData.channels;
+    nTimes = parsedData.nTimes;
+  } else {
+    const duration = 2;
+    nTimes = sfreq * duration;
+    channelNames = CHANNEL_10_20.slice(0, Math.min(nChannels, 19));
+    const nCh = channelNames.length;
+    eegData = [];
+    for (let ch = 0; ch < nCh; ch++) {
+      const series = [];
+      const isPosterior = ch >= 8 && ch <= 11;
+      const alphaAmp = isPosterior ? 15 : 3;
+      for (let t = 0; t < nTimes; t++) {
+        const time = t / sfreq;
+        const alpha = alphaAmp * Math.sin(2 * Math.PI * 10 * time + (ch * 0.5));
+        const beta = 2 * Math.sin(2 * Math.PI * 20 * time + (ch * 0.3));
+        const delta = 1 * Math.sin(2 * Math.PI * 2 * time);
+        const blink = (ch === 0 || ch === 1) ? 50 * Math.exp(-Math.pow((time - 0.5) / 0.05, 2)) : 0;
+        const noise = 2 * (Math.random() - 0.5);
+        series.push(alpha + beta + delta + blink + noise);
+      }
+      eegData.push(series);
+    }
+  }
+  const nCh = eegData.length;
+  const timeArray = [];
+  for (let t = 0; t < nTimes; t++) timeArray.push(t / sfreq);
+  let displayChannels;
+  if (displayMode === 'channels') displayChannels = channelNames;
+  else if (displayMode === 'quality') displayChannels = channelNames.slice(0, Math.min(4, nCh));
+  else displayChannels = channelNames.slice(0, Math.min(4, nCh));
+  const nDisplay = displayChannels.length;
+  const plotId = 'eeg-plot-' + Date.now();
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'd-flex mb-3 eeg-grid-viewer';
+  const modelContextStr = profile ? '<span class="badge bg-info text-dark me-1">' + modelName + '</span> <span class="badge bg-secondary">' + sfreq + ' Hz</span> <span class="badge bg-secondary">' + nCh + ' ch</span>' : '<span class="badge bg-secondary">Generic</span>';
+  const signalQuality = profile ? (profile.channels >= 19 ? 'Good' : 'Fair') : 'Good';
+  const qualityBadge = signalQuality === 'Good' ? 'bg-success' : 'bg-warning text-dark';
+  const viewStateId = 'view-' + Date.now();
+  window[viewStateId] = { currentTime: 0, windowDuration: 0.5, sfreq: sfreq, totalDuration: nTimes / sfreq, plotId: plotId, isPlaying: false, playSpeed: 1.0, playInterval: null, playStartTime: 0, lastFrameTime: 0 };
+
+  messageDiv.innerHTML = 
+    '<div class="flex-shrink-0"><div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-robot"></i></div></div>' +
+    '<div class="flex-grow-1 ms-2"><div class="py-2 px-3 mb-0 small d-inline-block text-start" style="max-width: 100%; width: 100%;">' +
+      '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1"><div><strong><i class="bi bi-graph-up me-1"></i>EEG Viewer</strong><span class="text-muted ms-2">' + fileName + '</span></div><div class="d-flex gap-1">' + modelContextStr + '<span class="badge ' + qualityBadge + '">' + signalQuality + '</span></div></div>' +
+      '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap"><span class="text-muted small">Channels: ' + nCh + '</span><span class="text-muted small">|</span><span class="text-muted small">Samples: ' + nTimes + '</span><span class="text-muted small">|</span><span class="text-muted small">Duration: ' + (nTimes / sfreq).toFixed(1) + 's</span><span class="text-muted small">|</span><span class="text-muted small">Mode: ' + displayMode.replace('_', ' ') + '</span></div>' +
+      '<div class="d-flex align-items-center justify-content-between mb-2 gap-2 flex-wrap" style="background: rgba(0,0,0,0.08); border-radius: 6px; padding: 4px 8px;">' +
+        '<div class="d-flex align-items-center gap-1">' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewStateId + '\', -0.2)" title="Scroll left 200ms" style="font-size:0.7rem;"><i class="bi bi-chevron-left"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewStateId + '\', -0.05)" title="Scroll left 50ms" style="font-size:0.7rem;"><i class="bi bi-chevron-double-left"></i></button>' +
+          '<span class="small text-muted mx-1">Time:</span>' +
+          '<input type="number" id="' + viewStateId + '-time-input" class="form-control form-control-sm" style="width: 70px; height: 24px; font-size:0.75rem;" value="0" min="0" max="' + (nTimes / sfreq).toFixed(2) + '" step="0.01" onchange="goToEEGTime(\'' + viewStateId + '\', this.value)">' +
+          '<span class="small text-muted">s</span>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewStateId + '\', 0.05)" title="Scroll right 50ms" style="font-size:0.7rem;"><i class="bi bi-chevron-double-right"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewStateId + '\', 0.2)" title="Scroll right 200ms" style="font-size:0.7rem;"><i class="bi bi-chevron-right"></i></button>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+          '<div class="vr mx-1" style="height:16px; opacity:0.2;"></div>' +
+          '<button class="btn btn-sm btn-outline-success py-0 px-1" id="' + viewStateId + '-play-btn" onclick="toggleEEGPlay(\'' + viewStateId + '\')" title="Play / Pause" style="font-size:0.7rem;"><i class="bi bi-play-fill"></i></button>' +
+          '<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="stopEEGPlay(\'' + viewStateId + '\')" title="Stop" style="font-size:0.7rem;"><i class="bi bi-stop-fill"></i></button>' +
+          '<span class="small text-muted" style="font-size:0.65rem;">Speed:</span>' +
+          '<select id="' + viewStateId + '-speed-select" class="form-select form-select-sm py-0" style="width: 58px; height: 22px; font-size:0.65rem;" onchange="changeEEGPlaySpeed(\'' + viewStateId + '\', this.value)">' +
+            '<option value="0.5">0.5x</option><option value="1.0" selected>1x</option><option value="2.0">2x</option><option value="4.0">4x</option>' +
+          '</select>' +
+          '<div class="vr mx-1" style="height:16px; opacity:0.2;"></div>' +
+          '<span class="small text-muted zoom-label">Zoom:</span>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="zoomEEG(\'' + viewStateId + '\', 1.5)" title="Zoom in" style="font-size:0.7rem;"><i class="bi bi-zoom-in"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="zoomEEG(\'' + viewStateId + '\', 0.67)" title="Zoom out" style="font-size:0.7rem;"><i class="bi bi-zoom-out"></i></button>' +
+          '<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="resetEEGView(\'' + viewStateId + '\', ' + (nTimes / sfreq).toFixed(2) + ')" title="Reset view" style="font-size:0.7rem;"><i class="bi bi-arrows-fullscreen"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="eeg-scroll-container" style="position: relative; max-height: 350px; overflow-y: auto; border-radius: 6px;">' +
+        '<div id="' + plotId + '" style="width: 100%; height: ' + Math.max(300, channelNames.length * 28) + 'px; background: rgba(255,255,255,.02);"></div>' +
+        '<div id="' + viewStateId + '-crosshair" style="position:absolute; top:0; bottom:0; width:1.5px; background:#ff6b6b; pointer-events:none; display:none; z-index:10; box-shadow: 0 0 4px rgba(255,107,107,0.6);"></div>' +
+        '<div id="' + viewStateId + '-crosshair-info" style="position:absolute; top:4px; background:rgba(0,0,0,0.75); color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; pointer-events:none; display:none; z-index:11; white-space:nowrap;"></div>' +
+      '</div>' +
+      '<div class="mt-2 small text-muted"><i class="bi bi-info-circle me-1"></i>EEG data visualized with <strong>' + modelName + '</strong> model context · sfreq: ' + sfreq + ' Hz · Use <strong>→</strong> arrows or click on plot to navigate time</div>' +
+    '</div></div>';
+
+  chatDiv.appendChild(messageDiv);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+  renderEEGPlot(plotId, timeArray, eegData, displayChannels, displayMode, sfreq);
+}
+
+// EEG Time Navigation
+function scrollEEGTime(viewStateId, deltaSeconds) {
+  const state = window[viewStateId]; if (!state) return;
+  state.currentTime = Math.max(0, Math.min(state.totalDuration - state.windowDuration, state.currentTime + deltaSeconds));
+  const timeInput = document.getElementById(viewStateId + '-time-input');
+  if (timeInput) timeInput.value = state.currentTime.toFixed(2);
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [state.currentTime, state.currentTime + state.windowDuration] });
+}
+
+function goToEEGTime(viewStateId, seconds) {
+  const state = window[viewStateId]; if (!state) return;
+  state.currentTime = Math.max(0, Math.min(state.totalDuration - state.windowDuration, parseFloat(seconds) || 0));
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [state.currentTime, state.currentTime + state.windowDuration] });
+}
+
+function zoomEEG(viewStateId, factor) {
+  const state = window[viewStateId]; if (!state) return;
+  state.windowDuration = Math.max(0.05, Math.min(state.totalDuration, state.windowDuration * factor));
+  state.currentTime = Math.min(state.currentTime, state.totalDuration - state.windowDuration);
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [state.currentTime, state.currentTime + state.windowDuration] });
+  const timeInput = document.getElementById(viewStateId + '-time-input');
+  if (timeInput) timeInput.value = state.currentTime.toFixed(2);
+}
+
+function resetEEGView(viewStateId, totalDuration) {
+  const state = window[viewStateId]; if (!state) return;
+  state.currentTime = 0; state.windowDuration = Math.min(0.5, totalDuration || state.totalDuration);
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [0, state.windowDuration], 'xaxis.autorange': false });
+  const timeInput = document.getElementById(viewStateId + '-time-input');
+  if (timeInput) timeInput.value = '0';
+  const crosshair = document.getElementById(viewStateId + '-crosshair');
+  if (crosshair) crosshair.style.display = 'none';
+  const info = document.getElementById(viewStateId + '-crosshair-info');
+  if (info) info.style.display = 'none';
+}
+
+function handlePlotClick(viewStateId, clickTime, clickY, plotId) {
+  let state = window[viewStateId];
+  if (!state) {
+    const keys = Object.keys(window);
+    for (let i = 0; i < keys.length; i++) { if (keys[i].startsWith('view-') && window[keys[i]].plotId === plotId) { viewStateId = keys[i]; state = window[keys[i]]; break; } }
+  }
+  if (!state) return;
+  const crosshair = document.getElementById(viewStateId + '-crosshair');
+  const info = document.getElementById(viewStateId + '-crosshair-info');
+  if (crosshair) {
+    crosshair.style.display = 'block'; crosshair.dataset.time = clickTime;
+    const plotDiv = document.getElementById(plotId);
+    if (plotDiv && plotDiv._fullLayout) {
+      const xAxis = plotDiv._fullLayout.xaxis; const xRange = xAxis.range;
+      const plotWidth = plotDiv.layout.width || plotDiv.clientWidth;
+      const pixelPos = ((clickTime - xRange[0]) / (xRange[1] - xRange[0])) * plotWidth;
+      crosshair.style.left = pixelPos + 'px';
+      if (info) { info.style.display = 'block'; info.style.left = Math.min(pixelPos, plotWidth - 120) + 'px'; info.innerHTML = '⏱ ' + clickTime.toFixed(3) + 's · ' + clickY.toFixed(1) + ' µV'; }
+    }
+  }
+  state.currentTime = Math.max(0, Math.min(state.totalDuration - state.windowDuration, clickTime - state.windowDuration / 2));
+  const timeInput = document.getElementById(viewStateId + '-time-input');
+  if (timeInput) timeInput.value = state.currentTime.toFixed(2);
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [state.currentTime, state.currentTime + state.windowDuration] });
+}
+
+// EEG Playback
+function toggleEEGPlay(viewStateId) {
+  const state = window[viewStateId]; if (!state) return;
+  const playBtn = document.getElementById(viewStateId + '-play-btn');
+  if (state.isPlaying) {
+    state.isPlaying = false; if (state.playInterval) { clearInterval(state.playInterval); state.playInterval = null; }
+    if (playBtn) { playBtn.className = 'btn btn-sm btn-outline-success py-0 px-1'; playBtn.innerHTML = '<i class="bi bi-play-fill"></i>'; playBtn.title = 'Resume playback'; }
+  } else {
+    if (state.currentTime >= state.totalDuration - state.windowDuration) state.currentTime = 0;
+    state.isPlaying = true; state.playStartTime = performance.now(); state.lastFrameTime = state.currentTime;
+    if (playBtn) { playBtn.className = 'btn btn-sm btn-success py-0 px-1'; playBtn.innerHTML = '<i class="bi bi-pause-fill"></i>'; playBtn.title = 'Pause playback'; }
+    const intervalMs = 1000 / 60;
+    state.playInterval = setInterval(function() {
+      const s = window[viewStateId]; if (!s || !s.isPlaying) return;
+      const deltaPerFrame = (intervalMs / 1000) * s.playSpeed;
+      const nextTime = s.currentTime + deltaPerFrame;
+      if (nextTime >= s.totalDuration - s.windowDuration) {
+        s.currentTime = s.totalDuration - s.windowDuration; s.isPlaying = false;
+        if (s.playInterval) { clearInterval(s.playInterval); s.playInterval = null; }
+        const btn = document.getElementById(viewStateId + '-play-btn');
+        if (btn) { btn.className = 'btn btn-sm btn-outline-success py-0 px-1'; btn.innerHTML = '<i class="bi bi-play-fill"></i>'; btn.title = 'Play from beginning'; }
+        updateEEGViewer(s); return;
+      }
+      s.currentTime = nextTime; updateEEGViewer(s);
+    }, intervalMs);
+  }
+}
+
+function stopEEGPlay(viewStateId) {
+  const state = window[viewStateId]; if (!state) return;
+  state.isPlaying = false; if (state.playInterval) { clearInterval(state.playInterval); state.playInterval = null; }
+  state.currentTime = 0;
+  const playBtn = document.getElementById(viewStateId + '-play-btn');
+  if (playBtn) { playBtn.className = 'btn btn-sm btn-outline-success py-0 px-1'; playBtn.innerHTML = '<i class="bi bi-play-fill"></i>'; playBtn.title = 'Play from beginning'; }
+  updateEEGViewer(state);
+}
+
+function changeEEGPlaySpeed(viewStateId, speed) {
+  const state = window[viewStateId]; if (!state) return;
+  state.playSpeed = parseFloat(speed);
+}
+
+function updateEEGViewer(state) {
+  if (!state) return;
+  let viewId = null;
+  const keys = Object.keys(window);
+  for (let i = 0; i < keys.length; i++) { if (keys[i].startsWith('view-') && window[keys[i]] === state) { viewId = keys[i]; break; } }
+  if (viewId) { const input = document.getElementById(viewId + '-time-input'); if (input) input.value = state.currentTime.toFixed(2); }
+  const plotDiv = document.getElementById(state.plotId);
+  if (plotDiv && plotDiv.layout) Plotly.relayout(state.plotId, { 'xaxis.range': [state.currentTime, state.currentTime + state.windowDuration] });
+  if (viewId) updateCrosshairPosition(viewId);
+}
+
+function updateCrosshairPosition(viewStateId) {
+  const state = window[viewStateId]; if (!state) return;
+  const crosshair = document.getElementById(viewStateId + '-crosshair');
+  if (!crosshair || crosshair.style.display === 'none') return;
+  const plotDiv = document.getElementById(state.plotId);
+  if (!plotDiv || !plotDiv._fullLayout) return;
+  const xAxis = plotDiv._fullLayout.xaxis; const xRange = xAxis.range;
+  const plotWidth = plotDiv.layout.width || plotDiv.clientWidth;
+  const crosshairTime = parseFloat(crosshair.dataset.time); if (isNaN(crosshairTime)) return;
+  const pixelPos = ((crosshairTime - xRange[0]) / (xRange[1] - xRange[0])) * plotWidth;
+  crosshair.style.left = pixelPos + 'px';
+  const info = document.getElementById(viewStateId + '-crosshair-info');
+  if (info) info.style.left = Math.min(pixelPos, plotWidth - 120) + 'px';
+}
+
+// EEG Grid Viewer
+function addMessageWithEEGGrid(fileEntries, gridCols) {
+  const chatDiv = document.getElementById('chatMessages');
+  const nFiles = fileEntries.length;
+  const existingGrids = chatDiv.querySelectorAll('.eeg-grid-viewer');
+  existingGrids.forEach(grid => grid.remove());
+  const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
+  const modelName = profile ? profile.name : 'Generic';
+  const sfreq = profile ? profile.sfreq : 250;
+  const nChannels = profile ? profile.channels : 19;
+
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'd-flex mb-3 eeg-grid-viewer';
+  let plotsHtml = '<div class="row g-2">';
+  
+  fileEntries.forEach((entry, idx) => {
+    const colClass = 'col-md-' + Math.floor(12 / gridCols);
+    const viewId = 'grid-view-' + idx;
+    const fileId = 'grid-file-' + idx;
+    
+    plotsHtml += '<div class="' + colClass + '">' +
+      '<div class="py-2 px-3 mb-0 small">' +
+        '<div class="d-flex align-items-center justify-content-between mb-1">' +
+          '<strong><i class="bi bi-file-earmark-medical me-1"></i>' + entry.fileName + '</strong>' +
+          '<span class="badge bg-secondary">' + entry.displayMode + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-1 flex-wrap" style="background:rgba(0,0,0,0.08);border-radius:4px;padding:3px 6px;">' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewId + '\', -0.2)" title="Scroll left" style="font-size:0.65rem;"><i class="bi bi-chevron-left"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewId + '\', -0.05)" title="Scroll left 50ms" style="font-size:0.65rem;"><i class="bi bi-chevron-double-left"></i></button>' +
+          '<input type="number" id="' + viewId + '-time-input" class="form-control form-control-sm" style="width:60px;height:22px;font-size:0.7rem;" value="0" min="0" step="0.01" onchange="goToEEGTime(\'' + viewId + '\', this.value)">' +
+          '<span class="small text-muted">s</span>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewId + '\', 0.05)" title="Scroll right 50ms" style="font-size:0.65rem;"><i class="bi bi-chevron-double-right"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="scrollEEGTime(\'' + viewId + '\', 0.2)" title="Scroll right" style="font-size:0.65rem;"><i class="bi bi-chevron-right"></i></button>' +
+          '<div class="vr mx-1" style="height:14px;opacity:0.2;"></div>' +
+          '<button class="btn btn-sm btn-outline-success py-0 px-1" id="' + viewId + '-play-btn" onclick="toggleEEGPlay(\'' + viewId + '\')" title="Play/Pause" style="font-size:0.65rem;"><i class="bi bi-play-fill"></i></button>' +
+          '<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="stopEEGPlay(\'' + viewId + '\')" title="Stop" style="font-size:0.65rem;"><i class="bi bi-stop-fill"></i></button>' +
+          '<select id="' + viewId + '-speed-select" class="form-select form-select-sm py-0" style="width:50px;height:20px;font-size:0.6rem;" onchange="changeEEGPlaySpeed(\'' + viewId + '\', this.value)">' +
+            '<option value="0.5">0.5x</option><option value="1.0" selected>1x</option><option value="2.0">2x</option><option value="4.0">4x</option>' +
+          '</select>' +
+          '<div class="vr mx-1" style="height:14px;opacity:0.2;"></div>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="zoomEEG(\'' + viewId + '\', 1.5)" title="Zoom in" style="font-size:0.65rem;"><i class="bi bi-zoom-in"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info py-0 px-1" onclick="zoomEEG(\'' + viewId + '\', 0.67)" title="Zoom out" style="font-size:0.65rem;"><i class="bi bi-zoom-out"></i></button>' +
+          '<button class="btn btn-sm btn-outline-secondary py-0 px-1" onclick="resetEEGView(\'' + viewId + '\', 2.00)" title="Reset" style="font-size:0.65rem;"><i class="bi bi-arrows-fullscreen"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="' + viewId + '-container" style="position:relative;">' +
+        '<div id="' + fileId + '" style="background:rgba(255,255,255,.02);border-radius:6px;height:150px;"></div>' +
+        '<div id="' + viewId + '-crosshair" style="position:absolute;top:0;bottom:0;width:1.5px;background:#ff6b6b;pointer-events:none;display:none;z-index:10;"></div>' +
+        '<div id="' + viewId + '-crosshair-info" style="position:absolute;top:4px;background:rgba(0,0,0,0.75);color:#fff;padding:2px 6px;border-radius:3px;font-size:0.65rem;pointer-events:none;display:none;z-index:11;white-space:nowrap;"></div>' +
+      '</div>' +
+    '</div>';
+  });
+  plotsHtml += '</div>';
+
+  messageDiv.innerHTML =
+    '<div class="flex-shrink-0"><div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-robot"></i></div></div>' +
+    '<div class="flex-grow-1 ms-2"><div class="py-2 px-3 mb-0 small d-inline-block text-start" style="max-width: 100%; width: 100%;">' +
+      '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1"><div><strong><i class="bi bi-grid me-1"></i>EEG Grid Viewer</strong><span class="text-muted ms-2">' + nFiles + ' files · ' + gridCols + ' columns</span></div><div><span class="badge bg-info text-dark">' + modelName + '</span></div></div>' +
+      plotsHtml +
+    '</div></div>';
+
+  chatDiv.appendChild(messageDiv);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+
+  fileEntries.forEach((entry, idx) => {
+    const plotId = 'grid-file-' + idx;
+    const viewId = 'grid-view-' + idx;
+    const fileName = entry.fileName;
+    const displayMode = entry.displayMode;
+    const parsed = entry.parsed;
+    
+    let eegData, channelNames, nTimes;
+    if (parsed) {
+      eegData = parsed.data;
+      channelNames = parsed.channels;
+      nTimes = parsed.nTimes;
+    } else {
+      const duration = 2;
+      nTimes = sfreq * duration;
+      channelNames = CHANNEL_10_20.slice(0, Math.min(nChannels, 19));
+      const nCh = channelNames.length;
+      eegData = [];
+      for (let ch = 0; ch < nCh; ch++) {
+        eegData[ch] = [];
+        const isPosterior = ch >= 8 && ch <= 11;
+        const alphaAmp = isPosterior ? 15 : 3;
+        for (let t = 0; t < nTimes; t++) {
+          const time = t / sfreq;
+          const alpha = alphaAmp * Math.sin(2 * Math.PI * 10 * time + (ch * 0.5));
+          const beta = 2 * Math.sin(2 * Math.PI * 20 * time + (ch * 0.3));
+          const delta = 1 * Math.sin(2 * Math.PI * 2 * time);
+          const blink = (ch === 0 || ch === 1) ? 50 * Math.exp(-Math.pow((time - 0.5) / 0.05, 2)) : 0;
+          const noise = 2 * (Math.random() - 0.5);
+          eegData[ch].push(alpha + beta + delta + blink + noise);
+        }
+      }
+    }
+    const timeArray = [];
+    for (let t = 0; t < nTimes; t++) timeArray.push(t / sfreq);
+    const displayChannels = channelNames.slice(0, Math.min(19, channelNames.length));
+    
+    let plotData = eegData;
+    if (!Array.isArray(eegData) || eegData.length === 0 || !Array.isArray(eegData[0])) {
+      plotData = [];
+      const nCh = displayChannels.length;
+      for (let ch = 0; ch < nCh; ch++) {
+        plotData[ch] = [];
+        for (let t = 0; t < nTimes; t++) {
+          plotData[ch].push(Math.sin(2 * Math.PI * 10 * t / sfreq + ch * 0.5) * 5);
+        }
+      }
+    }
+    
+    renderEEGPlot(plotId, timeArray, plotData, displayChannels, displayMode, sfreq);
+    
+    const totalDuration = nTimes / sfreq;
+    window[viewId] = {
+      currentTime: 0,
+      windowDuration: Math.min(0.5, totalDuration),
+      sfreq: sfreq,
+      totalDuration: totalDuration,
+      plotId: plotId,
+      isPlaying: false,
+      playSpeed: 1.0,
+      playInterval: null
+    };
+    
+    setTimeout(() => {
+      const plotDiv = document.getElementById(plotId);
+      if (plotDiv) {
+        plotDiv.on('plotly_click', function(data) {
+          if (data && data.points && data.points.length > 0) {
+            handlePlotClick(viewId, data.points[0].x, data.points[0].y, plotId);
+          }
+        });
+      }
+    }, 200);
+  });
+}
+
+function renderEEGPlot(plotId, time, allData, channelNames, displayMode, sfreq) {
+  const existingPlot = document.getElementById(plotId);
+  if (existingPlot && existingPlot.data) {
+    Plotly.purge(plotId);
+  }
+  
+  const traces = [];
+  const colors = ['#0dcaf0', '#ff6b6b', '#51cf66', '#ffd700', '#cc9fff', '#ff922b', '#20c997', '#f06595', '#748ffc', '#fcc419'];
+  const totalDuration = time[time.length - 1];
+
+  if (displayMode === 'channels') {
+    for (let ch = 0; ch < channelNames.length; ch++) {
+      const chData = allData[ch] || [];
+      traces.push({ x: time, y: chData.map(v => v + (channelNames.length - 1 - ch) * 100), type: 'scatter', mode: 'lines', name: channelNames[ch], line: { color: colors[ch % colors.length], width: 1 } });
+    }
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'Multi-Channel EEG Overview', font: { size: 11, color: '#e0e0ff' } },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Channel', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', showticklabels: true, tickmode: 'array', tickvals: channelNames.map((ch, i) => (channelNames.length - 1 - i) * 100), ticktext: channelNames, zeroline: false },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 45, r: 15, t: 28, b: 30 },
+      height: Math.min(600, Math.max(300, channelNames.length * 28)),
+      showlegend: true,
+      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.1 },
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  } else if (displayMode === 'spectrogram') {
+    const chData = allData[0] || [];
+    traces.push({ x: time, y: chData, type: 'scatter', mode: 'lines', name: channelNames[0] || 'C3', line: { color: '#0dcaf0', width: 1.5 } });
+    const layout = {
+      title: { text: (channelNames[0] || 'C3') + ' — Waveform with Frequency Bands', font: { size: 11, color: '#e0e0ff' } },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 45, r: 15, t: 28, b: 30 },
+      height: 220,
+      showlegend: false,
+      annotations: [
+        { x: 0.05, y: 0.95, xref: 'paper', yref: 'paper', text: 'α (8-12Hz)', showarrow: false, font: { size: 9, color: '#ffd700' } },
+        { x: 0.2, y: 0.95, xref: 'paper', yref: 'paper', text: 'β (13-30Hz)', showarrow: false, font: { size: 9, color: '#ff6b6b' } },
+        { x: 0.4, y: 0.95, xref: 'paper', yref: 'paper', text: 'δ (0.5-4Hz)', showarrow: false, font: { size: 9, color: '#51cf66' } },
+      ],
+    };
+    Plotly.newPlot(plotId, traces, layout, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  } else if (displayMode === 'quality') {
+    const chData = allData[0] || [];
+    traces.push({ x: time, y: chData, type: 'scatter', mode: 'lines', name: channelNames[0] || 'CH1', line: { color: '#0dcaf0', width: 1.5 } });
+    const flatThreshold = 0.5;
+    const flatRegions = [];
+    for (let t = 0; t < chData.length - 10; t++) {
+      const segment = chData.slice(t, t + 10);
+      const range = Math.max(...segment) - Math.min(...segment);
+      if (range < flatThreshold) flatRegions.push({ x: time[t], y: chData[t] });
+    }
+    if (flatRegions.length > 0) {
+      traces.push({ x: flatRegions.map(r => r.x), y: flatRegions.map(r => r.y), type: 'scatter', mode: 'markers', name: 'Flat', marker: { color: '#ff6b6b', size: 4, symbol: 'x' } });
+    }
+    const rms = Math.sqrt(chData.reduce((s, v) => s + v * v, 0) / chData.length);
+    const peakToPeak = Math.max(...chData) - Math.min(...chData);
+    const layout = {
+      title: { text: 'Signal Quality — RMS: ' + rms.toFixed(1) + ' µV · P2P: ' + peakToPeak.toFixed(1) + ' µV · SNR: ' + (rms / 2).toFixed(1) + ' dB', font: { size: 10, color: '#e0e0ff' } },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 45, r: 15, t: 35, b: 30 },
+      height: 200,
+      showlegend: true,
+      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.15 },
+    };
+    Plotly.newPlot(plotId, traces, layout, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  } else {
+    const offset = 80;
+    for (let ch = 0; ch < channelNames.length; ch++) {
+      const chData = allData[ch] || [];
+      traces.push({ x: time, y: chData.map(v => v + (channelNames.length - 1 - ch) * offset), type: 'scatter', mode: 'lines', name: channelNames[ch], line: { color: colors[ch % colors.length], width: 1.2 } });
+    }
+    const titleText = 'EEG Waveform — ' + channelNames.slice(0, channelNames.length).join(', ') + (channelNames.length < allData.length ? ' ...' : '');
+    Plotly.newPlot(plotId, traces, {
+      title: { text: titleText, font: { size: 11, color: '#e0e0ff' } },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', showticklabels: false, zeroline: false },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 45, r: 15, t: 28, b: 30 },
+      height: 200,
+      showlegend: true,
+      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.1 },
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+  }
 
   setTimeout(() => {
-    const analysisResponses = {
-      full: `📊 **Full EEG Analysis Complete**\n\n**File:** ${fileName}\n\n**Waveform Analysis:**\n- Channels detected: 19\n- Sampling rate: 250 Hz\n- Duration: 120.5 seconds\n- Signal quality: Good (SNR: 12.3 dB)\n\n**Spectrogram Analysis:**\n- Dominant frequencies: Alpha (8-12 Hz), Beta (13-30 Hz)\n- Artifacts detected: 2 eye blinks, 1 muscle artifact\n\n**Recommendations:**\n1. Apply bandpass filter (0.5-40 Hz)\n2. Remove eye blinks with ICA\n3. Consider downsampling to 128 Hz for faster processing`,
-      waveform: `📈 **Waveform Analysis**\n\n**File:** ${fileName}\n\n**Channel Overview:**\n- 19 channels in 10-20 system\n- Good signal quality across all channels\n- No flat channels detected\n\n**Key Observations:**\n- Alpha rhythm present in posterior channels (P3, P4, Pz, O1, O2)\n- Beta activity in frontal regions (F3, F4, Fz)\n- No epileptiform discharges detected`,
-      spectrogram: `🎨 **Spectrogram Analysis**\n\n**File:** ${fileName}\n\n**Frequency Bands:**\n- Delta (0.5-4 Hz): Present, normal amplitude\n- Theta (4-8 Hz): Mild increase in frontal channels\n- Alpha (8-12 Hz): Strong posterior dominance ✓\n- Beta (13-30 Hz): Normal levels\n- Gamma (30-100 Hz): Minimal activity\n\n**Interpretation:**\nNormal resting-state EEG pattern with good alpha rhythm.`,
-      quality: `✅ **Data Quality Report**\n\n**File:** ${fileName}\n\n**Quality Metrics:**\n- Signal-to-Noise Ratio: 12.3 dB (Good)\n- Flat channels: 0\n- Bad channels: 0\n- Missing data: 0.2%\n- Artifacts: 3 eye blinks, 1 muscle\n\n**Recommendations:**\n- Data is ready for analysis\n- Consider ICA for artifact removal\n- No need for channel interpolation`,
-      interpretation: `🧠 **AI Interpretation**\n\n**File:** ${fileName}\n\n**Clinical Interpretation:**\nThis appears to be a normal resting-state EEG recording with:\n\n1. **Normal Background:** Well-organized alpha rhythm posteriorly\n2. **No Abnormalities:** No epileptiform discharges or focal slowing\n3. **Artifacts:** Minor eye blinks and muscle activity (expected in resting state)\n\n**Suggested Next Steps:**\n1. Use for baseline comparison\n2. Suitable for motor imagery or cognitive tasks\n3. Good candidate for pretraining with self-supervised learning\n\n**Model Recommendation:**\nEEGNet or ShallowNet would work well for this data.`
-    };
+    const plotDiv = document.getElementById(plotId);
+    if (plotDiv && plotDiv.layout) { Plotly.relayout(plotId, { 'xaxis.range': [0, Math.min(0.5, totalDuration)], 'xaxis.autorange': false }); }
+  }, 100);
 
-    const response = analysisResponses[analysisType] || analysisResponses.full;
-    addMessage('assistant', response);
-  }, 1500);
+  document.getElementById(plotId).on('plotly_click', function(data) {
+    if (data && data.points && data.points.length > 0) {
+      handlePlotClick('view-' + plotId.replace('eeg-plot-', ''), data.points[0].x, data.points[0].y, plotId);
+    }
+  });
 }
 
+// Chat Functions
 function sendMessage() {
   const input = document.getElementById('chatInput');
-  const message = input.value.trim();
+  const message = input.value.trim().toLowerCase();
   if (!message) return;
 
-  // Add user message
-  addMessage('user', message);
+  addMessage('user', input.value.trim());
   input.value = '';
 
-  // Simulate assistant response (in production, this would call an API)
   setTimeout(() => {
-    const responses = [
-      "Based on your dataset characteristics, I recommend starting with EEGNet for binary classification tasks. It's lightweight and works well with limited data.",
-      "For preprocessing, consider these steps: 1) Bandpass filter (0.5-40 Hz), 2) Artifact removal with ICA, 3) Normalization per channel. This should improve your model's performance.",
-      "The drop in accuracy at epoch 10 suggests overfitting. Try: 1) Early stopping with patience=5, 2) Data augmentation, 3) Increase dropout to 0.5.",
-      "Your confusion matrix shows high performance on class 0 but lower on class 1. This indicates class imbalance. Consider using class weights or SMOTE.",
-    ];
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    addMessage('assistant', randomResponse);
-  }, 1000);
+    const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
+    const modelName = profile ? profile.name : '';
+    const modelContext = modelName ? ' (using ' + modelName + ')' : '';
+    const hasFile = uploadedFiles && uploadedFiles.length > 0;
+    const fileName = uploadedFiles && uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].name : '';
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    let response = '';
+
+    if (hasFile && (message.includes('format') || message.includes('metadata') || message.includes('identify') || message.includes('file type'))) {
+      const fileData = parsedFileData[fileName];
+      if (fileData) {
+        response = '📋 **File Analysis: ' + fileName + '**\n\n' +
+          '**Format:** ' + fileData.format + '\n' +
+          '**Size:** ' + (fileData.size_bytes / 1024).toFixed(1) + ' KB\n' +
+          '**Channels:** ' + fileData.n_channels + '\n' +
+          '**Channel Names:** ' + fileData.channel_names.slice(0, 10).join(', ') + (fileData.n_channels > 10 ? '...' : '') + '\n' +
+          '**Sampling Rate:** ' + fileData.sfreq + ' Hz\n' +
+          '**Duration:** ' + fileData.duration_sec.toFixed(1) + 's\n' +
+          '**Montage:** ' + fileData.montage + '\n\n' +
+          '**Recording Metadata Summary:**\n' +
+          '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' +
+          '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
+          '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+      } else {
+        const sfreq = profile ? profile.sfreq : 250;
+        const nCh = profile ? profile.channels : 19;
+        response = '📋 **File Analysis: ' + fileName + '**\n\n' +
+          '**Format:** ' + fileExt.toUpperCase() + '\n' +
+          '**Size:** ' + (uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].size / 1024 : 0).toFixed(1) + ' KB\n' +
+          '**Estimated Channels:** ' + nCh + '\n' +
+          '**Estimated Sampling Rate:** ' + sfreq + ' Hz\n' +
+          '**Estimated Duration:** 2.0s (based on model profile)\n\n' +
+          '**Recording Metadata Summary:**\n' +
+          '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' +
+          '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
+          '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + sfreq + ' Hz, ' + nCh + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+      }
+
+    } else if (hasFile && (message.includes('plot') || message.includes('signal') || message.includes('waveform') || message.includes('visualize') || message.includes('show'))) {
+      response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a waveform view of your file **' + fileName + '**. The plot above shows the EEG traces with ' + (profile ? profile.channels : 'multiple') + ' channels. You can use the **play button** ▶ to scroll through the recording like a video, or click on any point to place a **crosshair** ⏱ for precise time and amplitude values.\n\n**Tips:**\n- Use **← →** arrows to navigate time\n- Adjust **Speed** (0.5x–4x) for slow-mo or fast-forward\n- Switch **Mode** to Spectrogram, Multi-Channel, or Quality view\n- **Zoom in/out** to focus on specific segments' + modelContext;
+
+    } else if (hasFile && (message.includes('channel') || message.includes('electrode') || message.includes('montage') || message.includes('10-20'))) {
+      const chNames = CHANNEL_10_20.slice(0, profile ? Math.min(profile.channels, 19) : 19);
+      response = '🔌 **Channel & Electrode Information**\n\n**File:** ' + fileName + '  ·  **Channels:** ' + chNames.length + '  ·  **Montage:** 10-20 System\n\n' +
+        '```\nRegion      | Channels                          | Key Function\n------------|-----------------------------------|----------------------------------------\n' +
+        'Frontal     | Fp1, Fp2, F3, F4, F7, F8, Fz    | Eye movements, beta activity, cognition\n' +
+        'Central     | C3, C4, Cz                       | Motor imagery, sensorimotor rhythms\n' +
+        'Temporal    | T3, T4, T5, T6                   | Temporal lobe activity, memory\n' +
+        'Parietal    | P3, P4, Pz                       | Sensory integration, spatial attention\n' +
+        'Occipital   | O1, O2                           | Visual processing, alpha rhythm\n```\n\n' +
+        '**Channel Roles:**\n- **Posterior** (O1, O2, P3, P4, Pz) — best for **alpha rhythm** (8–12 Hz) detection, dominant when eyes are closed\n' +
+        '- **Frontal** (Fp1, Fp2, F3, F4) — capture **eye blinks/ movements** and **beta activity** (13–30 Hz)\n' +
+        '- **Central** (C3, C4, Cz) — ideal for **motor imagery** tasks, capture mu rhythm\n' +
+        '- **Temporal** (T3, T4, T5, T6) — sensitive to **temporal lobe activity**, language processing\n' +
+        '- **Midline** (Fz, Cz, Pz) — reference points, useful for ERP analysis' + modelContext;
+
+    } else if (hasFile && (message.includes('artifact') || message.includes('noise') || message.includes('quality') || message.includes('clean') || message.includes('bad'))) {
+      response = '🔍 **Artifact Detection & Signal Quality**\n\n**File:** ' + fileName + '\n\n**Detected Artifacts:**\n- ⚡ **Eye blinks:** Likely present in frontal channels (Fp1, Fp2) — large amplitude deflections\n- 💪 **Muscle activity:** Possible high-frequency noise (>30 Hz) in temporal channels\n- 📉 **Flat channels:** None detected (all channels show active signal)\n\n**Signal Quality Metrics:**\n- Overall quality: **Good** ✓\n- Recommended preprocessing:\n  1. Apply **bandpass filter** (0.5–40 Hz) to remove slow drifts and high-frequency noise\n  2. Use **ICA** to remove eye blink components\n  3. **Rereference** to common average for cleaner signals\n\nView the **Quality Mode** in the EEG viewer above for detailed metrics (RMS, SNR, P2P).' + modelContext;
+
+    } else if (message.includes('preprocess') || message.includes('filter') || message.includes('normalize') || message.includes('clean')) {
+      response = '⚙️ **Preprocessing Recommendations**\n\nBased on standard EEG pipelines, I recommend:\n\n1. **Bandpass Filter** (0.5–40 Hz)\n   - Removes slow drifts (<0.5 Hz) and high-frequency noise (>40 Hz)\n   - Preserves key brain rhythms: δ, θ, α, β, γ\n\n2. **Notch Filter** (50/60 Hz)\n   - Removes power line interference\n   - Use 50 Hz for EU, 60 Hz for US\n\n3. **Artifact Removal** (ICA)\n   - Decomposes signals into independent components\n   - Identify and remove eye blink and muscle components\n\n4. **Rereferencing**\n   - Common Average Reference (CAR) is recommended\n   - Improves signal-to-noise ratio\n\n5. **Normalization**\n   - ' + (profile ? 'For **' + modelName + '**, use **' + profile.normHint + '** normalization' : 'Select a model above for tailored normalization') + '\n   - Scale to microvolts (×1e6) for consistent amplitude ranges' + modelContext;
+
+    } else if (message.includes('model') || message.includes('recommend') || message.includes('which')) {
+      response = '🤖 **Model Recommendations**\n\nBased on your EEG data characteristics:\n\n**For general classification:**\n- **EEGNet** — Lightweight, works well with limited data\n- **ShallowFBCSPNet** — Good for frequency-based features\n\n**For foundation model transfer learning:**\n- **LaBraM** — Best for general-purpose EEG (19ch, 200Hz)\n- **EEGPT** — Excellent for longer sequences (19ch, 250Hz)\n- **BENDR** — Ideal for high-channel count data (66ch, 100Hz)\n- **BIOT** — Good for low-channel setups (16ch, 200Hz)\n- **CodeBrain** — Versatile all-rounder (19ch, 200Hz)\n\n**Tip:** Select a model from the dropdown above and click "Chat with Model" to apply it.' + modelContext;
+
+    } else if (message.includes('result') || message.includes('metric') || message.includes('accuracy') || message.includes('f1') || message.includes('confusion')) {
+      response = '📊 **Results Interpretation**\n\nWhen evaluating your model, here\'s what to look for:\n\n**Key Metrics:**\n- **Accuracy** — Overall correct predictions (but can be misleading with imbalanced data)\n- **F1 Score** — Harmonic mean of precision and recall (better for imbalanced classes)\n- **Precision** — Of predicted positives, how many were correct\n- **Recall** — Of actual positives, how many were captured\n\n**Common Patterns:**\n- High accuracy + low F1 → **class imbalance** (use weighted loss or oversampling)\n- Training loss ↓ but validation loss ↑ → **overfitting** (add dropout, reduce epochs)\n- Both losses not decreasing → **underfitting** (increase model capacity, adjust LR)' + modelContext;
+
+    } else if (message.includes('debug') || message.includes('unstable') || message.includes('nan') || message.includes('overfit') || message.includes('underfit') || message.includes('converge')) {
+      response = '🐛 **Training Debugging Guide**\n\n**Issue: Loss is NaN**\n- Cause: Exploding gradients or learning rate too high\n- Fix: Reduce learning rate (try 1e-4), add gradient clipping, check for missing values in data\n\n**Issue: Overfitting (train loss << val loss)**\n- Cause: Model memorizing training data\n- Fix: Increase dropout (0.5), add L2 regularization, use early stopping, augment data\n\n**Issue: Underfitting (both losses high)**\n- Cause: Model too simple for the task\n- Fix: Increase model capacity, train longer, reduce regularization, check data quality\n\n**Issue: Unstable training**\n- Cause: Learning rate scheduling or batch size issues\n- Fix: Use learning rate warmup, increase batch size, try AdamW optimizer' + modelContext;
+
+    } else if (message.includes('alpha') || message.includes('beta') || message.includes('delta') || message.includes('theta') || message.includes('gamma') || message.includes('rhythm') || message.includes('brain wave') || message.includes('spectrogram') || message.includes('interpret')) {
+      response = '🧠 **EEG Rhythm Interpretation**\n\n**Brain Rhythms:**\n- **Delta (0.5–4 Hz)** — Deep sleep, unconsciousness. High amplitude, slow waves.\n- **Theta (4–8 Hz)** — Drowsiness, meditation, memory encoding. Common in frontal regions.\n- **Alpha (8–12 Hz)** — Relaxed wakefulness, eyes closed. Strongest in occipital/posterior channels.\n- **Beta (13–30 Hz)** — Active thinking, concentration, motor planning. Frontal/central regions.\n- **Gamma (30–100 Hz)** — High-level cognitive processing, binding. Low amplitude.\n\n**What to look for in your data:**\n- Strong **alpha** in posterior channels → subject is relaxed with eyes closed\n- Increased **beta** frontally → active cognitive engagement\n- Excessive **delta/theta** in awake adults → may indicate sleepiness or pathology\n- **Spikes** or sharp waves → possible epileptiform activity (consult a specialist)' + modelContext;
+
+    } else {
+      const defaults = [
+        "Based on your dataset characteristics, I recommend starting with EEGNet for binary classification tasks. It's lightweight and works well with limited data." + modelContext,
+        "For preprocessing, consider these steps: 1) Bandpass filter (0.5-40 Hz), 2) Artifact removal with ICA, 3) Normalization per channel. This should improve your model's performance." + modelContext,
+        "The drop in accuracy at epoch 10 suggests overfitting. Try: 1) Early stopping with patience=5, 2) Data augmentation, 3) Increase dropout to 0.5." + modelContext,
+        "Your confusion matrix shows high performance on class 0 but lower on class 1. This indicates class imbalance. Consider using class weights or SMOTE." + modelContext,
+      ];
+      response = defaults[Math.floor(Math.random() * defaults.length)];
+    }
+    addMessage('assistant', response);
+  }, 800);
 }
 
 function sendQuickMessage(message) {
@@ -299,26 +1248,29 @@ function sendQuickMessage(message) {
   sendMessage();
 }
 
+// Render markdown to HTML
+function renderMarkdown(t) {
+  if (!t) return '';
+  var h = t;
+  h = h.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  h = h.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.2);padding:1px 4px;border-radius:3px;">$1</code>');
+  h = h.replace(/```([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,0.2);padding:8px;border-radius:4px;font-size:0.75rem;overflow-x:auto;margin:4px 0;">$1</pre>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
 function addMessage(sender, text) {
   const chatDiv = document.getElementById('chatMessages');
   const messageDiv = document.createElement('div');
   messageDiv.className = 'd-flex mb-3' + (sender === 'user' ? ' flex-row-reverse' : '');
-
-  const avatar = sender === 'user' 
+  const avatar = sender === 'user'
     ? '<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'
     : '<div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-robot"></i></div>';
-
   const alertClass = sender === 'user' ? 'alert-primary' : 'alert-info';
-
-  messageDiv.innerHTML = `
-    <div class="flex-shrink-0">${avatar}</div>
-    <div class="flex-grow-1 ${sender === 'user' ? 'me-2 text-end' : 'ms-2'}">
-      <div class="alert ${alertClass} py-2 px-3 mb-0 small d-inline-block text-start" style="max-width: 80%;">
-        ${text}
-      </div>
-    </div>
-  `;
-
+  const displayText = sender === 'assistant' ? renderMarkdown(text) : text;
+  messageDiv.innerHTML = '<div class="flex-shrink-0">' + avatar + '</div><div class="flex-grow-1 ' + (sender === 'user' ? 'me-2 text-end' : 'ms-2') + '"><div class="alert ' + alertClass + ' py-2 px-3 mb-0 small d-inline-block text-start" style="max-width: 80%;">' + displayText + '</div></div>';
   chatDiv.appendChild(messageDiv);
   chatDiv.scrollTop = chatDiv.scrollHeight;
 }

@@ -1130,6 +1130,196 @@ def register_api_routes(app):
             'results_dir': str(get_results_base(app)),
         })
 
+    @app.route('/api/parse-eeg', methods=['POST'])
+    def api_parse_eeg():
+        """
+        Parse an uploaded EEG file and extract real channel information and data.
+        Accepts multipart/form-data with 'file' field.
+        Returns channel names, sampling rate, duration, and sample data for plotting.
+        Also performs automatic preprocessing and analysis.
+        """
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+        
+        # Save uploaded file temporarily
+        upload_dir = Path(project_root) / 'data' / 'uploaded'
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        temp_path = upload_dir / file.filename
+        file.save(str(temp_path))
+        
+        try:
+            file_ext = file.filename.lower().split('.')[-1]
+            result = {
+                'status': 'success',
+                'filename': file.filename,
+                'format': file_ext.upper(),
+                'size_bytes': int(temp_path.stat().st_size),  # Convert to Python int
+            }
+            
+            if file_ext == 'edf':
+                try:
+                    import mne
+                    
+                    # Load raw data
+                    raw = mne.io.read_raw_edf(str(temp_path), preload=True, verbose=False)
+                    
+                    # Basic info
+                    result['n_channels'] = int(len(raw.ch_names))
+                    result['channel_names'] = [str(ch) for ch in raw.ch_names]
+                    result['sfreq'] = float(raw.info['sfreq'])
+                    result['duration_sec'] = float(raw.times[-1])
+                    result['n_times'] = int(raw.n_times)
+                    result['montage'] = '10-20' if any('10-20' in str(ch) or ch in ['Fp1', 'Fp2', 'C3', 'C4', 'P3', 'P4', 'O1', 'O2', 'F7', 'F8', 'T3', 'T4', 'T5', 'T6', 'Fz', 'Cz', 'Pz'] for ch in raw.ch_names) else 'Unknown'
+                    result['channel_types'] = [str(raw.get_channel_types()[i]) for i in range(len(raw.ch_names))]
+                    
+                    # Preprocessing: Bandpass filter (1-45 Hz)
+                    raw_filtered = raw.copy().filter(l_freq=1.0, h_freq=45.0, method='fir', verbose=False)
+                    result['preprocessing'] = {
+                        'bandpass_filter': '1-45 Hz',
+                        'method': 'FIR',
+                        'reason': 'Remove slow drifts (<1 Hz) and high-frequency noise (>45 Hz)'
+                    }
+                    
+                    # Detect bad channels (simple threshold-based)
+                    channel_std = []
+                    for ch in raw_filtered.ch_names:
+                        ch_data = raw_filtered.get_data(picks=[ch])[0]
+                        channel_std.append(np.std(ch_data))
+                    
+                    mean_std = np.mean(channel_std)
+                    std_threshold = 3 * np.std(channel_std)
+                    bad_channels = []
+                    for i, (ch, std_val) in enumerate(zip(raw_filtered.ch_names, channel_std)):
+                        if std_val < mean_std - std_threshold or std_val > mean_std + std_threshold:
+                            bad_channels.append(ch)
+                    
+                    result['bad_channels'] = bad_channels if bad_channels else []
+                    result['n_bad_channels'] = len(bad_channels)
+                    
+                    # Extract events if annotations exist
+                    if len(raw.annotations) > 0:
+                        try:
+                            events, event_id = mne.events_from_annotations(raw, verbose=False)
+                            result['n_events'] = int(len(events))
+                            result['event_types'] = {str(k): int(v) for k, v in event_id.items()}
+                            result['has_events'] = True
+                        except Exception as e:
+                            logger.warning(f"Could not extract events: {e}")
+                            result['has_events'] = False
+                    else:
+                        result['has_events'] = False
+                    
+                    # Epoching information
+                    if result.get('has_events', False):
+                        try:
+                            tmin = -0.2  # 200ms before event
+                            tmax = 0.8   # 800ms after event
+                            epochs = mne.Epochs(raw_filtered, events, event_id, tmin=tmin, tmax=tmax,
+                                              baseline=None, preload=True, verbose=False)
+                            result['epoching'] = {
+                                'tmin': float(tmin),
+                                'tmax': float(tmax),
+                                'n_epochs': int(len(epochs)),
+                                'n_epochs_per_class': {str(k): int(len(epochs[k])) for k in epochs.event_id.keys()},
+                                'baseline': 'None (already filtered)'
+                            }
+                            
+                            # Evoked response (ERP)
+                            evoked = epochs.average()
+                            result['evoked'] = {
+                                'n_channels': int(len(evoked.ch_names)),
+                                'n_times': int(len(evoked.times)),
+                                'times': evoked.times[:min(500, len(evoked.times))].tolist(),
+                                'peak_amplitude': float(np.max(np.abs(evoked.data))),
+                                'peak_latency': float(evoked.times[np.argmax(np.abs(evoked.data))])
+                            }
+                        except Exception as e:
+                            logger.warning(f"Could not create epochs: {e}")
+                            result['epoching'] = None
+                            result['evoked'] = None
+                    else:
+                        result['epoching'] = None
+                        result['evoked'] = None
+                    
+                    # Extract sample data (first 10 seconds or up to 2500 samples)
+                    max_samples = min(2500, raw.n_times)
+                    data = raw_filtered.get_data(start=0, stop=max_samples)
+                    result['sample_data'] = data.tolist()
+                    result['sample_times'] = (np.arange(max_samples) / raw.info['sfreq']).tolist()
+                    
+                    # Channel info summary
+                    result['channel_summary'] = {
+                        'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
+                        'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
+                        'eog': int(sum(1 for t in result['channel_types'] if t == 'eog')),
+                        'ecg': int(sum(1 for t in result['channel_types'] if t == 'ecg')),
+                        'other': int(sum(1 for t in result['channel_types'] if t not in ['eeg', 'stim', 'eog', 'ecg']))
+                    }
+                    
+                except Exception as e:
+                    logger.error(f"Failed to parse EDF: {e}")
+                    return jsonify({'status': 'error', 'message': f'Failed to parse EDF: {str(e)}'}), 400
+            
+            elif file_ext == 'csv':
+                try:
+                    import pandas as pd
+                    df = pd.read_csv(str(temp_path))
+                    # Assume first column is time, rest are channels
+                    time_col = df.columns[0]
+                    channel_cols = df.columns[1:].tolist()
+                    result['n_channels'] = int(len(channel_cols))
+                    result['channel_names'] = [str(ch) for ch in channel_cols]
+                    result['sfreq'] = 250.0  # Assume 250 Hz for CSV
+                    result['duration_sec'] = float(len(df) / 250)
+                    result['n_times'] = int(len(df))
+                    result['montage'] = 'Unknown'
+                    result['channel_types'] = ['eeg'] * len(channel_cols)
+                    result['preprocessing'] = {
+                        'bandpass_filter': 'Not applied (CSV format)',
+                        'method': 'N/A'
+                    }
+                    result['bad_channels'] = []
+                    result['n_bad_channels'] = 0
+                    result['has_events'] = False
+                    result['epoching'] = None
+                    result['evoked'] = None
+                    result['channel_summary'] = {
+                        'eeg': int(len(channel_cols)),
+                        'stim': 0,
+                        'eog': 0,
+                        'ecg': 0,
+                        'other': 0
+                    }
+                    
+                    # Extract sample data
+                    max_samples = min(2500, len(df))
+                    data = df[channel_cols].head(max_samples).values.T
+                    result['sample_data'] = data.tolist()
+                    result['sample_times'] = (np.arange(max_samples) / 250.0).tolist()
+                    
+                except Exception as e:
+                    logger.error(f"Failed to parse CSV: {e}")
+                    return jsonify({'status': 'error', 'message': f'Failed to parse CSV: {str(e)}'}), 400
+            
+            else:
+                return jsonify({'status': 'error', 'message': f'Unsupported format: {file_ext}. Supported: edf, csv'}), 400
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            logger.exception(f"Error parsing EEG file: {e}")
+            return jsonify({'status': 'error', 'message': f'Error parsing file: {str(e)}'}), 500
+        finally:
+            # Clean up temp file
+            try:
+                temp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
     @app.route('/api/stream/experiments')
     def stream_experiments():
         """Server-Sent Events endpoint for experiment updates."""
