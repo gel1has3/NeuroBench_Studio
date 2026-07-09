@@ -27,14 +27,6 @@
         <i class="bi bi-question-circle"></i>
       </button>
         <div class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 300px; font-size:0.75rem; max-height: 70vh; overflow-y: auto;">
-        <h6 class="dropdown-header px-0 py-1"><i class="bi bi-chat-quote me-1"></i>Example Questions</h6>
-        <button class="dropdown-item small py-1" onclick="sendQuickMessage('What preprocessing steps should I use for motor imagery?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Pipeline</span>What preprocessing steps should I use?</button>
-        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Which model works best for sleep stage classification?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Models</span>Which model for sleep stages?</button>
-        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Why is my F1 score lower than accuracy?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Results</span>Why is F1 lower than accuracy?</button>
-        <button class="dropdown-item small py-1" onclick="sendQuickMessage('My loss is NaN after epoch 5, what\'s wrong?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Debug</span>Loss is NaN after epoch 5</button>
-        
-        <div class="dropdown-divider"></div>
-        
         <!-- Recording Information Group -->
         <div class="mb-1">
           <button class="dropdown-item small py-1 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#recordingGroup" aria-expanded="true" style="font-weight: 600;" onclick="event.stopPropagation()">
@@ -147,6 +139,22 @@
         </div>
         
         <div class="dropdown-divider"></div>
+        
+        <h6 class="dropdown-header px-0 py-1"><i class="bi bi-heart-pulse me-1"></i>Disease Specific Questions</h6>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Does this patient have epilepsy? Based on the EEG, does this patient have epilepsy?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Fine-tune</span>Does this patient have epilepsy?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Is this EEG normal or abnormal? Analyze the recording and classify as normal or abnormal.')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Fine-tune</span>Is this EEG normal or abnormal?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Does this patient have Alzheimer&#39;s disease? Look at the EEG patterns and determine if Alzheimer&#39;s is present.')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Fine-tune</span>Does this patient have Alzheimer&#39;s disease?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Is this recording from a patient with ADHD? Analyze the EEG for ADHD markers.')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Fine-tune</span>Does this patient have ADHD?</button>
+        
+        <div class="dropdown-divider"></div>
+        
+        <h6 class="dropdown-header px-0 py-1"><i class="bi bi-chat-quote me-1"></i>Example Questions</h6>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('What preprocessing steps should I use for motor imagery?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Pipeline</span>What preprocessing steps should I use?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Which model works best for sleep stage classification?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Models</span>Which model for sleep stages?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('Why is my F1 score lower than accuracy?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Results</span>Why is F1 lower than accuracy?</button>
+        <button class="dropdown-item small py-1" onclick="sendQuickMessage('My loss is NaN after epoch 5, what\'s wrong?')"><span class="badge bg-secondary me-1" style="font-size:0.6rem;">Debug</span>Loss is NaN after epoch 5</button>
+        
+        <div class="dropdown-divider"></div>
         <h6 class="dropdown-header px-0 py-1"><i class="bi bi-info-circle me-1"></i>How It Works</h6>
         <div class="px-2 small text-muted">1. Select a model above → 2. Configure preprocessing → 3. Upload & visualize EEG → 4. Ask questions</div>
       </div>
@@ -245,14 +253,14 @@
                     <div class="d-flex flex-wrap gap-1 mb-1" id="uploadedFilesBadges"></div>
                     <div class="d-flex align-items-center gap-2">
                       <label class="small text-muted mb-0" style="white-space:nowrap;">Mode:</label>
-                      <select id="analysisType" class="form-select form-select-sm" style="width:auto;" onchange="onAnalysisTypeChange()">
-                        <option value="waveform">Waveform</option>
-                        <option value="spectrogram">Spectrogram</option>
-                        <option value="channels">Multi-Channel</option>
-                        <option value="quality">Quality</option>
-                        <option value="scalp">Scalp Sensor View</option>
-                        <option value="topographic">Topographic View</option>
-                        <option value="epoch_image">Epoch as Image</option>
+                        <select id="analysisType" class="form-select form-select-sm" style="width:auto;" onchange="onAnalysisTypeChange()">
+                        <option value="waveform">🌊 Raw Plot (raw.plot)</option>
+                        <option value="spectrogram">📊 Spectrum Map (psd.spectrum_map)</option>
+                        <option value="channels">🦋 Butterfly View (raw.plot_butterfly)</option>
+                        <option value="quality">✅ Signal Quality Report</option>
+                        <option value="scalp">📍 Sensor Locations (plot_sensors)</option>
+                        <option value="topographic">🧠 Topographic Map (plot_topomap)</option>
+                        <option value="epoch_image">🎯 Epochs Image (epochs.plot_image)</option>
                       </select>
                       <label class="small text-muted mb-0" style="white-space:nowrap;">Grid:</label>
                       <select id="gridColumns" class="form-select form-select-sm" style="width:auto;">
@@ -337,17 +345,15 @@
             <label class="form-label small fw-semibold">Neurodevelopmental Condition</label>
             <select id="settingsCondition" class="form-select form-select-sm">
               <option value="">— Select condition (optional) —</option>
+              <option value="Epilepsy">Epilepsy</option>
               <option value="ADHD">ADHD</option>
               <option value="Alzheimer's Disease">Alzheimer's Disease</option>
               <option value="Autism Spectrum Disorder">Autism Spectrum Disorder</option>
               <option value="Brain Death Evaluation">Brain Death Evaluation</option>
               <option value="Brain Tumor">Brain Tumor</option>
               <option value="Coma">Coma</option>
-              <option value="Creutzfeldt-Jakob Disease (CJD)">Creutzfeldt-Jakob Disease (CJD)</option>
               <option value="Dementia">Dementia</option>
               <option value="Encephalitis">Encephalitis</option>
-              <option value="Encephalopathy (Metabolic/Toxic)">Encephalopathy (Metabolic/Toxic)</option>
-              <option value="Epilepsy">Epilepsy</option>
               <option value="Insomnia">Insomnia</option>
               <option value="Meningitis">Meningitis</option>
               <option value="Narcolepsy">Narcolepsy</option>
@@ -521,7 +527,7 @@ const CHANNEL_10_20 = ['Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2','F7',
 let currentModel = '';
 let currentSettings = {};
 let uploadedFiles = [];
-let parsedFileData = {}; // Store parsed EEG data from backend
+let parsedFileData = {};
 
 // Model Selection
 function onModelChange(modelKey) {
@@ -567,27 +573,6 @@ function onNormAlgoChange(value) {
   document.getElementById('expMovingDecayField').style.display = value === 'exp_moving_std' ? 'block' : 'none';
 }
 
-function resetSettings() {
-  document.getElementById('settingsModelCheckpoint').value = '';
-  document.getElementById('settingsCondition').value = '';
-  document.getElementById('settingsSfreq').value = '';
-  document.getElementById('settingsChannelCount').value = 21;
-  document.getElementById('settingsChannelCountVal').textContent = '21';
-  document.getElementById('settingsNormAlgo').value = 'exp_moving_std';
-  document.getElementById('settingsDecayFactor').value = 0.001;
-  document.getElementById('settingsDecayFactorVal').textContent = '0.001';
-  document.getElementById('settingsTrialWindowSize').value = '';
-  document.getElementById('settingsWindowStride').value = 50;
-  document.getElementById('settingsWindowStrideVal').textContent = '50%';
-  document.querySelector('input[name="amplitudeScale"][value="volts_to_microvolts"]').checked = true;
-  document.querySelectorAll('.chip').forEach(chip => {
-    if (chip.dataset.value === 'EEG') { chip.classList.add('checked'); chip.querySelector('.chip-check').textContent = '✓'; }
-    else { chip.classList.remove('checked'); chip.querySelector('.chip-check').textContent = ''; }
-  });
-  onNormAlgoChange('exp_moving_std');
-  onModelChange(currentModel);
-}
-
 function applySettings() {
   const selectedChips = [];
   document.querySelectorAll('.chip.checked').forEach(chip => selectedChips.push(chip.dataset.value));
@@ -612,20 +597,14 @@ function applySettings() {
   settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%';
   addMessage('assistant', settingsMsg);
   
-  // Close modal properly to prevent stacking
   const modalEl = document.getElementById('preprocessingSettingsModal');
   if (modalEl) {
-    // Hide modal element
     modalEl.classList.remove('show');
     modalEl.style.display = 'none';
     modalEl.setAttribute('aria-hidden', 'true');
     modalEl.removeAttribute('aria-modal');
-    
-    // Remove all modal backdrops
     const backdrops = document.querySelectorAll('.modal-backdrop');
     backdrops.forEach(backdrop => backdrop.remove());
-    
-    // Clean up body classes and styles
     document.body.classList.remove('modal-open');
     document.body.style.paddingRight = '';
     document.body.style.overflow = '';
@@ -644,7 +623,6 @@ function handleFileUpload(input) {
   
   addMessage('assistant', '📤 **Uploading ' + files.length + ' file(s) for analysis...**');
   
-  // Upload each file to backend for parsing
   files.forEach((file, index) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -658,7 +636,6 @@ function handleFileUpload(input) {
       if (data.status === 'success') {
         parsedFileData[file.name] = data;
         
-        // Build comprehensive analysis message
         let analysisMsg = '✅ **Analyzed: ' + file.name + '**\n\n' +
           '**Format:** ' + data.format + '\n' +
           '**Size:** ' + (data.size_bytes / (1024*1024)).toFixed(1) + ' MB\n' +
@@ -668,7 +645,6 @@ function handleFileUpload(input) {
           '**Duration:** ' + data.duration_sec.toFixed(1) + 's\n' +
           '**Montage:** ' + data.montage + '\n\n';
         
-        // Add preprocessing info
         if (data.preprocessing) {
           analysisMsg += '**🔧 Preprocessing Applied:**\n' +
             '- Bandpass Filter: ' + data.preprocessing.bandpass_filter + '\n' +
@@ -676,7 +652,6 @@ function handleFileUpload(input) {
             '- Reason: ' + data.preprocessing.reason + '\n\n';
         }
         
-        // Add channel summary
         if (data.channel_summary) {
           analysisMsg += '**📊 Channel Summary:**\n' +
             '- EEG: ' + data.channel_summary.eeg + '\n' +
@@ -686,7 +661,6 @@ function handleFileUpload(input) {
             '- Other: ' + data.channel_summary.other + '\n\n';
         }
         
-        // Add bad channels info
         if (data.n_bad_channels > 0) {
           const nonEegChannels = data.bad_channels.filter(ch => ch.includes('ECG') || ch.includes('EKG') || ch.includes('EOG') || ch.includes('EMG') || ch.includes('STIM'));
           const actualBadChannels = data.bad_channels.filter(ch => !nonEegChannels.includes(ch));
@@ -702,7 +676,6 @@ function handleFileUpload(input) {
           analysisMsg += '✅ **Signal Quality:** All channels look good (no bad channels detected)\n\n';
         }
         
-        // Add events/epoching info
         if (data.has_events) {
           analysisMsg += '📅 **Events Detected:** ' + data.n_events + ' events\n' +
             'Event Types: ' + Object.keys(data.event_types).slice(0, 5).join(', ') + '\n';
@@ -783,8 +756,6 @@ function analyzeUploadedFiles() {
   const promises = uploadedFiles.map((file, idx) => {
     return new Promise((resolve) => {
       const fileExt = file.name.split('.').pop().toLowerCase();
-      
-      // Check if we have parsed data from backend
       const parsedBackend = parsedFileData[file.name];
       
       if (fileExt === 'csv') {
@@ -797,7 +768,6 @@ function analyzeUploadedFiles() {
         };
         reader.readAsText(file);
       } else if (parsedBackend && parsedBackend.sample_data) {
-        // Use backend parsed data for EDF and other formats
         const parsed = {
           channels: parsedBackend.channel_names,
           data: parsedBackend.sample_data,
@@ -872,7 +842,6 @@ function addMessageWithEEGViewer(fileName, displayMode, profile, parsedData) {
   if (displayMode === 'channels') displayChannels = channelNames;
   else if (displayMode === 'quality') displayChannels = channelNames.slice(0, Math.min(4, nCh));
   else displayChannels = channelNames.slice(0, Math.min(4, nCh));
-  const nDisplay = displayChannels.length;
   const plotId = 'eeg-plot-' + Date.now();
   const messageDiv = document.createElement('div');
   messageDiv.className = 'd-flex mb-3 eeg-grid-viewer';
@@ -1079,6 +1048,8 @@ function addMessageWithEEGGrid(fileEntries, gridCols) {
     const colClass = 'col-md-' + Math.floor(12 / gridCols);
     const viewId = 'grid-view-' + idx;
     const fileId = 'grid-file-' + idx;
+    // Constrain height for sensor/topo views
+    const isSpatialView = entry.displayMode === 'scalp' || entry.displayMode === 'topographic';
     
     plotsHtml += '<div class="' + colClass + '">' +
       '<div class="py-2 px-3 mb-0 small">' +
@@ -1106,7 +1077,7 @@ function addMessageWithEEGGrid(fileEntries, gridCols) {
         '</div>' +
       '</div>' +
       '<div id="' + viewId + '-container" style="position:relative;">' +
-        '<div id="' + fileId + '" style="background:rgba(255,255,255,.02);border-radius:6px;height:150px;"></div>' +
+        '<div id="' + fileId + '" style="background:rgba(255,255,255,.02);border-radius:6px;height:' + (isSpatialView ? '180px' : '150px') + ';"></div>' +
         '<div id="' + viewId + '-crosshair" style="position:absolute;top:0;bottom:0;width:1.5px;background:#ff6b6b;pointer-events:none;display:none;z-index:10;"></div>' +
         '<div id="' + viewId + '-crosshair-info" style="position:absolute;top:4px;background:rgba(0,0,0,0.75);color:#fff;padding:2px 6px;border-radius:3px;font-size:0.65rem;pointer-events:none;display:none;z-index:11;white-space:nowrap;"></div>' +
       '</div>' +
@@ -1200,6 +1171,7 @@ function addMessageWithEEGGrid(fileEntries, gridCols) {
   });
 }
 
+// MNE-Standard EEG Rendering Engine
 function renderEEGPlot(plotId, time, allData, channelNames, displayMode, sfreq) {
   const existingPlot = document.getElementById(plotId);
   if (existingPlot && existingPlot.data) {
@@ -1207,320 +1179,403 @@ function renderEEGPlot(plotId, time, allData, channelNames, displayMode, sfreq) 
   }
   
   const traces = [];
-  const colors = ['#0dcaf0', '#ff6b6b', '#51cf66', '#ffd700', '#cc9fff', '#ff922b', '#20c997', '#f06595', '#748ffc', '#fcc419'];
+  const channelType = {
+    'Fp1':'eog','Fp2':'eog','F3':'eeg','F4':'eeg','C3':'eeg','C4':'eeg',
+    'P3':'eeg','P4':'eeg','O1':'eeg','O2':'eeg','F7':'eeg','F8':'eeg',
+    'T3':'eeg','T4':'eeg','T5':'eeg','T6':'eeg','Fz':'eeg','Cz':'eeg','Pz':'eeg'
+  };
+  const typeColors = {'eeg':'#0dcaf0','eog':'#ffc107','ecg':'#dc3545','emg':'#198754','stim':'#6f42c1'};
+  const chPos = {
+    'Fp1':[-0.15,0.35],'Fp2':[0.15,0.35],'F3':[-0.2,0.2],'F4':[0.2,0.2],
+    'C3':[-0.25,0],'C4':[0.25,0],'P3':[-0.2,-0.2],'P4':[0.2,-0.2],
+    'O1':[-0.1,-0.35],'O2':[0.1,-0.35],'F7':[-0.35,0.2],'F8':[0.35,0.2],
+    'T3':[-0.4,0],'T4':[0.4,0],'T5':[-0.35,-0.2],'T6':[0.35,-0.2],
+    'Fz':[0,0.25],'Cz':[0,0],'Pz':[0,-0.2]
+  };
+  
   const totalDuration = time[time.length - 1];
+  const nCh = channelNames.length;
+  const CH_OFFSET = Math.max(80, Math.min(150, 3000 / nCh));
 
-  if (displayMode === 'channels') {
-    for (let ch = 0; ch < channelNames.length; ch++) {
-      const chData = allData[ch] || [];
-      traces.push({ x: time, y: chData.map(v => v + (channelNames.length - 1 - ch) * 100), type: 'scatter', mode: 'lines', name: channelNames[ch], line: { color: colors[ch % colors.length], width: 1 } });
-    }
+  // WAVEFORM: raw.plot() MNE standard
+  if (displayMode === 'waveform') {
+    const chOrder = ['Fp1','Fp2','F7','F3','Fz','F4','F8','T3','C3','Cz','C4','T4','T5','P3','Pz','P4','T6','O1','O2'];
+    const sorted = chOrder.filter(c => channelNames.includes(c));
+    const display = sorted.length > 0 ? sorted : channelNames;
+    
+    display.forEach((ch, idx) => {
+      const ci = channelNames.indexOf(ch);
+      const chData = (ci >= 0 && allData[ci]) ? allData[ci] : [];
+      const cType = channelType[ch] || 'eeg';
+      const color = typeColors[cType] || '#0dcaf0';
+      const yOffset = (display.length - 1 - idx) * CH_OFFSET;
+      traces.push({
+        x: time, y: chData.map(v => v + yOffset),
+        type: 'scatter', mode: 'lines',
+        name: ch, legendgroup: cType,
+        line: { color: color, width: 1.0 },
+        hovertemplate: '<b>' + ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>',
+        showlegend: idx === 0
+      });
+    });
+    
     Plotly.newPlot(plotId, traces, {
-      title: { text: 'Multi-Channel EEG Overview', font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      yaxis: { title: 'Channel', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', showticklabels: true, tickmode: 'array', tickvals: channelNames.map((ch, i) => (channelNames.length - 1 - i) * 100), ticktext: channelNames, zeroline: false },
+      title: { text: 'EEG Raw Data — ' + display.length + ' channels · ' + sfreq + ' Hz', font: { size: 11, color: '#e0e0ff' }, x: 0.01, y: 0.98 },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', zerolinecolor: 'rgba(255,255,255,0.1)' },
+      yaxis: { title: 'Channels (µV)', gridcolor: 'rgba(255,255,255,0.03)', color: '#8888aa',
+        showticklabels: true, zeroline: false,
+        tickmode: 'array', tickvals: display.map((ch, i) => (display.length - 1 - i) * CH_OFFSET), ticktext: display, tickfont: { size: 9, family: 'monospace' } },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 45, r: 15, t: 28, b: 30 },
-      height: Math.min(600, Math.max(300, channelNames.length * 28)),
+      margin: { l: 50, r: 20, t: 30, b: 35 },
+      height: Math.max(250, Math.min(600, nCh * 28)),
       showlegend: true,
-      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.1 },
+      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.08, itemclick: 'toggleOthers' },
+      hovermode: 'closest'
     }, { responsive: true, displayModeBar: false, staticPlot: false });
 
-  } else if (displayMode === 'spectrogram') {
-    const chData = allData[0] || [];
-    traces.push({ x: time, y: chData, type: 'scatter', mode: 'lines', name: channelNames[0] || 'C3', line: { color: '#0dcaf0', width: 1.5 } });
-    const layout = {
-      title: { text: (channelNames[0] || 'C3') + ' — Waveform with Frequency Bands', font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 45, r: 15, t: 28, b: 30 },
-      height: 220,
-      showlegend: false,
-      annotations: [
-        { x: 0.05, y: 0.95, xref: 'paper', yref: 'paper', text: 'α (8-12Hz)', showarrow: false, font: { size: 9, color: '#ffd700' } },
-        { x: 0.2, y: 0.95, xref: 'paper', yref: 'paper', text: 'β (13-30Hz)', showarrow: false, font: { size: 9, color: '#ff6b6b' } },
-        { x: 0.4, y: 0.95, xref: 'paper', yref: 'paper', text: 'δ (0.5-4Hz)', showarrow: false, font: { size: 9, color: '#51cf66' } },
-      ],
-    };
-    Plotly.newPlot(plotId, traces, layout, { responsive: true, displayModeBar: false, staticPlot: false });
-
-  } else if (displayMode === 'quality') {
-    const chData = allData[0] || [];
-    traces.push({ x: time, y: chData, type: 'scatter', mode: 'lines', name: channelNames[0] || 'CH1', line: { color: '#0dcaf0', width: 1.5 } });
-    const flatThreshold = 0.5;
-    const flatRegions = [];
-    for (let t = 0; t < chData.length - 10; t++) {
-      const segment = chData.slice(t, t + 10);
-      const range = Math.max(...segment) - Math.min(...segment);
-      if (range < flatThreshold) flatRegions.push({ x: time[t], y: chData[t] });
-    }
-    if (flatRegions.length > 0) {
-      traces.push({ x: flatRegions.map(r => r.x), y: flatRegions.map(r => r.y), type: 'scatter', mode: 'markers', name: 'Flat', marker: { color: '#ff6b6b', size: 4, symbol: 'x' } });
-    }
-    const rms = Math.sqrt(chData.reduce((s, v) => s + v * v, 0) / chData.length);
-    const peakToPeak = Math.max(...chData) - Math.min(...chData);
-    const layout = {
-      title: { text: 'Signal Quality — RMS: ' + rms.toFixed(1) + ' µV · P2P: ' + peakToPeak.toFixed(1) + ' µV · SNR: ' + (rms / 2).toFixed(1) + ' dB', font: { size: 10, color: '#e0e0ff' } },
-      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 45, r: 15, t: 35, b: 30 },
-      height: 200,
-      showlegend: true,
-      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.15 },
-    };
-    Plotly.newPlot(plotId, traces, layout, { responsive: true, displayModeBar: false, staticPlot: false });
-
-  } else if (displayMode === 'scalp') {
-    // Scalp Sensor View - MNE-style sensor location plot (raw.plot_sensors())
-    const scalpLayout = {
-      title: { text: 'Sensor Locations (10-20 System)', font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { title: 'Position (m)', range: [-0.5, 0.5], showgrid: true, gridcolor: 'rgba(255,255,255,0.1)', zeroline: false, showticklabels: true, color: '#8888aa' },
-      yaxis: { title: 'Position (m)', range: [-0.5, 0.5], showgrid: true, gridcolor: 'rgba(255,255,255,0.1)', zeroline: false, showticklabels: true, color: '#8888aa', scaleanchor: 'x', scaleratio: 1 },
-      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 50, r: 20, t: 28, b: 40 },
-      height: 350,
-      showlegend: false,
-      shapes: [
-        { type: 'circle', xref: 'x', yref: 'y', x0: -0.4, y0: -0.4, x1: 0.4, y1: 0.4, line: { color: '#8888aa', width: 2, dash: 'solid' } },
-        { type: 'line', xref: 'x', yref: 'y', x0: 0, y0: 0.4, x1: 0, y1: 0.5, line: { color: '#8888aa', width: 2 } },
-        { type: 'path', xref: 'x', yref: 'y', path: 'M -0.5 0 L -0.45 -0.1 L -0.5 -0.15 Z', line: { color: '#8888aa', width: 1 } },
-        { type: 'path', xref: 'x', yref: 'y', path: 'M 0.5 0 L 0.45 -0.1 L 0.5 -0.15 Z', line: { color: '#8888aa', width: 1 } },
-      ]
-    };
+  // SPECTROGRAM: compute_psd().plot() MNE standard
+  } else if (displayMode === 'spectrum_map' || displayMode === 'spectrogram' || displayMode === 'spectrogram') {
+    const chIdx = 0;
+    const chData = (allData[chIdx] || []).slice(0, Math.min(allData[chIdx]?.length || 500, 500));
+    const nfft = Math.min(128, Math.floor(chData.length / 4));
+    const hop = Math.floor(nfft / 4);
+    const windowFn = new Array(nfft).fill(0).map((_,i) => 0.5 * (1 - Math.cos(2*Math.PI*i/(nfft-1))));
     
-    // MNE 10-20 system positions (approximate, in meters)
-    const chPos = {
-      'Fp1': [-0.15, 0.35], 'Fp2': [0.15, 0.35],
-      'F3': [-0.2, 0.2], 'F4': [0.2, 0.2],
-      'C3': [-0.25, 0], 'C4': [0.25, 0],
-      'P3': [-0.2, -0.2], 'P4': [0.2, -0.2],
-      'O1': [-0.1, -0.35], 'O2': [0.1, -0.35],
-      'F7': [-0.35, 0.2], 'F8': [0.35, 0.2],
-      'T3': [-0.4, 0], 'T4': [0.4, 0],
-      'T5': [-0.35, -0.2], 'T6': [0.35, -0.2],
-      'Fz': [0, 0.25], 'Cz': [0, 0], 'Pz': [0, -0.2]
-    };
+    const nFrames = Math.floor((chData.length - nfft) / hop) + 1;
+    const freqs = [];
+    for (let k = 0; k <= nfft/2; k++) freqs.push(k * sfreq / nfft);
+    const freqMask = freqs.filter(f => f <= 45);
+    const nFreqs = freqMask.length;
+    const specgram = [];
+    const tAxis = [];
     
-    // Plot sensor locations (like MNE's plot_sensors)
-    channelNames.forEach((ch, idx) => {
-      const pos = chPos[ch];
-      if (pos) {
-        traces.push({
-          x: [pos[0]], y: [pos[1]],
-          mode: 'markers+text',
-          type: 'scatter',
-          text: [ch],
-          textposition: 'top center',
-          textfont: { size: 9, color: '#e0e0ff', family: 'Arial' },
-          marker: { 
-            size: 12, 
-            color: colors[idx % colors.length], 
-            line: { color: '#ffffff', width: 2 },
-            symbol: 'circle'
-          },
-          name: ch,
-          showlegend: false,
-          hoverinfo: 'text',
-          hovertext: '<b>' + ch + '</b><br>Position: (' + pos[0].toFixed(2) + ', ' + pos[1].toFixed(2) + ') m'
-        });
+    for (let f = 0; f < nFrames; f++) {
+      const start = f * hop;
+      const frame = [];
+      for (let i = 0; i < nfft; i++) {
+        frame.push((start + i < chData.length) ? chData[start + i] * windowFn[i] : 0);
       }
+      const real = new Array(nfft/2+1).fill(0);
+      const imag = new Array(nfft/2+1).fill(0);
+      for (let k = 0; k <= nfft/2; k++) {
+        for (let n = 0; n < nfft; n++) {
+          const angle = -2 * Math.PI * k * n / nfft;
+          real[k] += frame[n] * Math.cos(angle);
+          imag[k] += frame[n] * Math.sin(angle);
+        }
+      }
+      const frameSpec = [];
+      for (let k = 0; k < nFreqs; k++) {
+        const pow = 10 * Math.log10(Math.max(1e-10, (real[k]*real[k] + imag[k]*imag[k]) / nfft));
+        frameSpec.push(pow);
+      }
+      specgram.push(frameSpec);
+      tAxis.push(start / sfreq);
+    }
+    
+    const zData = [];
+    for (let k = 0; k < nFreqs; k++) {
+      const row = [];
+      for (let f = 0; f < nFrames; f++) row.push(specgram[f][k]);
+      zData.push(row);
+    }
+    const bandColors = [
+      {name:'δ',range:[0.5,4],color:'rgba(111,66,193,0.15)'},
+      {name:'θ',range:[4,8],color:'rgba(255,193,7,0.15)'},
+      {name:'α',range:[8,12],color:'rgba(13,202,240,0.15)'},
+      {name:'β',range:[13,30],color:'rgba(25,135,84,0.15)'},
+      {name:'γ',range:[30,45],color:'rgba(220,53,69,0.10)'}
+    ];
+    const shapes = bandColors.map(band => ({
+      type:'rect', xref:'paper', yref:'y',
+      x0:0, x1:1, y0:band.range[0], y1:band.range[1],
+      fillcolor:band.color, line:{width:0}, layer:'below'
+    }));
+    const annotations = bandColors.map(band => ({
+      x: 1.02, y: (band.range[0] + band.range[1]) / 2,
+      xref: 'paper', yref: 'y',
+      text: '<b>' + band.name + '</b>', showarrow: false, font: { size: 9, color: '#8888aa' }, xanchor: 'left'
+    }));
+
+    traces.push({
+      z: zData, x: tAxis, y: freqMask,
+      type: 'heatmap', colorscale: 'Viridis',
+      colorbar: { title: { text: 'dB', font: { size: 9, color: '#8888aa' } }, tickfont: { size: 8, color: '#8888aa' }, thickness: 12, len: 0.7 },
+      hovertemplate: 'Time: %{x:.2f}s<br>Freq: %{y:.1f} Hz<br>Power: %{z:.1f} dB<extra></extra>'
+    });
+
+    Plotly.newPlot(plotId, traces, {
+      title: { text: channelNames[chIdx] + ' — Power Spectral Density (STFT, dB)', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', range: [tAxis[0]||0, tAxis[tAxis.length-1]||1] },
+      yaxis: { title: 'Frequency (Hz)', range: [0, 45], gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', zeroline: false },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 50, r: 60, t: 30, b: 35 }, height: 280,
+      showlegend: false, shapes: shapes, annotations: annotations
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // BUTTERFLY VIEW
+  } else if (displayMode === 'channels' || displayMode === 'butterfly') {
+    const chOrder = ['Fp1','Fp2','F7','F3','Fz','F4','F8','T3','C3','Cz','C4','T4','T5','P3','Pz','P4','T6','O1','O2'];
+    const sorted = chOrder.filter(c => channelNames.includes(c));
+    const display = sorted.length > 0 ? sorted : channelNames;
+    
+    display.forEach((ch, idx) => {
+      const ci = channelNames.indexOf(ch);
+      const chData = (ci >= 0 && allData[ci]) ? allData[ci] : [];
+      const yOffset = (display.length - 1 - idx) * CH_OFFSET;
+      const cType = channelType[ch] || 'eeg';
+      const color = typeColors[cType] || '#0dcaf0';
+      traces.push({
+        x: time, y: chData.map(v => v + yOffset),
+        type: 'scatter', mode: 'lines', name: ch, legendgroup: cType,
+        line: { color: color, width: 0.8 },
+        hovertemplate: '<b>' + ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>',
+        showlegend: idx < 4
+      });
     });
     
-    Plotly.newPlot(plotId, traces, scalpLayout, { responsive: true, displayModeBar: false, staticPlot: false });
-
-  } else if (displayMode === 'topographic') {
-    // Topographic View - MNE-style topomap (evoked.plot_topomap())
-    const topoLayout = {
-      title: { text: 'Topographic Map (Spherical Spline Interpolation)', font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { title: 'Position (m)', range: [-0.5, 0.5], showgrid: false, zeroline: false, showticklabels: false },
-      yaxis: { title: 'Position (m)', range: [-0.5, 0.5], showgrid: false, zeroline: false, showticklabels: false, scaleanchor: 'x', scaleratio: 1 },
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'Butterfly Plot — All Channels Stacked', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.03)', color: '#8888aa', showticklabels: true, zeroline: false, tickfont: { size: 8 } },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 20, r: 20, t: 28, b: 20 },
-      height: 350,
-      showlegend: false,
-      shapes: [
-        { type: 'circle', xref: 'x', yref: 'y', x0: -0.4, y0: -0.4, x1: 0.4, y1: 0.4, line: { color: '#8888aa', width: 2 } },
-      ]
-    };
+      margin: { l: 50, r: 15, t: 28, b: 30 },
+      height: Math.min(600, Math.max(250, nCh * 26)),
+      showlegend: true, legend: { font: { size: 8 }, orientation: 'h', x: 0, y: 1.08, tracegroupgap: 0 },
+      hovermode: 'closest'
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // SIGNAL QUALITY REPORT
+  } else if (displayMode === 'quality') {
+    const chMetrics = [];
+    channelNames.forEach((ch, idx) => {
+      const d = allData[idx] || [];
+      if (d.length === 0) return;
+      const rms = Math.sqrt(d.reduce((s,v) => s + v*v, 0) / d.length);
+      const p2p = Math.max(...d) - Math.min(...d);
+      const n50 = d.length >= 20 ? Math.abs(d[10]) : 0;
+      const lineNoiseRatio = Math.min(1, (n50 / (rms + 0.01)) * 0.5);
+      const flatCount = d.filter(v => Math.abs(v) < 0.5).length / d.length;
+      chMetrics.push({ ch, rms, p2p, lineNoiseRatio, flatRatio: flatCount });
+    });
+    const avgRMS = chMetrics.reduce((s,m) => s + m.rms, 0) / chMetrics.length;
+    const avgP2P = chMetrics.reduce((s,m) => s + m.p2p, 0) / chMetrics.length;
+    const avgLNR = chMetrics.reduce((s,m) => s + m.lineNoiseRatio, 0) / chMetrics.length;
+    const nFlat = chMetrics.filter(m => m.flatRatio > 0.3).length;
+    const globalFieldPower = Math.sqrt(chMetrics.reduce((s,m) => s + m.rms*m.rms, 0));
+    const bestCh = chMetrics.reduce((a,b) => a.rms > b.rms ? a : b);
+    const bestIdx = channelNames.indexOf(bestCh.ch);
+    const bestData = (bestIdx >= 0 && allData[bestIdx]) ? allData[bestIdx] : [];
     
-    const chPos = {
-      'Fp1': [-0.15, 0.35], 'Fp2': [0.15, 0.35],
-      'F3': [-0.2, 0.2], 'F4': [0.2, 0.2],
-      'C3': [-0.25, 0], 'C4': [0.25, 0],
-      'P3': [-0.2, -0.2], 'P4': [0.2, -0.2],
-      'O1': [-0.1, -0.35], 'O2': [0.1, -0.35],
-      'F7': [-0.35, 0.2], 'F8': [0.35, 0.2],
-      'T3': [-0.4, 0], 'T4': [0.4, 0],
-      'T5': [-0.35, -0.2], 'T6': [0.35, -0.2],
-      'Fz': [0, 0.25], 'Cz': [0, 0], 'Pz': [0, -0.2]
-    };
-    
-    // Get amplitudes at middle time point (like evoked response)
+    traces.push({
+      x: time, y: bestData, type: 'scatter', mode: 'lines',
+      name: bestCh.ch + ' (best)', line: { color: '#0dcaf0', width: 1.5 },
+      hovertemplate: '<b>' + bestCh.ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>'
+    });
+    chMetrics.filter(m => m.flatRatio > 0.3).forEach(m => {
+      const mi = channelNames.indexOf(m.ch);
+      const md = (mi >= 0 && allData[mi]) ? allData[mi] : [];
+      traces.push({
+        x: [time[Math.floor(time.length/2)]], y: [md[Math.floor(md.length/2)] || 0],
+        type: 'scatter', mode: 'markers', name: 'FLAT: ' + m.ch,
+        marker: { color: '#dc3545', size: 8, symbol: 'x' }, showlegend: true
+      });
+    });
+
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'Signal Quality — GFP: ' + globalFieldPower.toFixed(1) + '· RMS: ' + avgRMS.toFixed(1) + '· P2P: ' + avgP2P.toFixed(1) + '· LNR: ' + (avgLNR*100).toFixed(0) + '%· Flat: ' + nFlat + 'ch', font: { size: 9, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 45, r: 15, t: 45, b: 30 }, height: 220,
+      showlegend: true, legend: { font: { size: 7, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.15 }
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // SENSOR LOCATIONS: plot_sensors() MNE standard (constrained height for chat)
+  } else if (displayMode === 'scalp' || displayMode === 'plot_sensors') {
+    const shapes = [
+      { type: 'circle', xref: 'x', yref: 'y', x0: -0.42, y0: -0.42, x1: 0.42, y1: 0.42, line: { color: '#8888aa', width: 2 } },
+      { type: 'path', xref: 'x', yref: 'y', path: 'M 0 0.42 L -0.06 0.48 L 0 0.52 L 0.06 0.48 Z', line: { color: '#adb5bd', width: 1.5 }, fillcolor: '#adb5bd' },
+      { type: 'path', xref: 'x', yref: 'y', path: 'M -0.42 -0.05 Q -0.52 0 -0.42 0.05 Z', line: { color: '#adb5bd', width: 1.5 }, fillcolor: 'rgba(0,0,0,0)' },
+      { type: 'path', xref: 'x', yref: 'y', path: 'M 0.42 -0.05 Q 0.52 0 0.42 0.05 Z', line: { color: '#adb5bd', width: 1.5 }, fillcolor: 'rgba(0,0,0,0)' }
+    ];
+
+    channelNames.forEach((ch, idx) => {
+      const pos = chPos[ch];
+      if (!pos) return;
+      const cType = channelType[ch] || 'eeg';
+      const color = typeColors[cType] || '#0dcaf0';
+      traces.push({
+        x: [pos[0]], y: [pos[1]],
+        mode: 'markers+text', type: 'scatter',
+        text: [ch], textposition: 'top center',
+        textfont: { size: 7, color: '#e0e0ff', family: 'monospace' },
+        marker: { size: cType === 'eeg' ? 8 : 6, color: color, line: { color: '#fff', width: 1.2 }, symbol: cType === 'eog' ? 'diamond' : cType === 'stim' ? 'square' : 'circle' },
+        showlegend: false,
+        hovertext: '<b>' + ch + '</b><br>Type: ' + cType.toUpperCase() + '<br>(' + pos[0].toFixed(2) + ', ' + pos[1].toFixed(2) + ') m'
+      });
+    });
+
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'Sensor Locations (10-20)', font: { size: 9, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { visible: false, range: [-0.55, 0.55] },
+      yaxis: { visible: false, range: [-0.55, 0.55], scaleanchor: 'x', scaleratio: 1 },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 5, r: 5, t: 22, b: 5 }, height: 190,
+      shapes: shapes, hovermode: 'closest'
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // TOPOGRAPHIC MAP: plot_topomap() MNE standard (constrained height for chat)
+  } else if (displayMode === 'topographic' || displayMode === 'plot_topomap') {
     const amplitudes = {};
     channelNames.forEach((ch, idx) => {
-      if (allData[idx] && allData[idx].length > 0) {
-        const midIdx = Math.floor(allData[idx].length / 2);
-        amplitudes[ch] = allData[idx][midIdx];
-      } else {
-        amplitudes[ch] = 0;
-      }
+      const d = allData[idx];
+      amplitudes[ch] = (d && d.length > 0) ? d[Math.floor(d.length/2)] : 0;
     });
+    const allAmps = Object.values(amplitudes).filter(a => a !== undefined);
+    const ampMax = Math.max(Math.abs(Math.min(...allAmps)), Math.abs(Math.max(...allAmps))) || 1;
     
-    // Create interpolated topographic map using inverse distance weighting
     const gridRes = 30;
-    const xGrid = [], yGrid = [], zGrid = [];
+    const xG = [], yG = [], zG = [];
     for (let i = 0; i < gridRes; i++) {
       for (let j = 0; j < gridRes; j++) {
-        const x = -0.4 + (0.8 * i / (gridRes - 1));
-        const y = -0.4 + (0.8 * j / (gridRes - 1));
-        const distFromCenter = Math.sqrt(x * x + y * y);
-        
-        if (distFromCenter <= 0.4) {
-          xGrid.push(x);
-          yGrid.push(y);
-          
-          // Inverse distance weighting interpolation
-          let sumWeights = 0, sumValues = 0;
+        const x = -0.4 + 0.8 * i / (gridRes - 1);
+        const y = -0.4 + 0.8 * j / (gridRes - 1);
+        if (Math.sqrt(x*x + y*y) <= 0.4) {
+          xG.push(x); yG.push(y);
+          let sumW = 0, sumV = 0;
           channelNames.forEach(ch => {
-            const pos = chPos[ch];
-            if (pos) {
-              const dist = Math.sqrt((x - pos[0]) ** 2 + (y - pos[1]) ** 2);
-              const weight = 1 / (dist * dist + 0.01);
-              sumWeights += weight;
-              sumValues += weight * amplitudes[ch];
+            const p = chPos[ch];
+            if (p && amplitudes[ch] !== undefined) {
+              const dSq = (x-p[0])*(x-p[0]) + (y-p[1])*(y-p[1]);
+              if (dSq < 1e-8) { sumW = 1e10; sumV = amplitudes[ch]; return; }
+              const w = Math.max(1e-10, 1 / (dSq + 0.001));
+              sumW += w; sumV += w * amplitudes[ch];
             }
           });
-          zGrid.push(sumWeights > 0 ? sumValues / sumWeights : 0);
+          zG.push(sumW > 0 ? sumV / sumW : 0);
         }
       }
     }
-    
-    // Add interpolated contour
-    traces.push({
-      x: xGrid, y: yGrid, z: zGrid,
-      type: 'contour',
-      colorscale: 'RdBu',
-      reversescale: true,
-      showscale: true,
-      colorbar: { 
-        title: { text: 'Amplitude (µV)', font: { size: 10, color: '#8888aa' } },
-        tickfont: { size: 9, color: '#8888aa' },
-        thickness: 15
-      },
-      contours: { 
-        coloring: 'heatmap',
-        showlabels: false
-      },
-      line: { width: 0.5, color: 'rgba(255,255,255,0.3)' },
-      opacity: 0.85
-    });
-    
-    // Add channel markers on top
-    channelNames.forEach((ch, idx) => {
-      const pos = chPos[ch];
-      if (pos) {
-        traces.push({
-          x: [pos[0]], y: [pos[1]],
-          mode: 'markers+text',
-          type: 'scatter',
-          text: [ch],
-          textposition: 'top center',
-          textfont: { size: 8, color: '#000', family: 'Arial' },
-          marker: { 
-            size: 8, 
-            color: '#ffffff', 
-            line: { color: '#000000', width: 1.5 }
-          },
-          showlegend: false,
-          hoverinfo: 'text',
-          hovertext: '<b>' + ch + '</b><br>Amplitude: ' + (amplitudes[ch] || 0).toFixed(2) + ' µV'
-        });
-      }
-    });
-    
-    Plotly.newPlot(plotId, traces, topoLayout, { responsive: true, displayModeBar: false, staticPlot: false });
 
-  } else if (displayMode === 'epoch_image') {
-    // Epoch as Image - MNE-style epochs.plot_image()
-    const nEpochs = 8;
-    const samplesPerEpoch = Math.min(50, allData[0] ? Math.floor(allData[0].length / nEpochs) : 50);
-    const nCh = Math.min(channelNames.length, 19);
-    
-    // Build image data: channels × (epochs × time)
-    const imageData = [];
-    for (let ch = 0; ch < nCh; ch++) {
-      const chData = allData[ch] || [];
-      const row = [];
-      
-      for (let e = 0; e < nEpochs; e++) {
-        const startIdx = (e * samplesPerEpoch) % Math.max(1, chData.length - samplesPerEpoch);
-        for (let t = 0; t < samplesPerEpoch; t++) {
-          const idx = startIdx + t;
-          row.push(idx < chData.length ? chData[idx] : 0);
-        }
-      }
-      imageData.push(row);
-    }
-    
-    const epochLayout = {
-      title: { text: 'Epoch Image — ' + nEpochs + ' epochs × ' + nCh + ' channels', font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { 
-        title: 'Time (samples)',
-        gridcolor: 'rgba(255,255,255,0.05)', 
-        color: '#8888aa',
-        tickmode: 'array',
-        tickvals: [samplesPerEpoch/2, samplesPerEpoch + samplesPerEpoch/2, samplesPerEpoch*2 + samplesPerEpoch/2],
-        ticktext: ['Epoch 1', 'Epoch 2', 'Epoch 3']
-      },
-      yaxis: { 
-        title: 'Channels', 
-        gridcolor: 'rgba(255,255,255,0.05)', 
-        color: '#8888aa',
-        tickmode: 'array',
-        tickvals: Array.from({length: nCh}, (_, i) => i),
-        ticktext: channelNames.slice(0, nCh)
-      },
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 100, r: 20, t: 28, b: 40 },
-      height: 350,
-      showlegend: false,
-    };
-    
     traces.push({
-      z: imageData,
-      type: 'heatmap',
-      colorscale: 'RdBu',
-      reversescale: true,
+      x: xG, y: yG, z: zG, type: 'contour',
+      colorscale: [[0,'#053061'],[0.25,'#2166ac'],[0.5,'#f7f7f7'],[0.75,'#b2182b'],[1,'#67001f']],
       showscale: true,
-      colorbar: { 
-        title: { text: 'Amplitude (µV)', font: { size: 10, color: '#8888aa' } },
-        tickfont: { size: 9, color: '#8888aa' },
-        thickness: 15
-      },
-      hovertemplate: 'Channel: %{y}<br>Sample: %{x}<br>Amplitude: %{z:.2f} µV<extra></extra>',
-      zmid: 0
+      colorbar: { title: { text: 'µV', font: { size: 7 } }, tickfont: { size: 6 }, thickness: 8, len: 0.5, tickvals: [-ampMax, 0, ampMax], ticktext: [-ampMax.toFixed(1), '0', ampMax.toFixed(1)] },
+      contours: { coloring: 'heatmap', showlabels: false },
+      line: { width: 0.5, color: 'rgba(255,255,255,0.2)' }, opacity: 0.9,
+      hovertemplate: 'Amplitude: %{z:.2f} µV<extra></extra>'
     });
-    
-    Plotly.newPlot(plotId, traces, epochLayout, { responsive: true, displayModeBar: false, staticPlot: false });
-  } else {
-    const offset = 80;
-    for (let ch = 0; ch < channelNames.length; ch++) {
-      const chData = allData[ch] || [];
-      traces.push({ x: time, y: chData.map(v => v + (channelNames.length - 1 - ch) * offset), type: 'scatter', mode: 'lines', name: channelNames[ch], line: { color: colors[ch % colors.length], width: 1.2 } });
-    }
-    const titleText = 'EEG Waveform — ' + channelNames.slice(0, channelNames.length).join(', ') + (channelNames.length < allData.length ? ' ...' : '');
+
+    channelNames.forEach((ch, idx) => {
+      const p = chPos[ch];
+      if (!p) return;
+      traces.push({
+        x: [p[0]], y: [p[1]], mode: 'markers+text', type: 'scatter',
+        text: [ch], textposition: 'top center', textfont: { size: 6, color: '#000' },
+        marker: { size: 5, color: '#fff', line: { color: '#000', width: 0.8 } }, showlegend: false,
+        hovertext: '<b>' + ch + '</b><br>Amplitude: ' + (amplitudes[ch]||0).toFixed(2) + ' µV'
+      });
+    });
+
     Plotly.newPlot(plotId, traces, {
-      title: { text: titleText, font: { size: 11, color: '#e0e0ff' } },
-      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
-      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa', showticklabels: false, zeroline: false },
+      title: { text: 'Topographic Map', font: { size: 9, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { visible: false, range: [-0.5, 0.5] },
+      yaxis: { visible: false, range: [-0.5, 0.5], scaleanchor: 'x', scaleratio: 1 },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-      margin: { l: 45, r: 15, t: 28, b: 30 },
-      height: 200,
-      showlegend: true,
-      legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0, y: 1.1 },
+      margin: { l: 5, r: 45, t: 22, b: 5 }, height: 190,
+      shapes: [{type:'circle',xref:'x',yref:'y',x0:-0.4,y0:-0.4,x1:0.4,y1:0.4,line:{color:'#8888aa',width:1.5}}]
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // EPOCH IMAGE: epochs.plot_image() MNE standard
+  } else if (displayMode === 'epoch_image' || displayMode === 'epochs_plot_image') {
+    const targetCh = channelNames[0] || 'C3';
+    const targetIdx = channelNames.indexOf(targetCh);
+    const targetData = (targetIdx >= 0 && allData[targetIdx]) ? allData[targetIdx] : [];
+    const nTimes = targetData.length;
+    const nEpochs = Math.min(12, Math.max(4, Math.floor(nTimes / 30)));
+    const epochLen = Math.min(40, Math.floor((nTimes - 5) / nEpochs));
+    
+    const epochMatrix = [];
+    for (let e = 0; e < nEpochs; e++) {
+      const start = Math.floor(e * (nTimes - epochLen) / Math.max(1, nEpochs - 1));
+      const row = [];
+      for (let t = 0; t < epochLen; t++) row.push(targetData[Math.min(start + t, nTimes - 1)]);
+      epochMatrix.push(row);
+    }
+
+    traces.push({
+      z: epochMatrix, type: 'heatmap',
+      colorscale: [[0,'#053061'],[0.25,'#2166ac'],[0.5,'#f7f7f7'],[0.75,'#b2182b'],[1,'#67001f']],
+      zmid: 0, showscale: true,
+      colorbar: { title: { text: 'µV', font: { size: 8, color: '#8888aa' } }, tickfont: { size: 7, color: '#8888aa' }, thickness: 10, len: 0.6 },
+      hovertemplate: 'Trial: %{y}<br>Time: %{x:.2f}s<br>Ampl: %{z:.2f} µV<extra></extra>'
+    });
+
+    const erp = [];
+    for (let t = 0; t < epochLen; t++) {
+      let sum = 0;
+      for (let e = 0; e < nEpochs; e++) sum += epochMatrix[e][t];
+      erp.push(sum / nEpochs);
+    }
+    const erpTime = [];
+    const sfreqEst = sfreq || 250;
+    for (let t = 0; t < epochLen; t++) erpTime.push(t / sfreqEst);
+
+    traces.push({
+      x: erpTime, y: erp, xaxis: 'x2', yaxis: 'y2',
+      type: 'scatter', mode: 'lines', name: 'ERP (avg)',
+      line: { color: '#ffc107', width: 2 }, showlegend: true,
+      hovertemplate: 'ERP @ %{x:.3f}s: %{y:.2f} µV<extra></extra>'
+    });
+
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'Epochs Image — ' + targetCh + ' (' + nEpochs + ' trials)', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+      grid: { rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' },
+      xaxis: { title: 'Time (s)', domain: [0, 1], gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa',
+        tickvals: [0, epochLen/(4*sfreqEst), epochLen/(2*sfreqEst), 3*epochLen/(4*sfreqEst), epochLen/sfreqEst],
+        ticktext: ['0', (epochLen/(4*sfreqEst)).toFixed(2), (epochLen/(2*sfreqEst)).toFixed(2), (3*epochLen/(4*sfreqEst)).toFixed(2), (epochLen/sfreqEst).toFixed(2)] },
+      yaxis: { title: 'Trials', domain: [0.35, 1], gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa',
+        tickvals: Array.from({length: nEpochs}, (_, i) => i),
+        ticktext: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'].slice(0, nEpochs) },
+      xaxis2: { title: 'Time (s)', domain: [0, 1], gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis2: { title: 'ERP (µV)', domain: [0, 0.3], gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 55, r: 50, t: 28, b: 35 }, height: 380,
+      showlegend: true, legend: { font: { size: 8, color: '#8888aa' }, orientation: 'h', x: 0.5, y: -0.1, xanchor: 'center' }
+    }, { responsive: true, displayModeBar: false, staticPlot: false });
+
+  // DEFAULT: Multi-channel stacked
+  } else {
+    const chOrder = ['Fp1','Fp2','F7','F3','Fz','F4','F8','T3','C3','Cz','C4','T4','T5','P3','Pz','P4','T6','O1','O2'];
+    const sorted = chOrder.filter(c => channelNames.includes(c));
+    const display = sorted.length > 0 ? sorted : channelNames;
+    
+    display.forEach((ch, idx) => {
+      const ci = channelNames.indexOf(ch);
+      const chData = (ci >= 0 && allData[ci]) ? allData[ci] : [];
+      const yOffset = (display.length - 1 - idx) * CH_OFFSET;
+      const cType = channelType[ch] || 'eeg';
+      const color = typeColors[cType] || '#0dcaf0';
+      traces.push({
+        x: time, y: chData.map(v => v + yOffset),
+        type: 'scatter', mode: 'lines', name: ch,
+        line: { color: color, width: 0.9 },
+        hovertemplate: '<b>' + ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>',
+        showlegend: idx < 4
+      });
+    });
+
+    Plotly.newPlot(plotId, traces, {
+      title: { text: 'EEG — ' + channelNames.join(', ') + (nCh > 5 ? ' ...' : ''), font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+      xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+      yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.03)', color: '#8888aa', showticklabels: true, zeroline: false },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 50, r: 15, t: 30, b: 30 },
+      height: Math.min(500, Math.max(200, nCh * 25)),
+      showlegend: true, legend: { font: { size: 8 }, orientation: 'h', x: 0, y: 1.08 },
+      hovermode: 'closest'
     }, { responsive: true, displayModeBar: false, staticPlot: false });
   }
 
@@ -1554,7 +1609,16 @@ function sendMessage() {
     const fileExt = fileName.split('.').pop().toLowerCase();
     let response = '';
 
-    if (hasFile && (message.includes('format') || message.includes('metadata') || message.includes('identify') || message.includes('file type'))) {
+    // DURATION: added 'length' and 'long is' to handle "what is the length of the eeg"
+    if (hasFile && (message.includes('how long') || message.includes('duration') || message.includes('length of') || message.includes('long is'))) {
+      const fileData = parsedFileData[fileName];
+      if (fileData) {
+        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + ' seconds\n- **Total samples:** ' + fileData.n_times + '\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n\nThis is a ' + (fileData.duration_sec < 10 ? 'short' : fileData.duration_sec < 60 ? 'moderate' : 'long') + ' recording. ' + (fileData.duration_sec < 10 ? 'Consider collecting more data for robust analysis.' : 'Good for most analysis tasks.') + modelContext;
+      } else {
+        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Estimated Duration:** 2.0 seconds (based on model profile)\n- **Note:** Upload the file to get exact duration from the file header.' + modelContext;
+      }
+
+    } else if (hasFile && (message.includes('format') || message.includes('metadata') || message.includes('identify') || message.includes('file type'))) {
       const fileData = parsedFileData[fileName];
       if (fileData) {
         response = '📋 **File Analysis: ' + fileName + '**\n\n' +
@@ -1570,30 +1634,11 @@ function sendMessage() {
           '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
           '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
       } else {
-        const sfreq = profile ? profile.sfreq : 250;
-        const nCh = profile ? profile.channels : 19;
-        response = '📋 **File Analysis: ' + fileName + '**\n\n' +
-          '**Format:** ' + fileExt.toUpperCase() + '\n' +
-          '**Size:** ' + (uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].size / 1024 : 0).toFixed(1) + ' KB\n' +
-          '**Estimated Channels:** ' + nCh + '\n' +
-          '**Estimated Sampling Rate:** ' + sfreq + ' Hz\n' +
-          '**Estimated Duration:** 2.0s (based on model profile)\n\n' +
-          '**Recording Metadata Summary:**\n' +
-          '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' +
-          '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
-          '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + sfreq + ' Hz, ' + nCh + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+        response = '📋 **File Analysis: ' + fileName + '**\n\n' + '**Format:** ' + fileExt.toUpperCase() + '\n' + '**Size:** ' + (uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].size / 1024 : 0).toFixed(1) + ' KB\n' + '**Estimated Channels:** ' + (profile ? profile.channels : 19) + '\n' + '**Estimated Sampling Rate:** ' + (profile ? profile.sfreq : 250) + ' Hz\n' + '**Estimated Duration:** 2.0s (based on model profile)\n\n' + '**Recording Metadata Summary:**\n' + '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' + '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' + '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
       }
 
     } else if (hasFile && (message.includes('plot') || message.includes('signal') || message.includes('waveform') || message.includes('visualize') || message.includes('show'))) {
-      response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a waveform view of your file **' + fileName + '**. The plot above shows the EEG traces with ' + (profile ? profile.channels : 'multiple') + ' channels. You can use the **play button** ▶ to scroll through the recording like a video, or click on any point to place a **crosshair** ⏱ for precise time and amplitude values.\n\n**Tips:**\n- Use **← →** arrows to navigate time\n- Adjust **Speed** (0.5x–4x) for slow-mo or fast-forward\n- Switch **Mode** to Spectrogram, Multi-Channel, or Quality view\n- **Zoom in/out** to focus on specific segments' + modelContext;
-
-    } else if (hasFile && (message.includes('how long') || message.includes('duration'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + ' seconds\n- **Total samples:** ' + fileData.n_times + '\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n\nThis is a ' + (fileData.duration_sec < 10 ? 'short' : fileData.duration_sec < 60 ? 'moderate' : 'long') + ' recording. ' + (fileData.duration_sec < 10 ? 'Consider collecting more data for robust analysis.' : 'Good for most analysis tasks.') + modelContext;
-      } else {
-        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Estimated Duration:** 2.0 seconds (based on model profile)\n- **Note:** Upload the file to get exact duration from the file header.' + modelContext;
-      }
+      response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a waveform view of your file **' + fileName + '**.' + modelContext;
 
     } else if (hasFile && (message.includes('how many channels') || message.includes('channels recorded') || message.includes('n_channels'))) {
       const fileData = parsedFileData[fileName];
@@ -1634,194 +1679,14 @@ function sendMessage() {
         response = '❓ **Missing Channels**\n\n**File:** ' + fileName + '\n\nUpload the file to check for missing channels. The system will compare your channels against the standard 10-20 system.' + modelContext;
       }
 
-    } else if (hasFile && (message.includes('epochs') || message.includes('epoch extracted') || message.includes('epoching'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData && fileData.epoching) {
-        response = '⏱️ **Epoch Information**\n\n**File:** ' + fileName + '\n\n- **Epochs extracted:** ' + fileData.epoching.n_epochs + '\n- **Time window:** ' + (fileData.epoching.tmin * 1000).toFixed(0) + 'ms to ' + (fileData.epoching.tmax * 1000).toFixed(0) + 'ms\n- **Events detected:** ' + (fileData.n_events || 0) + '\n\n**Epochs per class:**\n' + JSON.stringify(fileData.epoching.n_epochs_per_class).replace(/[{}]/g, '').replace(/,/g, '\n') + '\n\n' + (fileData.epoching.n_epochs > 50 ? '✅ Good number of epochs for training.' : '⚠️ Consider collecting more trials for robust model training.') + modelContext;
-      } else if (fileData && fileData.has_events) {
-        response = '⏱️ **Epoch Information**\n\n**File:** ' + fileName + '\n\n- **Events detected:** ' + fileData.n_events + '\n- **Epochs:** Not yet extracted\n\nUse the epoching tool to extract epochs. Default window: -0.2s to 0.5s around events.' + modelContext;
-      } else {
-        response = '⏱️ **Epoch Information**\n\n**File:** ' + fileName + '\n\n- **No events/annotations found** in the file\n- **Epochs:** Cannot be extracted without event markers\n\nThe file has no event markers. Consider adding annotations or using continuous data analysis.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('is this eeg noisy') || message.includes('noisy') || message.includes('signal quality'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        const rms = fileData.rms || 0;
-        const quality = rms > 20 ? 'Good' : rms > 10 ? 'Fair' : 'Poor';
-        response = '🔊 **Signal Quality Assessment**\n\n**File:** ' + fileName + '\n\n- **Overall Quality:** ' + quality + '\n- **RMS Amplitude:** ' + (fileData.rms ? fileData.rms.toFixed(1) : 'N/A') + ' µV\n- **Bad Channels:** ' + (fileData.n_bad_channels || 0) + '\n\n**Noise Sources Detected:**\n- ⚡ **Eye blinks** — Check frontal channels (Fp1, Fp2)\n- 💪 **Muscle artifacts** — High-frequency noise in temporal channels\n- 📉 **Line noise** — 50/60 Hz interference (use notch filter)\n\n**Recommendations:**\n1. Apply bandpass filter (0.5–40 Hz)\n2. Use ICA for artifact removal\n3. Interpolate bad channels' + modelContext;
-      } else {
-        response = '🔊 **Signal Quality Assessment**\n\n**File:** ' + fileName + '\n\nUpload the file to get detailed signal quality metrics including RMS, SNR, and artifact detection.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('channels contain the most artifacts') || message.includes('artifact channels'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData && fileData.bad_channels) {
-        response = '⚡ **Artifact Channels**\n\n**File:** ' + fileName + '\n\n**Channels with detected artifacts:**\n' + fileData.bad_channels.map(ch => '- **' + ch + '** — ' + (ch.includes('Fp') ? 'Eye blink artifacts' : ch.includes('T') ? 'Muscle artifacts' : 'High noise')).join('\n') + '\n\n**Recommendation:** Consider removing or interpolating these channels before analysis.' + modelContext;
-      } else {
-        response = '⚡ **Artifact Channels**\n\n**File:** ' + fileName + '\n\nNo specific artifact channels detected. All channels appear to have good signal quality.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('disconnected electrodes') || message.includes('disconnected'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData && fileData.n_bad_channels > 0) {
-        response = '🔌 **Disconnected Electrodes**\n\n**File:** ' + fileName + '\n\n- **Disconnected channels:** ' + fileData.n_bad_channels + '\n- **Channel names:** ' + (fileData.bad_channels || []).join(', ') + '\n\nThese channels show flat or near-zero signal and should be interpolated or removed.' + modelContext;
-      } else {
-        response = '🔌 **Disconnected Electrodes**\n\n**File:** ' + fileName + '\n\nNo disconnected electrodes detected. All channels show active signal.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('segments have excessive noise') || message.includes('excessive noise') || message.includes('noisy segments'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔊 **Noisy Segments**\n\n**File:** ' + fileName + '\n\n**Segments with excessive noise:**\n- **Time 0.0-0.5s** — Possible electrode settling\n- **Time 1.2-1.5s** — Muscle artifact detected\n\n**Recommendation:** Mark these segments for exclusion or apply robust filtering.' + modelContext;
-      } else {
-        response = '🔊 **Noisy Segments**\n\n**File:** ' + fileName + '\n\nUpload the file to identify specific noisy time segments.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('parts of the recording look similar') || message.includes('similar') || message.includes('repeated patterns'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔄 **Similar Recording Parts**\n\n**File:** ' + fileName + '\n\n**Similar segments detected:**\n- **Segment 1 (0.5-1.0s)** and **Segment 2 (2.5-3.0s)** — Correlation: 0.85\n- **Segment 3 (1.0-1.5s)** and **Segment 4 (3.0-3.5s)** — Correlation: 0.78\n\nThese may represent repeated experimental conditions or resting state periods.' + modelContext;
-      } else {
-        response = '🔄 **Similar Recording Parts**\n\n**File:** ' + fileName + '\n\nUpload the file to find similar segments using cross-correlation analysis.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('windows are most different') || message.includes('different windows'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔀 **Most Different Windows**\n\n**File:** ' + fileName + '\n\n**Windows with highest variance:**\n- **Window 2 (1.0-1.5s)** — High spectral change\n- **Window 4 (2.0-2.5s)** — Event-related response\n\nThese windows show the most distinct EEG patterns, possibly corresponding to different cognitive states.' + modelContext;
-      } else {
-        response = '🔀 **Most Different Windows**\n\n**File:** ' + fileName + '\n\nUpload the file to identify windows with the most distinct EEG patterns.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('unusual segments') || message.includes('unusual'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⚠️ **Unusual Segments**\n\n**File:** ' + fileName + '\n\n**Unusual segments detected:**\n- **Time 0.8-0.9s** — Sharp spike (amplitude: 150 µV)\n- **Time 2.2-2.3s** — Abrupt frequency shift\n\nThese may require manual review or exclusion from analysis.' + modelContext;
-      } else {
-        response = '⚠️ **Unusual Segments**\n\n**File:** ' + fileName + '\n\nUpload the file to detect unusual or anomalous EEG segments.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('unusual eeg segments') || message.includes('anomalous') || message.includes('anomaly'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🚨 **Anomaly Detection**\n\n**File:** ' + fileName + '\n\n**Anomalous segments:**\n- **Time 0.8-0.9s** — Sharp spike (amplitude: 150 µV)\n- **Time 2.2-2.3s** — Abrupt frequency shift\n\n**Top 10 anomalies:**\n1. 0.85s — Spike (150 µV)\n2. 2.25s — Frequency shift\n3. 3.10s — Channel dropout\n\nConsider marking these for exclusion or further investigation.' + modelContext;
-      } else {
-        response = '🚨 **Anomaly Detection**\n\n**File:** ' + fileName + '\n\nUpload the file to detect anomalous EEG segments using statistical methods.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('abnormal') || message.includes('abnormal-looking'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⚠️ **Abnormal Regions**\n\n**File:** ' + fileName + '\n\n**Abnormal-looking regions:**\n- **Channel Fp1, 0.8-0.9s** — High amplitude spike\n- **Channel T3, 2.2-2.3s** — Sharp frequency change\n\nThese regions deviate from normal EEG patterns and may need review.' + modelContext;
-      } else {
-        response = '⚠️ **Abnormal Regions**\n\n**File:** ' + fileName + '\n\nUpload the file to highlight abnormal-looking EEG regions.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('top 10 anomalies') || message.includes('top 10'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔟 **Top 10 Anomalies**\n\n**File:** ' + fileName + '\n\n1. **0.85s** — Spike (150 µV) in Fp1\n2. **2.25s** — Frequency shift in T3\n3. **3.10s** — Channel dropout in Cz\n4. **4.50s** — Muscle artifact in T6\n5. **5.20s** — Eye blink in Fp2\n6. **6.80s** — Flat signal in P3\n7. **7.15s** — High-frequency noise in O1\n8. **8.90s** — Abrupt amplitude change\n9. **9.45s** — Line noise burst\n10. **10.10s** — Baseline drift\n\n**Recommendation:** Review these segments and consider exclusion.' + modelContext;
-      } else {
-        response = '🔟 **Top 10 Anomalies**\n\n**File:** ' + fileName + '\n\nUpload the file to identify the top 10 anomalous segments.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('visualize the eeg') || message.includes('show pca') || message.includes('show umap') || message.includes('cluster the recording'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '📊 **Embedding Exploration**\n\n**File:** ' + fileName + '\n\n**Available visualizations:**\n- **PCA** — Reduces dimensionality to 3 components\n- **UMAP** — Non-linear embedding for pattern discovery\n- **Clustering** — K-means on embedded features\n\nUse the **Mode** dropdown in the EEG viewer to switch between visualization types.' + modelContext;
-      } else {
-        response = '📊 **Embedding Exploration**\n\n**File:** ' + fileName + '\n\nUpload the file to generate PCA, UMAP, and clustering visualizations.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('how does the eeg change over time') || message.includes('change over time'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⏱️ **Temporal Changes**\n\n**File:** ' + fileName + '\n\n**EEG changes over time:**\n- **0-1s** — Baseline settling\n- **1-2s** — Stable alpha rhythm (8-12 Hz)\n- **2-3s** — Beta increase (13-30 Hz)\n\nThe signal shows typical progression from settling to stable rhythms.' + modelContext;
-      } else {
-        response = '⏱️ **Temporal Changes**\n\n**File:** ' + fileName + '\n\nUpload the file to analyze how the EEG changes over time.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('signal become different') || message.includes('when does the signal'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⏱️ **Signal Change Points**\n\n**File:** ' + fileName + '\n\n**When signal becomes different:**\n- **1.2s** — Onset of beta activity\n- **2.5s** — Alpha suppression\n- **3.8s** — Return to baseline\n\nThese time points show significant spectral changes.' + modelContext;
-      } else {
-        response = '⏱️ **Signal Change Points**\n\n**File:** ' + fileName + '\n\nUpload the file to identify when the signal becomes significantly different.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('most stable') || message.includes('stable period'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⏱️ **Most Stable Period**\n\n**File:** ' + fileName + '\n\n**Most stable period:**\n- **Time:** 1.0-2.0s\n- **Variance:** Low (0.02)\n- **Dominant rhythm:** Alpha (8-12 Hz)\n\nThis period shows the most consistent signal quality for analysis.' + modelContext;
-      } else {
-        response = '⏱️ **Most Stable Period**\n\n**File:** ' + fileName + '\n\nUpload the file to identify the most stable period in the recording.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('channels differ the most') || message.includes('differ the most'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔌 **Channel Differences**\n\n**File:** ' + fileName + '\n\n**Channels that differ the most:**\n- **Fp1 vs Fp2** — Correlation: 0.45 (eye movement asymmetry)\n- **C3 vs C4** — Correlation: 0.62 (motor asymmetry)\n- **O1 vs O2** — Correlation: 0.85 (visual symmetry)\n\nHigh differences may indicate lateralized brain activity.' + modelContext;
-      } else {
-        response = '🔌 **Channel Differences**\n\n**File:** ' + fileName + '\n\nUpload the file to compare channel differences.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('most active') || message.includes('channels are most active'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⚡ **Most Active Channels**\n\n**File:** ' + fileName + '\n\n**Most active channels (by RMS):**\n- **Fp1** — 25.3 µV (eye blinks)\n- **O1** — 18.7 µV (alpha rhythm)\n- **C3** — 12.4 µV (motor activity)\n- **F3** — 10.2 µV (beta activity)\n\nThese channels show the highest signal amplitude.' + modelContext;
-      } else {
-        response = '⚡ **Most Active Channels**\n\n**File:** ' + fileName + '\n\nUpload the file to identify the most active channels.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('compare frontal versus occipital') || message.includes('frontal versus occipital'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔀 **Frontal vs Occipital Comparison**\n\n**File:** ' + fileName + '\n\n**Frontal channels (Fp1, Fp2, F3, F4):**\n- Dominant: Beta (13-30 Hz)\n- RMS: 15.2 µV\n- Function: Cognitive processing\n\n**Occipital channels (O1, O2):**\n- Dominant: Alpha (8-12 Hz)\n- RMS: 18.7 µV\n- Function: Visual processing\n\n**Key difference:** Occipital shows stronger alpha when eyes are closed.' + modelContext;
-      } else {
-        response = '🔀 **Frontal vs Occipital Comparison**\n\n**File:** ' + fileName + '\n\nUpload the file to compare frontal and occipital channel activity.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('dominant frequencies') || message.includes('dominant') || message.includes('power') || message.includes('alpha power') || message.includes('delta') || message.includes('theta') || message.includes('beta') || message.includes('gamma') || message.includes('spectrogram'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '📊 **Frequency Analysis**\n\n**File:** ' + fileName + '\n\n**Dominant frequencies:**\n- **Delta (0.5-4 Hz):** 25% power\n- **Theta (4-8 Hz):** 15% power\n- **Alpha (8-12 Hz):** 40% power (strongest)\n- **Beta (13-30 Hz):** 20% power\n\n**Alpha power:** High in occipital channels (O1, O2)\n\nUse the **Spectrogram** mode in the EEG viewer for detailed frequency analysis.' + modelContext;
-      } else {
-        response = '📊 **Frequency Analysis**\n\n**File:** ' + fileName + '\n\nUpload the file to compute power spectral density and dominant frequencies.' + modelContext;
-      }
-
-    } else if (hasFile && (message.includes('channel') || message.includes('electrode') || message.includes('montage') || message.includes('10-20'))) {
-      const chNames = CHANNEL_10_20.slice(0, profile ? Math.min(profile.channels, 19) : 19);
-      response = '🔌 **Channel & Electrode Information**\n\n**File:** ' + fileName + '  ·  **Channels:** ' + chNames.length + '  ·  **Montage:** 10-20 System\n\n' +
-        '```\nRegion      | Channels                          | Key Function\n------------|-----------------------------------|----------------------------------------\n' +
-        'Frontal     | Fp1, Fp2, F3, F4, F7, F8, Fz    | Eye movements, beta activity, cognition\n' +
-        'Central     | C3, C4, Cz                       | Motor imagery, sensorimotor rhythms\n' +
-        'Temporal    | T3, T4, T5, T6                   | Temporal lobe activity, memory\n' +
-        'Parietal    | P3, P4, Pz                       | Sensory integration, spatial attention\n' +
-        'Occipital   | O1, O2                           | Visual processing, alpha rhythm\n```\n\n' +
-        '**Channel Roles:**\n- **Posterior** (O1, O2, P3, P4, Pz) — best for **alpha rhythm** (8–12 Hz) detection, dominant when eyes are closed\n' +
-        '- **Frontal** (Fp1, Fp2, F3, F4) — capture **eye blinks/ movements** and **beta activity** (13–30 Hz)\n' +
-        '- **Central** (C3, C4, Cz) — ideal for **motor imagery** tasks, capture mu rhythm\n' +
-        '- **Temporal** (T3, T4, T5, T6) — sensitive to **temporal lobe activity**, language processing\n' +
-        '- **Midline** (Fz, Cz, Pz) — reference points, useful for ERP analysis' + modelContext;
-
     } else if (hasFile && (message.includes('artifact') || message.includes('noise') || message.includes('quality') || message.includes('clean') || message.includes('bad'))) {
-      response = '🔍 **Artifact Detection & Signal Quality**\n\n**File:** ' + fileName + '\n\n**Detected Artifacts:**\n- ⚡ **Eye blinks:** Likely present in frontal channels (Fp1, Fp2) — large amplitude deflections\n- 💪 **Muscle activity:** Possible high-frequency noise (>30 Hz) in temporal channels\n- 📉 **Flat channels:** None detected (all channels show active signal)\n\n**Signal Quality Metrics:**\n- Overall quality: **Good** ✓\n- Recommended preprocessing:\n  1. Apply **bandpass filter** (0.5–40 Hz) to remove slow drifts and high-frequency noise\n  2. Use **ICA** to remove eye blink components\n  3. **Rereference** to common average for cleaner signals\n\nView the **Quality Mode** in the EEG viewer above for detailed metrics (RMS, SNR, P2P).' + modelContext;
+      response = '🔍 **Artifact Detection & Signal Quality**\n\n**File:** ' + fileName + '\n\n**Detected Artifacts:**\n- ⚡ **Eye blinks:** Likely present in frontal channels (Fp1, Fp2)\n- 💪 **Muscle activity:** Possible high-frequency noise (>30 Hz) in temporal channels\n- 📉 **Flat channels:** None detected\n\n**Recommendations:**\n1. Apply bandpass filter (0.5–40 Hz)\n2. Use ICA for artifact removal\n3. Rereference to common average' + modelContext;
 
     } else if (message.includes('preprocess') || message.includes('filter') || message.includes('normalize') || message.includes('clean')) {
-      response = '⚙️ **Preprocessing Recommendations**\n\nBased on standard EEG pipelines, I recommend:\n\n1. **Bandpass Filter** (0.5–40 Hz)\n   - Removes slow drifts (<0.5 Hz) and high-frequency noise (>40 Hz)\n   - Preserves key brain rhythms: δ, θ, α, β, γ\n\n2. **Notch Filter** (50/60 Hz)\n   - Removes power line interference\n   - Use 50 Hz for EU, 60 Hz for US\n\n3. **Artifact Removal** (ICA)\n   - Decomposes signals into independent components\n   - Identify and remove eye blink and muscle components\n\n4. **Rereferencing**\n   - Common Average Reference (CAR) is recommended\n   - Improves signal-to-noise ratio\n\n5. **Normalization**\n   - ' + (profile ? 'For **' + modelName + '**, use **' + profile.normHint + '** normalization' : 'Select a model above for tailored normalization') + '\n   - Scale to microvolts (×1e6) for consistent amplitude ranges' + modelContext;
+      response = '⚙️ **Preprocessing Recommendations**\n\n1. **Bandpass Filter** (0.5–40 Hz)\n2. **Notch Filter** (50/60 Hz)\n3. **Artifact Removal** (ICA)\n4. **Rereferencing** (CAR)\n5. **Normalization**' + (profile ? ' — use **' + profile.normHint + '**' : '') + modelContext;
 
     } else if (message.includes('model') || message.includes('recommend') || message.includes('which')) {
-      response = '🤖 **Model Recommendations**\n\nBased on your EEG data characteristics:\n\n**For general classification:**\n- **EEGNet** — Lightweight, works well with limited data\n- **ShallowFBCSPNet** — Good for frequency-based features\n\n**For foundation model transfer learning:**\n- **LaBraM** — Best for general-purpose EEG (19ch, 200Hz)\n- **EEGPT** — Excellent for longer sequences (19ch, 250Hz)\n- **BENDR** — Ideal for high-channel count data (66ch, 100Hz)\n- **BIOT** — Good for low-channel setups (16ch, 200Hz)\n- **CodeBrain** — Versatile all-rounder (19ch, 200Hz)\n\n**Tip:** Select a model from the dropdown above and click "Chat with Model" to apply it.' + modelContext;
-
-    } else if (message.includes('result') || message.includes('metric') || message.includes('accuracy') || message.includes('f1') || message.includes('confusion')) {
-      response = '📊 **Results Interpretation**\n\nWhen evaluating your model, here\'s what to look for:\n\n**Key Metrics:**\n- **Accuracy** — Overall correct predictions (but can be misleading with imbalanced data)\n- **F1 Score** — Harmonic mean of precision and recall (better for imbalanced classes)\n- **Precision** — Of predicted positives, how many were correct\n- **Recall** — Of actual positives, how many were captured\n\n**Common Patterns:**\n- High accuracy + low F1 → **class imbalance** (use weighted loss or oversampling)\n- Training loss ↓ but validation loss ↑ → **overfitting** (add dropout, reduce epochs)\n- Both losses not decreasing → **underfitting** (increase model capacity, adjust LR)' + modelContext;
-
-    } else if (message.includes('debug') || message.includes('unstable') || message.includes('nan') || message.includes('overfit') || message.includes('underfit') || message.includes('converge')) {
-      response = '🐛 **Training Debugging Guide**\n\n**Issue: Loss is NaN**\n- Cause: Exploding gradients or learning rate too high\n- Fix: Reduce learning rate (try 1e-4), add gradient clipping, check for missing values in data\n\n**Issue: Overfitting (train loss << val loss)**\n- Cause: Model memorizing training data\n- Fix: Increase dropout (0.5), add L2 regularization, use early stopping, augment data\n\n**Issue: Underfitting (both losses high)**\n- Cause: Model too simple for the task\n- Fix: Increase model capacity, train longer, reduce regularization, check data quality\n\n**Issue: Unstable training**\n- Cause: Learning rate scheduling or batch size issues\n- Fix: Use learning rate warmup, increase batch size, try AdamW optimizer' + modelContext;
-
-    } else if (message.includes('alpha') || message.includes('beta') || message.includes('delta') || message.includes('theta') || message.includes('gamma') || message.includes('rhythm') || message.includes('brain wave') || message.includes('spectrogram') || message.includes('interpret')) {
-      response = '🧠 **EEG Rhythm Interpretation**\n\n**Brain Rhythms:**\n- **Delta (0.5–4 Hz)** — Deep sleep, unconsciousness. High amplitude, slow waves.\n- **Theta (4–8 Hz)** — Drowsiness, meditation, memory encoding. Common in frontal regions.\n- **Alpha (8–12 Hz)** — Relaxed wakefulness, eyes closed. Strongest in occipital/posterior channels.\n- **Beta (13–30 Hz)** — Active thinking, concentration, motor planning. Frontal/central regions.\n- **Gamma (30–100 Hz)** — High-level cognitive processing, binding. Low amplitude.\n\n**What to look for in your data:**\n- Strong **alpha** in posterior channels → subject is relaxed with eyes closed\n- Increased **beta** frontally → active cognitive engagement\n- Excessive **delta/theta** in awake adults → may indicate sleepiness or pathology\n- **Spikes** or sharp waves → possible epileptiform activity (consult a specialist)' + modelContext;
+      response = '🤖 **Model Recommendations**\n\n**LaBraM** — Best for general-purpose EEG (19ch, 200Hz)\n**EEGPT** — Excellent for longer sequences (19ch, 250Hz)\n**BENDR** — Ideal for high-channel count (66ch, 100Hz)\n**BIOT** — Good for low-channel setups (16ch, 200Hz)\n**CodeBrain** — Versatile all-rounder (19ch, 200Hz)' + modelContext;
 
     } else {
       const defaults = [
@@ -1841,7 +1706,6 @@ function sendQuickMessage(message) {
   sendMessage();
 }
 
-// Render markdown to HTML
 function renderMarkdown(t) {
   if (!t) return '';
   var h = t;

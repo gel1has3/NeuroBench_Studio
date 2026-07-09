@@ -32,6 +32,7 @@
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'braindecode_explorer' %}active{% endif %}" href="{{ url_for('braindecode_explorer') }}"><i class="bi bi-cpu"></i> Models</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'pipeline_builder' %}active{% endif %}" href="{{ url_for('pipeline_builder') }}"><i class="bi bi-diagram-3"></i> Pipeline Builder</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'results_dashboard' %}active{% endif %}" href="{{ url_for('results_dashboard') }}"><i class="bi bi-bar-chart"></i> Results</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'eeg_viewer' %}active{% endif %}" href="{{ url_for('eeg_viewer') }}"><i class="bi bi-graph-up"></i> EEG Viewer</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'eeg_assistant' %}active{% endif %}" href="{{ url_for('eeg_assistant') }}"><i class="bi bi-robot"></i> EEG Assistant</a></li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if request.endpoint in ['about', 'documentation'] %}active{% endif %}" href="#" id="docsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

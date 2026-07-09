@@ -1264,6 +1264,175 @@ def register_api_routes(app):
                     logger.error(f"Failed to parse EDF: {e}")
                     return jsonify({'status': 'error', 'message': f'Failed to parse EDF: {str(e)}'}), 400
             
+            elif file_ext == 'fif':
+                try:
+                    import mne
+                    
+                    # Load FIF file
+                    raw = mne.io.read_raw_fif(str(temp_path), preload=True, verbose=False)
+                    
+                    # Basic info
+                    result['n_channels'] = int(len(raw.ch_names))
+                    result['channel_names'] = [str(ch) for ch in raw.ch_names]
+                    result['sfreq'] = float(raw.info['sfreq'])
+                    result['duration_sec'] = float(raw.times[-1])
+                    result['n_times'] = int(raw.n_times)
+                    result['montage'] = '10-20' if any(ch in ['Fp1', 'Fp2', 'C3', 'C4', 'P3', 'P4', 'O1', 'O2', 'F7', 'F8', 'T3', 'T4', 'T5', 'T6', 'Fz', 'Cz', 'Pz'] for ch in raw.ch_names) else 'Unknown'
+                    result['channel_types'] = [str(raw.get_channel_types()[i]) for i in range(len(raw.ch_names))]
+                    
+                    # Preprocessing: Bandpass filter (1-45 Hz)
+                    raw_filtered = raw.copy().filter(l_freq=1.0, h_freq=45.0, method='fir', verbose=False)
+                    result['preprocessing'] = {
+                        'bandpass_filter': '1-45 Hz',
+                        'method': 'FIR',
+                        'reason': 'Remove slow drifts (<1 Hz) and high-frequency noise (>45 Hz)'
+                    }
+                    
+                    # Detect bad channels
+                    channel_std = []
+                    for ch in raw_filtered.ch_names:
+                        ch_data = raw_filtered.get_data(picks=[ch])[0]
+                        channel_std.append(np.std(ch_data))
+                    
+                    mean_std = np.mean(channel_std)
+                    std_threshold = 3 * np.std(channel_std)
+                    bad_channels = []
+                    for i, (ch, std_val) in enumerate(zip(raw_filtered.ch_names, channel_std)):
+                        if std_val < mean_std - std_threshold or std_val > mean_std + std_threshold:
+                            bad_channels.append(ch)
+                    
+                    result['bad_channels'] = bad_channels if bad_channels else []
+                    result['n_bad_channels'] = len(bad_channels)
+                    
+                    # Extract events if annotations exist
+                    if len(raw.annotations) > 0:
+                        try:
+                            events, event_id = mne.events_from_annotations(raw, verbose=False)
+                            result['n_events'] = int(len(events))
+                            result['event_types'] = {str(k): int(v) for k, v in event_id.items()}
+                            result['has_events'] = True
+                        except Exception as e:
+                            logger.warning(f"Could not extract events: {e}")
+                            result['has_events'] = False
+                    else:
+                        result['has_events'] = False
+                    
+                    # Epoching information
+                    if result.get('has_events', False):
+                        try:
+                            tmin = -0.2
+                            tmax = 0.8
+                            epochs = mne.Epochs(raw_filtered, events, event_id, tmin=tmin, tmax=tmax,
+                                              baseline=None, preload=True, verbose=False)
+                            result['epoching'] = {
+                                'tmin': float(tmin),
+                                'tmax': float(tmax),
+                                'n_epochs': int(len(epochs)),
+                                'n_epochs_per_class': {str(k): int(len(epochs[k])) for k in epochs.event_id.keys()},
+                                'baseline': 'None (already filtered)'
+                            }
+                            
+                            evoked = epochs.average()
+                            result['evoked'] = {
+                                'n_channels': int(len(evoked.ch_names)),
+                                'n_times': int(len(evoked.times)),
+                                'times': evoked.times[:min(500, len(evoked.times))].tolist(),
+                                'peak_amplitude': float(np.max(np.abs(evoked.data))),
+                                'peak_latency': float(evoked.times[np.argmax(np.abs(evoked.data))])
+                            }
+                        except Exception as e:
+                            logger.warning(f"Could not create epochs: {e}")
+                            result['epoching'] = None
+                            result['evoked'] = None
+                    else:
+                        result['epoching'] = None
+                        result['evoked'] = None
+                    
+                    # Extract sample data
+                    max_samples = min(2500, raw.n_times)
+                    data = raw_filtered.get_data(start=0, stop=max_samples)
+                    result['sample_data'] = data.tolist()
+                    result['sample_times'] = (np.arange(max_samples) / raw.info['sfreq']).tolist()
+                    
+                    # Channel info summary
+                    result['channel_summary'] = {
+                        'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
+                        'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
+                        'eog': int(sum(1 for t in result['channel_types'] if t == 'eog')),
+                        'ecg': int(sum(1 for t in result['channel_types'] if t == 'ecg')),
+                        'other': int(sum(1 for t in result['channel_types'] if t not in ['eeg', 'stim', 'eog', 'ecg']))
+                    }
+                    
+                except Exception as e:
+                    logger.error(f"Failed to parse FIF: {e}")
+                    return jsonify({'status': 'error', 'message': f'Failed to parse FIF: {str(e)}'}), 400
+            
+            elif file_ext == 'mat':
+                try:
+                    from scipy.io import loadmat
+                    # np is already imported globally at the top of the file
+                    
+                    mat_data = loadmat(str(temp_path))
+                    
+                    # Find EEG data in common variable names
+                    eeg_data = None
+                    for var in ['data', 'eeg', 'EEG', 'signal', 'X', 'x']:
+                        if var in mat_data:
+                            eeg_data = mat_data[var]
+                            break
+                    
+                    if eeg_data is None:
+                        for key, value in mat_data.items():
+                            if isinstance(value, np.ndarray) and len(value.shape) == 2 and not key.startswith('__'):
+                                eeg_data = value
+                                break
+                    
+                    if eeg_data is None:
+                        raise ValueError("Could not find EEG data in .mat file")
+                    
+                    # Ensure data is in (channels, time) format
+                    if eeg_data.shape[0] > eeg_data.shape[1]:
+                        eeg_data = eeg_data.T
+                    
+                    n_channels, n_times = eeg_data.shape
+                    channel_names = [f'Ch{i+1}' for i in range(n_channels)]
+                    sfreq = 250.0
+                    
+                    result['n_channels'] = int(n_channels)
+                    result['channel_names'] = channel_names
+                    result['sfreq'] = float(sfreq)
+                    result['duration_sec'] = float(n_times / sfreq)
+                    result['n_times'] = int(n_times)
+                    result['montage'] = 'Unknown (MAT file)'
+                    result['channel_types'] = ['eeg'] * n_channels
+                    result['preprocessing'] = {
+                        'bandpass_filter': 'Not applied (MAT format)',
+                        'method': 'N/A',
+                        'reason': 'Raw MATLAB data'
+                    }
+                    result['bad_channels'] = []
+                    result['n_bad_channels'] = 0
+                    result['has_events'] = False
+                    result['epoching'] = None
+                    result['evoked'] = None
+                    result['channel_summary'] = {
+                        'eeg': int(n_channels),
+                        'stim': 0,
+                        'eog': 0,
+                        'ecg': 0,
+                        'other': 0
+                    }
+                    
+                    # Extract sample data
+                    max_samples = min(2500, n_times)
+                    data = eeg_data[:, :max_samples]
+                    result['sample_data'] = data.tolist()
+                    result['sample_times'] = (np.arange(max_samples) / sfreq).tolist()
+                    
+                except Exception as e:
+                    logger.error(f"Failed to parse MAT: {e}")
+                    return jsonify({'status': 'error', 'message': f'Failed to parse MAT: {str(e)}'}), 400
+            
             elif file_ext == 'csv':
                 try:
                     import pandas as pd
@@ -1306,7 +1475,7 @@ def register_api_routes(app):
                     return jsonify({'status': 'error', 'message': f'Failed to parse CSV: {str(e)}'}), 400
             
             else:
-                return jsonify({'status': 'error', 'message': f'Unsupported format: {file_ext}. Supported: edf, csv'}), 400
+                return jsonify({'status': 'error', 'message': f'Unsupported format: {file_ext}. Supported: edf, csv, fif, mat (MNE-supported formats)'}), 400
             
             return jsonify(result)
             
@@ -1564,6 +1733,16 @@ def register_main_routes(app):
             refresh_interval=app.config['REFRESH_INTERVAL'],
         )
 
+    @app.route('/eeg-viewer')
+    def eeg_viewer():
+        """MNE-standard EEG Viewer with waveform, spectrogram, topographic, epoch, and quality views."""
+        experiments = discover_experiments(app)
+        return render_template(
+            'eeg_viewer.html',
+            experiments=experiments,
+            refresh_interval=app.config['REFRESH_INTERVAL'],
+        )
+
     @app.route('/api/run-pipeline', methods=['POST'])
     def api_run_pipeline():
         """
@@ -1764,6 +1943,7 @@ Datasets:      http://localhost:5000/datasets
 Models:        http://localhost:5000/braindecode
 Pipeline:      http://localhost:5000/pipeline
 Results:       http://localhost:5000/results
+EEG Viewer:    http://localhost:5000/eeg-viewer
 EEG Assistant: http://localhost:5000/assistant
 About:         http://localhost:5000/about
 API:           http://localhost:5000/api/health

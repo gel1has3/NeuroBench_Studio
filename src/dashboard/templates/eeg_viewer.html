@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+{% block title %}🧠 EEG Viewer - NeuroBench Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+.viewer-toolbar .btn-group { gap: 2px; }
+.viewer-toolbar .btn.active-view { background: rgba(13, 202, 240, 0.2); border-color: #0dcaf0; color: #0dcaf0; }
+.eeg-trace { fill: none; stroke-width: 1; }
+.eeg-trace.eeg { stroke: #0dcaf0; }
+.eeg-trace.eog { stroke: #ffc107; }
+.eeg-trace.ecg { stroke: #dc3545; }
+.eeg-trace.emg { stroke: #198754; }
+.eeg-trace.stim { stroke: #6f42c1; }
+.recording-active { animation: record-pulse 1.5s ease-in-out infinite; }
+@keyframes record-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero mb-3 d-flex flex-wrap align-items-center justify-content-between">
+    <div>
+        <span class="page-kicker">🧠 EEG Viewer</span>
+        <h4 class="mb-1">Professional MNE-Style EEG Visualization</h4>
+        <p class="text-muted small mb-0">Multi-view EEG browser: raw.plot · plot_sensors · plot_topomap · epochs.plot_image · spectrum_map · signal quality report</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span id="recordingIndicator" class="badge bg-danger d-none"><span class="recording-active px-1">●</span> Live</span>
+        <span class="text-muted small" id="fileInfoBadge">No file loaded</span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Controls -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <label class="form-label small mb-0">Load EEG File</label>
+                        <input type="file" id="eegFileInput" class="form-control form-control-sm" accept=".edf,.fif,.set,.csv">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-0">View Mode</label>
+                        <select id="viewMode" class="form-select form-select-sm">
+                            <option value="waveform">🌊 Raw Plot (raw.plot)</option>
+                            <option value="spectrogram">📊 Spectrum Map (compute_psd)</option>
+                            <option value="butterfly">🦋 Butterfly View</option>
+                            <option value="quality">✅ Signal Quality Report</option>
+                            <option value="plot_sensors">📍 Sensor Locations (plot_sensors)</option>
+                            <option value="plot_topomap">🧠 Topographic Map (plot_topomap)</option>
+                            <option value="epochs_plot_image">🎯 Epochs Image (epochs.plot_image)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-0">Time Window</label>
+                        <select id="timeWindow" class="form-select form-select-sm">
+                            <option value="0.5">0.5s</option>
+                            <option value="1.0" selected>1.0s</option>
+                            <option value="2.0">2.0s</option>
+                            <option value="5.0">5.0s</option>
+                            <option value="full">Full duration</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-0">Channel</label>
+                        <select id="channelSelect" class="form-select form-select-sm">
+                            <option value="0">First channel</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button class="btn btn-sm btn-info" onclick="loadAndView()"><i class="bi bi-play-fill"></i> View</button>
+                        <button class="btn btn-sm btn-outline-info" onclick="playView()"><i class="bi bi-play-circle"></i> Play</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="stopView()"><i class="bi bi-stop-circle"></i> Stop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Viewer -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up me-1"></i><span id="viewTitle">EEG Viewer — No data loaded</span></span>
+                <span class="text-muted small" id="statusBar">Ready</span>
+            </div>
+            <div class="card-body p-2">
+                <div id="eegPlot" style="width:100%; height:500px; background:rgba(255,255,255,.02); border-radius:6px;"></div>
+                <div id="infoBar" class="mt-2 small text-muted d-flex justify-content-between">
+                    <span id="cursorInfo">Click on plot for time/amplitude</span>
+                    <span id="dataInfo">No data</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Info Panel -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header py-2"><small class="fw-bold"><i class="bi bi-diagram-2"></i> Channel Info</small></div>
+            <div class="card-body p-2" id="channelInfoPanel" style="max-height: 200px; overflow-y: auto;">
+                <div class="text-muted small">Load a file to see channel information</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header py-2"><small class="fw-bold"><i class="bi bi-bar-chart"></i> Signal Metrics</small></div>
+            <div class="card-body p-2" id="metricsPanel">
+                <div class="text-muted small">Load a file to see signal metrics</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Panel -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header py-2"><small class="fw-bold"><i class="bi bi-bookmark"></i> Events / Annotations</small></div>
+            <div class="card-body p-2" id="eventsPanel">
+                <div class="text-muted small">Load a file to see event markers</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+// EEG Viewer State
+let eegState = {
+    data: null,
+    channelNames: [],
+    sfreq: 250,
+    nTimes: 0,
+    duration: 0,
+    currentTime: 0,
+    windowDuration: 1.0,
+    isPlaying: false,
+    playInterval: null,
+    plotId: 'eegPlot',
+    backendData: null
+};
+
+const CHANNEL_TYPES = {
+    'Fp1':'eog','Fp2':'eog','F3':'eeg','F4':'eeg','C3':'eeg','C4':'eeg',
+    'P3':'eeg','P4':'eeg','O1':'eeg','O2':'eeg','F7':'eeg','F8':'eeg',
+    'T3':'eeg','T4':'eeg','T5':'eeg','T6':'eeg','Fz':'eeg','Cz':'eeg','Pz':'eeg'
+};
+const TYPE_COLORS = {'eeg':'#0dcaf0','eog':'#ffc107','ecg':'#dc3545','emg':'#198754','stim':'#6f42c1'};
+const CHANNEL_POS = {
+    'Fp1':[-0.15,0.35],'Fp2':[0.15,0.35],'F3':[-0.2,0.2],'F4':[0.2,0.2],
+    'C3':[-0.25,0],'C4':[0.25,0],'P3':[-0.2,-0.2],'P4':[0.2,-0.2],
+    'O1':[-0.1,-0.35],'O2':[0.1,-0.35],'F7':[-0.35,0.2],'F8':[0.35,0.2],
+    'T3':[-0.4,0],'T4':[0.4,0],'T5':[-0.35,-0.2],'T6':[0.35,-0.2],
+    'Fz':[0,0.25],'Cz':[0,0],'Pz':[0,-0.2]
+};
+
+// File upload handler
+document.getElementById('eegFileInput').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) loadAndView();
+});
+
+function loadAndView() {
+    const file = document.getElementById('eegFileInput').files[0];
+    if (!file) { showToast('warning', 'Please select an EEG file first'); return; }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    document.getElementById('statusBar').textContent = '⏳ Loading ' + file.name + '...';
+    
+    fetch('/api/parse-eeg', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status !== 'success') throw new Error(data.message);
+        
+        eegState.backendData = data;
+        eegState.channelNames = data.channel_names;
+        eegState.sfreq = data.sfreq;
+        eegState.nTimes = data.n_times;
+        eegState.duration = data.duration_sec;
+        eegState.data = data.sample_data;
+        
+        document.getElementById('fileInfoBadge').textContent = file.name + ' · ' + data.n_channels + 'ch · ' + data.sfreq + 'Hz';
+        document.getElementById('statusBar').textContent = '✅ Loaded: ' + file.name;
+        document.getElementById('viewTitle').textContent = 'EEG Viewer — ' + file.name;
+        
+        updateChannelSelect();
+        updateChannelInfo(data);
+        updateMetrics(data);
+        updateEvents(data);
+        renderCurrentView();
+    })
+    .catch(err => {
+        document.getElementById('statusBar').textContent = '❌ Error: ' + err.message;
+        showToast('danger', 'Failed to load file: ' + err.message);
+    });
+}
+
+function updateChannelSelect() {
+    const sel = document.getElementById('channelSelect');
+    sel.innerHTML = eegState.channelNames.map((ch, i) => 
+        '<option value="' + i + '">' + ch + ' (' + (CHANNEL_TYPES[ch] || 'eeg') + ')</option>'
+    ).join('');
+}
+
+function updateChannelInfo(data) {
+    const panel = document.getElementById('channelInfoPanel');
+    let html = '<table class="table table-sm small mb-0"><thead><tr><th>#</th><th>Name</th><th>Type</th><th>RMS (µV)</th><th>Status</th></tr></thead><tbody>';
+    
+    const badSet = new Set(data.bad_channels || []);
+    data.channel_names.forEach((ch, i) => {
+        const chData = data.sample_data[i] || [];
+        const rms = chData.length > 0 ? Math.sqrt(chData.reduce((s,v) => s + v*v, 0) / chData.length) : 0;
+        const cType = CHANNEL_TYPES[ch] || 'eeg';
+        const isBad = badSet.has(ch);
+        html += '<tr class="' + (isBad ? 'text-danger' : '') + '">' +
+            '<td>' + (i+1) + '</td>' +
+            '<td><span style="color:' + (TYPE_COLORS[cType]||'#0dcaf0') + '">' + ch + '</span></td>' +
+            '<td>' + cType.toUpperCase() + '</td>' +
+            '<td>' + rms.toFixed(1) + '</td>' +
+            '<td>' + (isBad ? '⚠️ BAD' : '✅') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    panel.innerHTML = html;
+}
+
+function updateMetrics(data) {
+    const panel = document.getElementById('metricsPanel');
+    const allData = data.sample_data || [];
+    const chRMS = allData.map(ch => Math.sqrt(ch.reduce((s,v) => s + v*v, 0) / (ch.length||1)));
+    const avgRMS = chRMS.reduce((a,b) => a+b, 0) / (chRMS.length||1);
+    const p2p = allData.map(ch => Math.max(...ch) - Math.min(...ch));
+    const avgP2P = p2p.reduce((a,b) => a+b, 0) / (p2p.length||1);
+    const gfp = Math.sqrt(chRMS.reduce((s,v) => s + v*v, 0));
+    
+    panel.innerHTML = '<div class="small">' +
+        '<div class="d-flex justify-content-between mb-1"><span>Channels</span><strong>' + data.n_channels + '</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Sampling Rate</span><strong>' + data.sfreq + ' Hz</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Duration</span><strong>' + data.duration_sec.toFixed(1) + ' s</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Global Field Power</span><strong>' + gfp.toFixed(1) + ' µV</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Avg RMS</span><strong>' + avgRMS.toFixed(1) + ' µV</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Avg P2P</span><strong>' + avgP2P.toFixed(1) + ' µV</strong></div>' +
+        '<div class="d-flex justify-content-between mb-1"><span>Bad Channels</span><strong class="' + (data.n_bad_channels > 0 ? 'text-danger' : 'text-success') + '">' + data.n_bad_channels + '</strong></div>' +
+        (data.montage ? '<div class="d-flex justify-content-between"><span>Montage</span><strong>' + data.montage + '</strong></div>' : '') +
+    '</div>';
+}
+
+function updateEvents(data) {
+    const panel = document.getElementById('eventsPanel');
+    if (data.has_events && data.event_types) {
+        let html = '<div class="small">' +
+            '<div class="d-flex justify-content-between mb-1"><span>Events</span><strong>' + data.n_events + '</strong></div>';
+        Object.entries(data.event_types).slice(0, 8).forEach(([k, v]) => {
+            html += '<div class="d-flex justify-content-between mb-1"><span>' + k + '</span><span class="badge bg-info text-dark">' + v + '</span></div>';
+        });
+        html += '</div>';
+        panel.innerHTML = html;
+    } else {
+        panel.innerHTML = '<div class="text-muted small">No events/annotations found in this file</div>';
+    }
+}
+
+// Render current view based on selected mode
+function renderCurrentView() {
+    const mode = document.getElementById('viewMode').value;
+    const timeWindow = document.getElementById('timeWindow').value;
+    const chIdx = parseInt(document.getElementById('channelSelect').value) || 0;
+    
+    eegState.windowDuration = timeWindow === 'full' ? eegState.duration : parseFloat(timeWindow);
+    eegState.currentTime = 0;
+    
+    const time = [];
+    for (let t = 0; t < eegState.nTimes; t++) time.push(t / eegState.sfreq);
+    
+    document.getElementById('viewTitle').textContent = 'EEG Viewer — ' + mode.replace(/_/g,' ') + 
+        ' · ch: ' + eegState.channelNames[chIdx] + ' · window: ' + eegState.windowDuration.toFixed(1) + 's';
+    
+    renderEEGPlot(eegState.plotId, time, eegState.data, eegState.channelNames, mode, eegState.sfreq, chIdx);
+}
+
+// MNE-Standard rendering engine
+function renderEEGPlot(plotId, time, allData, channelNames, mode, sfreq, chIdx) {
+    const el = document.getElementById(plotId);
+    if (!el) return;
+    Plotly.purge(plotId);
+    
+    const traces = [];
+    const nCh = channelNames.length;
+    const CH_OFFSET = Math.max(60, Math.min(120, 2000 / nCh));
+    const totalDuration = time[time.length - 1] || 1;
+    
+    // ──── WAVEFORM: raw.plot() MNE standard ────
+    if (mode === 'waveform') {
+        const chOrder = ['Fp1','Fp2','F7','F3','Fz','F4','F8','T3','C3','Cz','C4','T4','T5','P3','Pz','P4','T6','O1','O2'];
+        const sorted = chOrder.filter(c => channelNames.includes(c));
+        const display = sorted.length > 0 ? sorted : channelNames;
+        
+        display.forEach((ch, idx) => {
+            const ci = channelNames.indexOf(ch);
+            const d = (ci >= 0 && allData[ci]) || [];
+            const cType = CHANNEL_TYPES[ch] || 'eeg';
+            traces.push({
+                x: time, y: d.map(v => v + (display.length - 1 - idx) * CH_OFFSET),
+                type: 'scatter', mode: 'lines', name: ch,
+                line: { color: TYPE_COLORS[cType] || '#0dcaf0', width: 0.9 },
+                hovertemplate: '<b>' + ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>'
+            });
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'EEG Raw Data — ' + display.length + ' ch · ' + sfreq + ' Hz', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)', color: '#8888aa' },
+            yaxis: { title: 'Channels', gridcolor: 'rgba(255,255,255,0.03)', color: '#8888aa',
+                tickvals: display.map((_,i) => (display.length-1-i) * CH_OFFSET), ticktext: display, tickfont: { size: 8, family: 'monospace' } },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 45, r: 15, t: 28, b: 30 },
+            height: 450,
+            hovermode: 'closest'
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── SPECTROGRAM ────
+    if (mode === 'spectrogram' || mode === 'spectrum_map') {
+        const chData = (allData[chIdx] || []).slice(0, 500);
+        const nfft = Math.min(128, Math.floor(chData.length / 4));
+        const hop = Math.floor(nfft / 4);
+        const windowFn = new Array(nfft).fill(0).map((_,i) => 0.5 * (1 - Math.cos(2*Math.PI*i/(nfft-1))));
+        const nFrames = Math.max(1, Math.floor((chData.length - nfft) / hop) + 1);
+        const freqs = Array.from({length: Math.floor(nfft/2)+1}, (_,k) => k * sfreq / nfft).filter(f => f <= 45);
+        const nFreqs = freqs.length;
+        const specgram = [], tAxis = [];
+        
+        for (let f = 0; f < nFrames; f++) {
+            const start = f * hop;
+            const real = new Array(nfft/2+1).fill(0), imag = new Array(nfft/2+1).fill(0);
+            for (let k = 0; k <= nfft/2; k++) {
+                for (let n = 0; n < nfft && start+n < chData.length; n++) {
+                    const angle = -2 * Math.PI * k * n / nfft;
+                    real[k] += chData[start+n] * windowFn[n] * Math.cos(angle);
+                    imag[k] += chData[start+n] * windowFn[n] * Math.sin(angle);
+                }
+            }
+            specgram.push(freqs.map((_,k) => 10 * Math.log10(Math.max(1e-10, (real[k]*real[k] + imag[k]*imag[k]) / nfft))));
+            tAxis.push(start / sfreq);
+        }
+        
+        const zData = freqs.map((_,k) => specgram.map(f => f[k]));
+        const bandShapes = [
+            {name:'δ',r:[0.5,4],c:'rgba(111,66,193,0.12)'},
+            {name:'θ',r:[4,8],c:'rgba(255,193,7,0.12)'},
+            {name:'α',r:[8,12],c:'rgba(13,202,240,0.12)'},
+            {name:'β',r:[13,30],c:'rgba(25,135,84,0.12)'},
+            {name:'γ',r:[30,45],c:'rgba(220,53,69,0.08)'}
+        ];
+        
+        traces.push({
+            z: zData, x: tAxis, y: freqs,
+            type: 'heatmap', colorscale: 'Viridis',
+            colorbar: { title: 'dB', tickfont: { size: 8, color: '#8888aa' }, thickness: 10 },
+            hovertemplate: 'Time: %{x:.2f}s<br>Freq: %{y:.1f} Hz<br>Power: %{z:.1f} dB<extra></extra>'
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: channelNames[chIdx] + ' — STFT Spectrogram (dB)', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Frequency (Hz)', range: [0, 45], gridcolor: 'rgba(255,255,255,0.05)' },
+            shapes: bandShapes.map(b => ({type:'rect',xref:'paper',yref:'y',x0:0,x1:1,y0:b.r[0],y1:b.r[1],fillcolor:b.c,line:{width:0},layer:'below'})),
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 50, r: 50, t: 28, b: 30 }, height: 450
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── BUTTERFLY ────
+    if (mode === 'butterfly') {
+        channelNames.forEach((ch, idx) => {
+            const d = allData[idx] || [];
+            const cType = CHANNEL_TYPES[ch] || 'eeg';
+            traces.push({
+                x: time, y: d.map(v => v + (nCh - 1 - idx) * CH_OFFSET),
+                type: 'scatter', mode: 'lines', name: ch,
+                line: { color: TYPE_COLORS[cType] || '#0dcaf0', width: 0.7 },
+                hovertemplate: '<b>' + ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>'
+            });
+        });
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'Butterfly Plot — All Channels', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.03)' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 45, r: 15, t: 28, b: 30 }, height: 450
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── QUALITY ────
+    if (mode === 'quality') {
+        const chMetrics = channelNames.map((ch, idx) => {
+            const d = allData[idx] || [];
+            const rms = Math.sqrt(d.reduce((s,v) => s + v*v, 0) / (d.length||1));
+            const p2p = d.length > 0 ? Math.max(...d) - Math.min(...d) : 0;
+            const flat = d.filter(v => Math.abs(v) < 0.5).length / (d.length||1);
+            return { ch: ch, rms: rms, p2p: p2p, flat: flat };
+        });
+        const gfp = Math.sqrt(chMetrics.reduce((s,m) => s + m.rms*m.rms, 0));
+        const avgRMS = chMetrics.reduce((s,m) => s + m.rms, 0) / chMetrics.length;
+        
+        const best = chMetrics.reduce((a,b) => a.rms > b.rms ? a : b);
+        const bestIdx = channelNames.indexOf(best.ch);
+        traces.push({
+            x: time, y: allData[bestIdx] || [],
+            type: 'scatter', mode: 'lines', name: best.ch + ' (best)',
+            line: { color: '#0dcaf0', width: 1.5 },
+            hovertemplate: '<b>' + best.ch + '</b> @ %{x:.3f}s<br>%{y:.1f} µV<extra></extra>'
+        });
+        chMetrics.filter(m => m.flat > 0.3).forEach(m => {
+            const mi = channelNames.indexOf(m.ch);
+            const md = allData[mi] || [];
+            traces.push({
+                x: [time[Math.floor(time.length/2)]], y: [md[Math.floor(md.length/2)] || 0],
+                type: 'scatter', mode: 'markers', name: 'FLAT: ' + m.ch,
+                marker: { color: '#dc3545', size: 8, symbol: 'x' }
+            });
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'Signal Quality — GFP: ' + gfp.toFixed(1) + '· RMS: ' + avgRMS.toFixed(1) + '· Flat: ' + chMetrics.filter(m => m.flat>0.3).length + 'ch', font: { size: 10, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { title: 'Time (s)', gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Amplitude (µV)', gridcolor: 'rgba(255,255,255,0.05)' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 45, r: 15, t: 35, b: 30 }, height: 450,
+            showlegend: true, legend: { font: { size: 8 }, orientation: 'h', x: 0, y: 1.1 }
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── SENSOR LOCATIONS ────
+    if (mode === 'plot_sensors' || mode === 'scalp') {
+        const shapes = [
+            { type: 'circle', xref: 'x', yref: 'y', x0: -0.42, y0: -0.42, x1: 0.42, y1: 0.42, line: { color: '#8888aa', width: 2 } },
+            { type: 'path', xref: 'x', yref: 'y', path: 'M 0 0.42 L -0.06 0.48 L 0 0.52 L 0.06 0.48 Z', line: { color: '#adb5bd', width: 1.5 }, fillcolor: '#adb5bd' },
+            { type: 'path', xref: 'x', yref: 'y', path: 'M -0.42 -0.05 Q -0.52 0 -0.42 0.05 Z', line: { color: '#adb5bd', width: 1.5 } },
+            { type: 'path', xref: 'x', yref: 'y', path: 'M 0.42 -0.05 Q 0.52 0 0.42 0.05 Z', line: { color: '#adb5bd', width: 1.5 } }
+        ];
+        
+        channelNames.forEach((ch, idx) => {
+            const pos = CHANNEL_POS[ch]; if (!pos) return;
+            const cType = CHANNEL_TYPES[ch] || 'eeg';
+            traces.push({
+                x: [pos[0]], y: [pos[1]],
+                mode: 'markers+text', type: 'scatter',
+                text: [ch], textposition: 'top center',
+                textfont: { size: 8, color: '#e0e0ff', family: 'monospace' },
+                marker: { size: cType === 'eeg' ? 10 : 8, color: TYPE_COLORS[cType]||'#0dcaf0', line: { color: '#fff', width: 1.5 },
+                    symbol: cType === 'eog' ? 'diamond' : cType === 'stim' ? 'square' : 'circle' },
+                showlegend: false,
+                hovertext: '<b>' + ch + '</b><br>Type: ' + cType.toUpperCase()
+            });
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'Sensor Locations (10-20)', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { visible: false, range: [-0.55, 0.55] },
+            yaxis: { visible: false, range: [-0.55, 0.55], scaleanchor: 'x', scaleratio: 1 },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 10, r: 10, t: 28, b: 10 }, height: 450,
+            shapes: shapes, hovermode: 'closest'
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── TOPOGRAPHIC MAP ────
+    if (mode === 'plot_topomap' || mode === 'topographic') {
+        const amplitudes = {};
+        channelNames.forEach((ch, idx) => {
+            const d = allData[idx];
+            amplitudes[ch] = (d && d.length > 0) ? d[Math.floor(d.length/2)] : 0;
+        });
+        const allAmps = Object.values(amplitudes).filter(a => a !== undefined);
+        const ampMax = Math.max(Math.abs(Math.min(...allAmps)), Math.abs(Math.max(...allAmps))) || 1;
+        
+        const gridRes = 40;
+        const xG = [], yG = [], zG = [];
+        for (let i = 0; i < gridRes; i++) {
+            for (let j = 0; j < gridRes; j++) {
+                const x = -0.4 + 0.8 * i / (gridRes - 1);
+                const y = -0.4 + 0.8 * j / (gridRes - 1);
+                if (Math.sqrt(x*x + y*y) <= 0.4) {
+                    xG.push(x); yG.push(y);
+                    let sumW = 0, sumV = 0;
+                    channelNames.forEach(ch => {
+                        const p = CHANNEL_POS[ch];
+                        if (p && amplitudes[ch] !== undefined) {
+                            const dSq = (x-p[0])*(x-p[0]) + (y-p[1])*(y-p[1]);
+                            if (dSq < 1e-8) { sumW = 1e10; sumV = amplitudes[ch]; return; }
+                            const w = 1 / (dSq + 0.001);
+                            sumW += w; sumV += w * amplitudes[ch];
+                        }
+                    });
+                    zG.push(sumW > 0 ? sumV / sumW : 0);
+                }
+            }
+        }
+        
+        traces.push({
+            x: xG, y: yG, z: zG, type: 'contour',
+            colorscale: [[0,'#053061'],[0.25,'#2166ac'],[0.5,'#f7f7f7'],[0.75,'#b2182b'],[1,'#67001f']],
+            showscale: true,
+            colorbar: { title: { text: 'µV', font: { size: 8 } }, tickfont: { size: 7 }, thickness: 10, len: 0.6 },
+            contours: { coloring: 'heatmap' }, line: { width: 0.5, color: 'rgba(255,255,255,0.2)' }, opacity: 0.9
+        });
+        channelNames.forEach(ch => {
+            const p = CHANNEL_POS[ch]; if (!p) return;
+            traces.push({
+                x: [p[0]], y: [p[1]], mode: 'markers+text', type: 'scatter',
+                text: [ch], textposition: 'top center', textfont: { size: 7, color: '#000' },
+                marker: { size: 7, color: '#fff', line: { color: '#000', width: 1 } }, showlegend: false
+            });
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'Topographic Map', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            xaxis: { visible: false, range: [-0.5, 0.5] },
+            yaxis: { visible: false, range: [-0.5, 0.5], scaleanchor: 'x', scaleratio: 1 },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 10, r: 50, t: 28, b: 10 }, height: 450,
+            shapes: [{type:'circle',xref:'x',yref:'y',x0:-0.4,y0:-0.4,x1:0.4,y1:0.4,line:{color:'#8888aa',width:2}}]
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+    
+    // ──── EPOCH IMAGE ────
+    if (mode === 'epochs_plot_image' || mode === 'epoch_image') {
+        const targetCh = channelNames[Math.min(chIdx, channelNames.length-1)] || 'C3';
+        const targetIdx = channelNames.indexOf(targetCh);
+        const targetData = (targetIdx >= 0 && allData[targetIdx]) || [];
+        const nEpochs = Math.min(12, Math.max(4, Math.floor(targetData.length / 30)));
+        const epochLen = Math.min(40, Math.floor((targetData.length - 5) / nEpochs));
+        const epochMatrix = [];
+        
+        for (let e = 0; e < nEpochs; e++) {
+            const start = Math.floor(e * (targetData.length - epochLen) / Math.max(1, nEpochs - 1));
+            const row = [];
+            for (let t = 0; t < epochLen; t++) row.push(targetData[Math.min(start + t, targetData.length - 1)]);
+            epochMatrix.push(row);
+        }
+        
+        traces.push({
+            z: epochMatrix, type: 'heatmap',
+            colorscale: [[0,'#053061'],[0.25,'#2166ac'],[0.5,'#f7f7f7'],[0.75,'#b2182b'],[1,'#67001f']],
+            zmid: 0, showscale: true,
+            colorbar: { title: { text: 'µV', font: { size: 8 } }, tickfont: { size: 7 }, thickness: 10, len: 0.6 },
+            hovertemplate: 'Trial: %{y}<br>Time: %{x:.2f}s<br>Ampl: %{z:.2f} µV<extra></extra>'
+        });
+        
+        // ERP overlay
+        const erp = Array.from({length: epochLen}, (_,t) => epochMatrix.reduce((s,e) => s + e[t], 0) / nEpochs);
+        const erpTime = Array.from({length: epochLen}, (_,t) => t / sfreq);
+        traces.push({
+            x: erpTime, y: erp, xaxis: 'x2', yaxis: 'y2',
+            type: 'scatter', mode: 'lines', name: 'ERP',
+            line: { color: '#ffc107', width: 2 }, showlegend: true,
+            hovertemplate: 'ERP @ %{x:.3f}s: %{y:.2f} µV<extra></extra>'
+        });
+        
+        Plotly.newPlot(plotId, traces, {
+            title: { text: 'Epochs Image — ' + targetCh + ' (' + nEpochs + ' trials)', font: { size: 11, color: '#e0e0ff' }, x: 0.01 },
+            grid: { rows: 2, columns: 1, pattern: 'independent' },
+            xaxis: { title: 'Time (s)', domain: [0,1], gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis: { title: 'Trials', domain: [0.35,1], gridcolor: 'rgba(255,255,255,0.05)',
+                tickvals: Array.from({length:nEpochs}, (_,i) => i),
+                ticktext: Array.from({length:nEpochs}, (_,i) => 'T'+(i+1)) },
+            xaxis2: { title: 'Time (s)', domain: [0,1], gridcolor: 'rgba(255,255,255,0.05)' },
+            yaxis2: { title: 'ERP (µV)', domain: [0,0.3], gridcolor: 'rgba(255,255,255,0.05)' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 55, r: 50, t: 28, b: 35 }, height: 450,
+            showlegend: true, legend: { font: { size: 8 }, orientation: 'h', x: 0.5, y: -0.1 }
+        }, { responsive: true, displayModeBar: false });
+        return;
+    }
+}
+
+// Playback controls
+function playView() {
+    if (eegState.isPlaying) return;
+    if (!eegState.data) { showToast('warning', 'Load a file first'); return; }
+    eegState.isPlaying = true;
+    const fps = 30;
+    eegState.playInterval = setInterval(() => {
+        if (!eegState.isPlaying) return;
+        const delta = 0.05;
+        eegState.currentTime += delta;
+        if (eegState.currentTime >= eegState.duration - eegState.windowDuration) {
+            eegState.currentTime = 0;
+        }
+        const plotDiv = document.getElementById(eegState.plotId);
+        if (plotDiv && plotDiv.layout) {
+            Plotly.relayout(eegState.plotId, { 'xaxis.range': [eegState.currentTime, eegState.currentTime + eegState.windowDuration] });
+        }
+        document.getElementById('cursorInfo').textContent = '⏱ Playing: ' + eegState.currentTime.toFixed(2) + 's';
+    }, 1000/fps);
+}
+
+function stopView() {
+    eegState.isPlaying = false;
+    if (eegState.playInterval) { clearInterval(eegState.playInterval); eegState.playInterval = null; }
+    document.getElementById('cursorInfo').textContent = '⏹ Stopped';
+}
+
+// Mode change handler
+document.getElementById('viewMode').addEventListener('change', function() {
+    if (eegState.data) renderCurrentView();
+});
+
+// Toast notifications
+function showToast(type, message) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    const toastId = 'toast-' + Date.now();
+    container.innerHTML += '<div id="' + toastId + '" class="toast ' + (type==='danger'?'bg-danger text-white':type==='warning'?'bg-warning text-dark':'bg-info text-dark') + '" role="alert">' +
+        '<div class="d-flex"><div class="toast-body">' + message + '</div>' +
+        '<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button></div></div>';
+    const el = document.getElementById(toastId);
+    if (el) { new bootstrap.Toast(el, {delay: 3000}).show(); el.addEventListener('hidden.bs.toast', function() { this.remove(); }); }
+}
+</script>
+{% endblock %}
