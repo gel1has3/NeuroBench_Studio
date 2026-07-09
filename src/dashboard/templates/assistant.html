@@ -327,7 +327,7 @@
               <option value="CodeBrain">CodeBrain</option>
               <option value="EEGDINO">EEGDINO</option>
               <option value="EEGPT">EEGPT</option>
-              <option value="LaBraM">LaBraM</option>
+              <option value="LaBraM" selected>LaBraM</option>
               <option value="REVE">REVE</option>
               <option value="SignalJEPA">SignalJEPA</option>
               <option value="STEEGFormer">STEEGFormer</option>
@@ -345,7 +345,7 @@
             <label class="form-label small fw-semibold">Neurodevelopmental Condition</label>
             <select id="settingsCondition" class="form-select form-select-sm">
               <option value="">— Select condition (optional) —</option>
-              <option value="Epilepsy">Epilepsy</option>
+              <option value="Epilepsy" selected>Epilepsy</option>
               <option value="ADHD">ADHD</option>
               <option value="Alzheimer's Disease">Alzheimer's Disease</option>
               <option value="Autism Spectrum Disorder">Autism Spectrum Disorder</option>
@@ -423,7 +423,7 @@
           <!-- Trial Window Size -->
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Trial Window Size (samples)</label>
-            <input type="number" id="settingsTrialWindowSize" class="form-control form-control-sm" placeholder="Auto" min="50" max="2000" step="50">
+            <input type="number" id="settingsTrialWindowSize" class="form-control form-control-sm" placeholder="Auto" min="50" max="2000" step="50" value="1800">
             <small class="text-muted">Leave empty for model default</small>
           </div>
 
@@ -447,6 +447,16 @@
               <input class="form-check-input" type="radio" name="amplitudeScale" id="ampRaw" value="raw">
               <label class="form-check-label small" for="ampRaw">Raw (no scaling)</label>
             </div>
+          </div>
+
+          <!-- Preprocessing Enforcement -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Preprocessing Enforcement</label>
+            <select id="settingsPrepEnforcement" class="form-select form-select-sm">
+              <option value="optional" selected>Optional (skip if preprocessed)</option>
+              <option value="mandatory">Mandatory (always preprocess)</option>
+            </select>
+            <small class="text-muted">Enforce pipelines on all files</small>
           </div>
 
           <!-- Preprocessing Pipeline -->
@@ -525,7 +535,17 @@ const MODEL_PROFILES = {
 const CHANNEL_10_20 = ['Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2','F7','F8','T3','T4','T5','T6','Fz','Cz','Pz'];
 
 let currentModel = '';
-let currentSettings = {};
+let currentSettings = {
+  modelCheckpoint: 'LaBraM',
+  condition: 'Epilepsy',
+  sfreq: '',
+  signalTypes: ['EEG'],
+  channelCount: '21',
+  normAlgo: 'exp_moving_std',
+  trialWindowSize: '1800',
+  windowStride: '50',
+  prepEnforcement: 'optional'
+};
 let uploadedFiles = [];
 let parsedFileData = {};
 
@@ -533,20 +553,67 @@ let parsedFileData = {};
 function onModelChange(modelKey) {
   currentModel = modelKey;
   const profile = MODEL_PROFILES[modelKey];
-  if (profile) {
-    document.getElementById('modelProfileInfo').classList.remove('d-none');
-    document.getElementById('modelSelectPlaceholder').classList.add('d-none');
-    document.getElementById('modelSfreq').textContent = profile.sfreq + ' Hz';
-    document.getElementById('modelChannels').textContent = profile.channels + ' ch';
-    document.getElementById('modelWindow').textContent = profile.window;
-    document.getElementById('activeModelBadge').style.display = 'inline-block';
-    document.getElementById('activeModelName').textContent = profile.name;
-    document.getElementById('contextBadge').classList.remove('d-none');
-    document.getElementById('contextBadgeName').textContent = profile.name;
-  } else {
-    document.getElementById('modelProfileInfo').classList.add('d-none');
-    document.getElementById('modelSelectPlaceholder').classList.remove('d-none');
-    document.getElementById('activeModelBadge').style.display = 'none';
+  
+  // Update modelStatusBadge and statusModelName (which exist in HTML)
+  const statusBadge = document.getElementById('modelStatusBadge');
+  const statusName = document.getElementById('statusModelName');
+  if (statusBadge && statusName) {
+    if (profile) {
+      statusBadge.style.display = 'inline-block';
+      statusName.textContent = profile.name;
+    } else {
+      statusBadge.style.display = 'none';
+      statusName.textContent = 'None';
+    }
+  }
+
+  // Update contextBadge and contextBadgeName (which exist in HTML)
+  const contextBadge = document.getElementById('contextBadge');
+  const contextBadgeName = document.getElementById('contextBadgeName');
+  if (contextBadge && contextBadgeName) {
+    if (profile) {
+      contextBadge.classList.remove('d-none');
+      contextBadgeName.textContent = profile.name;
+    } else {
+      contextBadge.classList.add('d-none');
+      contextBadgeName.textContent = '—';
+    }
+  }
+
+  // Safely update optional/missing elements (to avoid crashes)
+  const profileInfo = document.getElementById('modelProfileInfo');
+  if (profileInfo) {
+    if (profile) {
+      profileInfo.classList.remove('d-none');
+    } else {
+      profileInfo.classList.add('d-none');
+    }
+  }
+  const selectPlaceholder = document.getElementById('modelSelectPlaceholder');
+  if (selectPlaceholder) {
+    if (profile) {
+      selectPlaceholder.classList.add('d-none');
+    } else {
+      selectPlaceholder.classList.remove('d-none');
+    }
+  }
+  
+  const modelSfreqEl = document.getElementById('modelSfreq');
+  if (modelSfreqEl && profile) modelSfreqEl.textContent = profile.sfreq + ' Hz';
+  
+  const modelChannelsEl = document.getElementById('modelChannels');
+  if (modelChannelsEl && profile) modelChannelsEl.textContent = profile.channels + ' ch';
+  
+  const modelWindowEl = document.getElementById('modelWindow');
+  if (modelWindowEl && profile) modelWindowEl.textContent = profile.window;
+  
+  const activeModelBadgeEl = document.getElementById('activeModelBadge');
+  if (activeModelBadgeEl) {
+    activeModelBadgeEl.style.display = profile ? 'inline-block' : 'none';
+  }
+  const activeModelNameEl = document.getElementById('activeModelName');
+  if (activeModelNameEl && profile) {
+    activeModelNameEl.textContent = profile.name;
   }
 }
 
@@ -556,8 +623,14 @@ function applyModelToChat() {
     return;
   }
   const profile = MODEL_PROFILES[currentModel];
-  document.getElementById('modelContextMsg').classList.remove('d-none');
-  document.getElementById('contextModelName').textContent = profile.name;
+  const modelContextMsgEl = document.getElementById('modelContextMsg');
+  if (modelContextMsgEl) {
+    modelContextMsgEl.classList.remove('d-none');
+  }
+  const contextModelNameEl = document.getElementById('contextModelName');
+  if (contextModelNameEl) {
+    contextModelNameEl.textContent = profile.name;
+  }
   addMessage('assistant', '✅ **Model & Settings Applied**\n\n**Model:** ' + profile.name + '\n**Target sfreq:** ' + profile.sfreq + ' Hz\n**Channels:** ' + profile.channels + '\n\nI\'m now context-aware of your configuration. How can I help you with this setup?');
 }
 
@@ -566,11 +639,17 @@ function toggleChip(el) {
   if (el.dataset.value === 'EEG') return;
   el.classList.toggle('checked');
   const checkSpan = el.querySelector('.chip-check');
-  checkSpan.textContent = el.classList.contains('checked') ? '✓' : '';
+  if (checkSpan) {
+    checkSpan.textContent = el.classList.contains('checked') ? '✓' : '';
+  }
 }
 
+// Norm Algo Change
 function onNormAlgoChange(value) {
-  document.getElementById('expMovingDecayField').style.display = value === 'exp_moving_std' ? 'block' : 'none';
+  const decayField = document.getElementById('expMovingDecayField');
+  if (decayField) {
+    decayField.style.display = value === 'exp_moving_std' ? 'block' : 'none';
+  }
 }
 
 function applySettings() {
@@ -585,16 +664,20 @@ function applySettings() {
     normAlgo: document.getElementById('settingsNormAlgo').value,
     trialWindowSize: document.getElementById('settingsTrialWindowSize').value,
     windowStride: document.getElementById('settingsWindowStride').value,
+    prepEnforcement: document.getElementById('settingsPrepEnforcement').value,
   };
   if (currentSettings.modelCheckpoint) {
-    document.getElementById('modelSelect').value = currentSettings.modelCheckpoint;
+    const modelSelectEl = document.getElementById('modelSelect');
+    if (modelSelectEl) {
+      modelSelectEl.value = currentSettings.modelCheckpoint;
+    }
     onModelChange(currentSettings.modelCheckpoint);
   }
   let settingsMsg = '⚙️ **Preprocessing settings applied**\n\n';
   if (currentSettings.condition) {
     settingsMsg += '- **Condition:** ' + currentSettings.condition + '\n';
   }
-  settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%';
+  settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%\n- **Enforcement:** ' + currentSettings.prepEnforcement;
   addMessage('assistant', settingsMsg);
   
   const modalEl = document.getElementById('preprocessingSettingsModal');
@@ -626,6 +709,15 @@ function handleFileUpload(input) {
   files.forEach((file, index) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('modelCheckpoint', currentSettings.modelCheckpoint || 'LaBraM');
+    formData.append('condition', currentSettings.condition || 'Epilepsy');
+    formData.append('sfreq', currentSettings.sfreq || '');
+    formData.append('signalTypes', JSON.stringify(currentSettings.signalTypes || ['EEG']));
+    formData.append('channelCount', currentSettings.channelCount || '21');
+    formData.append('normAlgo', currentSettings.normAlgo || 'exp_moving_std');
+    formData.append('trialWindowSize', currentSettings.trialWindowSize || '1800');
+    formData.append('windowStride', currentSettings.windowStride || '50');
+    formData.append('prepEnforcement', currentSettings.prepEnforcement || 'optional');
     
     fetch('/api/parse-eeg', {
       method: 'POST',
@@ -674,6 +766,12 @@ function handleFileUpload(input) {
           }
         } else {
           analysisMsg += '✅ **Signal Quality:** All channels look good (no bad channels detected)\n\n';
+        }
+        
+        if (data.classification) {
+          analysisMsg += '🧠 **LaBraM Downstream Prediction:** **' + data.classification.prediction + '**\n' +
+            'Confidence: ' + (data.classification.confidence * 100).toFixed(1) + '%\n' +
+            'Downstream status: ' + data.classification.fine_tuning.status + '\n\n';
         }
         
         if (data.has_events) {
@@ -1611,57 +1709,189 @@ function sendMessage() {
 
     // DURATION: added 'length' and 'long is' to handle "what is the length of the eeg"
     if (hasFile && (message.includes('how long') || message.includes('duration') || message.includes('length of') || message.includes('long is'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + ' seconds\n- **Total samples:** ' + fileData.n_times + '\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n\nThis is a ' + (fileData.duration_sec < 10 ? 'short' : fileData.duration_sec < 60 ? 'moderate' : 'long') + ' recording. ' + (fileData.duration_sec < 10 ? 'Consider collecting more data for robust analysis.' : 'Good for most analysis tasks.') + modelContext;
+      if (uploadedFiles.length > 1) {
+        let summary = '⏱️ **EEG Duration Summary**\n\n| File | Duration | Sampling Rate | Total Samples | Status |\n|---|---|---|---|---|\n';
+        let details = '\n### ⏱️ Individual Duration Reports\n\n';
+        uploadedFiles.forEach(file => {
+          const fileData = parsedFileData[file.name];
+          if (fileData) {
+            summary += '| ' + file.name + ' | **' + fileData.duration_sec.toFixed(1) + 's** | ' + fileData.sfreq + ' Hz | ' + fileData.n_times + ' | Ready |\n';
+            details += `**${file.name}**:\n- **Duration:** ${fileData.duration_sec.toFixed(1)} seconds\n- **Total samples:** ${fileData.n_times}\n- **Sampling rate:** ${fileData.sfreq} Hz\n\n`;
+          } else {
+            summary += '| ' + file.name + ' | — | — | — | Analyzing... |\n';
+          }
+        });
+        response = summary + details + modelContext;
       } else {
-        response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Estimated Duration:** 2.0 seconds (based on model profile)\n- **Note:** Upload the file to get exact duration from the file header.' + modelContext;
+        const fileData = parsedFileData[fileName];
+        if (fileData) {
+          response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + ' seconds\n- **Total samples:** ' + fileData.n_times + '\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n\nThis is a ' + (fileData.duration_sec < 10 ? 'short' : fileData.duration_sec < 60 ? 'moderate' : 'long') + ' recording. ' + (fileData.duration_sec < 10 ? 'Consider collecting more data for robust analysis.' : 'Good for most analysis tasks.') + modelContext;
+        } else {
+          response = '⏱️ **EEG Duration**\n\n**File:** ' + fileName + '\n\n- **Estimated Duration:** 2.0 seconds (based on model profile)\n- **Note:** Upload the file to get exact duration from the file header.' + modelContext;
+        }
       }
 
     } else if (hasFile && (message.includes('format') || message.includes('metadata') || message.includes('identify') || message.includes('file type'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '📋 **File Analysis: ' + fileName + '**\n\n' +
-          '**Format:** ' + fileData.format + '\n' +
-          '**Size:** ' + (fileData.size_bytes / 1024).toFixed(1) + ' KB\n' +
-          '**Channels:** ' + fileData.n_channels + '\n' +
-          '**Channel Names:** ' + fileData.channel_names.slice(0, 10).join(', ') + (fileData.n_channels > 10 ? '...' : '') + '\n' +
-          '**Sampling Rate:** ' + fileData.sfreq + ' Hz\n' +
-          '**Duration:** ' + fileData.duration_sec.toFixed(1) + 's\n' +
-          '**Montage:** ' + fileData.montage + '\n\n' +
-          '**Recording Metadata Summary:**\n' +
-          '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' +
-          '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
-          '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+      if (uploadedFiles.length > 1) {
+        let summary = '📋 **Format & Metadata Summary**\n\n| File | Format | Size | Channels | Status |\n|---|---|---|---|---|\n';
+        let details = '\n### 📋 Individual Format & Metadata Reports\n\n';
+        uploadedFiles.forEach(file => {
+          const fileData = parsedFileData[file.name];
+          if (fileData) {
+            summary += '| ' + file.name + ' | ' + fileData.format + ' | ' + (fileData.size_bytes / 1024).toFixed(1) + ' KB | ' + fileData.n_channels + ' | Ready |\n';
+            details += `**${file.name}**:\n- **Format:** ${fileData.format}\n- **Size:** ${(fileData.size_bytes / 1024).toFixed(1)} KB\n- **Channels:** ${fileData.n_channels}\n- **Sampling Rate:** ${fileData.sfreq} Hz\n- **Duration:** ${fileData.duration_sec.toFixed(1)}s\n- **Montage:** ${fileData.montage}\n\n`;
+          } else {
+            const ext = file.name.split('.').pop().toUpperCase();
+            summary += '| ' + file.name + ' | ' + ext + ' | ' + (file.size / 1024).toFixed(1) + ' KB | — | Analyzing... |\n';
+          }
+        });
+        response = summary + details + modelContext;
       } else {
-        response = '📋 **File Analysis: ' + fileName + '**\n\n' + '**Format:** ' + fileExt.toUpperCase() + '\n' + '**Size:** ' + (uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].size / 1024 : 0).toFixed(1) + ' KB\n' + '**Estimated Channels:** ' + (profile ? profile.channels : 19) + '\n' + '**Estimated Sampling Rate:** ' + (profile ? profile.sfreq : 250) + ' Hz\n' + '**Estimated Duration:** 2.0s (based on model profile)\n\n' + '**Recording Metadata Summary:**\n' + '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' + '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' + '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+        const fileData = parsedFileData[fileName];
+        if (fileData) {
+          response = '📋 **File Analysis: ' + fileName + '**\n\n' +
+            '**Format:** ' + fileData.format + '\n' +
+            '**Size:** ' + (fileData.size_bytes / 1024).toFixed(1) + ' KB\n' +
+            '**Channels:** ' + fileData.n_channels + '\n' +
+            '**Channel Names:** ' + fileData.channel_names.slice(0, 10).join(', ') + (fileData.n_channels > 10 ? '...' : '') + '\n' +
+            '**Sampling Rate:** ' + fileData.sfreq + ' Hz\n' +
+            '**Duration:** ' + fileData.duration_sec.toFixed(1) + 's\n' +
+            '**Montage:** ' + fileData.montage + '\n\n' +
+            '**Recording Metadata Summary:**\n' +
+            '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' +
+            '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' +
+            '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+        } else {
+          response = '📋 **File Analysis: ' + fileName + '**\n\n' + '**Format:** ' + fileExt.toUpperCase() + '\n' + '**Size:** ' + (uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].size / 1024 : 0).toFixed(1) + ' KB\n' + '**Estimated Channels:** ' + (profile ? profile.channels : 19) + '\n' + '**Estimated Sampling Rate:** ' + (profile ? profile.sfreq : 250) + ' Hz\n' + '**Estimated Duration:** 2.0s (based on model profile)\n\n' + '**Recording Metadata Summary:**\n' + '- File type: ' + (fileExt === 'edf' ? 'European Data Format (EDF)' : fileExt === 'fif' ? 'MNE-Python FIF' : fileExt === 'mat' ? 'MATLAB MAT' : 'CSV (time-series)') + '\n' + '- ' + (fileExt === 'edf' ? 'EDF is the standard format for EEG recordings, supporting multi-channel signals with embedded metadata.' : fileExt === 'csv' ? 'CSV files contain tabular time-series data. Each column typically represents a channel.' : 'Binary format requiring specialized readers for full metadata extraction.') + '\n' + '- ' + (profile ? 'Optimized for **' + modelName + '** model (' + profile.sfreq + ' Hz, ' + profile.channels + ' channels)' : 'No model selected — select one above for tailored analysis.') + modelContext;
+        }
       }
 
-    } else if (hasFile && (message.includes('plot') || message.includes('signal') || message.includes('waveform') || message.includes('visualize') || message.includes('show'))) {
-      response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a waveform view of your file **' + fileName + '**.' + modelContext;
+    } else if (message.includes('alpha') || message.includes('beta') || message.includes('delta') || message.includes('theta') || message.includes('gamma') || message.includes('frequency band') || message.includes('power spectral') || message.includes('psd') || message.includes('spectrogram') || message.includes('spectrum')) {
+      response = '🌊 **EEG Frequency Band Analysis**\n\n' +
+        (hasFile ? '**File:** ' + fileName + '\n\n' : '') +
+        '| Band | Range | Function | Resolvable? |\n' +
+        '|---|---|---|---|\n' +
+        '| δ Delta | 0.5–4 Hz | Deep sleep, pathology | ✅ |\n' +
+        '| θ Theta | 4–8 Hz | Drowsiness, memory | ✅ |\n' +
+        '| α Alpha | 8–13 Hz | Relaxed wakefulness | ✅ |\n' +
+        '| β Beta | 13–30 Hz | Active thinking, motor | ✅ |\n' +
+        '| γ Gamma | 30–80 Hz | Higher cognition | ✅ |\n\n' +
+        'Compute PSD with MNE-Python:\n' +
+        '```python\n' +
+        'spectrum = raw.compute_psd(method="welch", fmin=1, fmax=45)\n' +
+        'spectrum.plot()\n' +
+        '```' + modelContext;
+        
+      if (hasFile) {
+        document.getElementById('analysisType').value = 'spectrogram';
+        document.getElementById('uploadSection').classList.remove('d-none');
+        setTimeout(() => {
+          analyzeUploadedFiles();
+        }, 100);
+      }
 
-    } else if (hasFile && (message.includes('how many channels') || message.includes('channels recorded') || message.includes('n_channels'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '🔢 **Channel Count**\n\n**File:** ' + fileName + '\n\n- **Total channels:** ' + fileData.n_channels + '\n- **Channel names:** ' + fileData.channel_names.slice(0, 10).join(', ') + (fileData.n_channels > 10 ? ' ...' : '') + '\n\n' + (fileData.n_channels >= 19 ? '✅ Good channel count for standard 10-20 system analysis.' : '⚠️ Lower than typical 10-20 system (19+ channels recommended).') + modelContext;
+    } else if (message.includes('plot') || message.includes('signal') || message.includes('waveform') || message.includes('visualize') || message.includes('show eeg') || message.includes('show plot') || message.includes('show waveform') || message.includes('show signal') || message.includes('butterfly') || message.includes('spectrum map') || message.includes('quality') || message.includes('scalp') || message.includes('topomap') || message.includes('topographic') || message.includes('epoch image')) {
+      if (hasFile) {
+        let mode = 'waveform';
+        let modeName = 'raw time-domain waveform';
+        if (message.includes('spectrogram') || message.includes('spectrum') || message.includes('psd') || message.includes('power') || message.includes('alpha') || message.includes('beta') || message.includes('delta') || message.includes('theta') || message.includes('gamma')) {
+          mode = 'spectrogram';
+          modeName = 'spectrum map (PSD)';
+        } else if (message.includes('butterfly') || message.includes('overlay')) {
+          mode = 'channels';
+          modeName = 'butterfly overlay';
+        } else if (message.includes('quality') || message.includes('variance')) {
+          mode = 'quality';
+          modeName = 'signal quality report';
+        } else if (message.includes('location') || message.includes('sensor') || message.includes('scalp')) {
+          mode = 'scalp';
+          modeName = 'sensor locations';
+        } else if (message.includes('topomap') || message.includes('topographic')) {
+          mode = 'topographic';
+          modeName = 'topographic map';
+        } else if (message.includes('epoch')) {
+          mode = 'epoch_image';
+          modeName = 'epochs image';
+        }
+        
+        response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a ' + modeName + ' view of your file **' + fileName + '**.' + modelContext;
+        
+        document.getElementById('analysisType').value = mode;
+        document.getElementById('uploadSection').classList.remove('d-none');
+        setTimeout(() => {
+          analyzeUploadedFiles();
+        }, 100);
       } else {
-        response = '🔢 **Channel Count**\n\n**File:** ' + fileName + '\n\n- **Estimated channels:** ' + (profile ? profile.channels : 19) + '\n- **Note:** Upload the file to get exact channel count from the file header.' + modelContext;
+        response = '⚠️ **No EEG File Uploaded**\n\nTo visualize EEG data, please upload an EDF, FIF, CSV, or MAT file first using the **Upload** button below.';
+      }
+
+    } else if (hasFile && (message.includes('how many channels') || message.includes('channels recorded') || message.includes('n_channels') || message.includes('channel count'))) {
+      if (uploadedFiles.length > 1) {
+        let summary = '🔢 **Channel Count Summary**\n\n| File | Channels | Montage | Status |\n|---|---|---|---|\n';
+        let details = '\n### 🔢 Individual Channel Reports\n\n';
+        uploadedFiles.forEach(file => {
+          const fileData = parsedFileData[file.name];
+          if (fileData) {
+            summary += '| ' + file.name + ' | **' + fileData.n_channels + '** | ' + (fileData.montage || '10-20') + ' | Ready |\n';
+            details += `**${file.name}**:\n- **Total channels:** ${fileData.n_channels}\n- **Channel names:** ${fileData.channel_names.slice(0, 10).join(', ')}${fileData.n_channels > 10 ? ' ...' : ''}\n- **Montage:** ${fileData.montage || '10-20'}\n\n`;
+          } else {
+            summary += '| ' + file.name + ' | — | — | Analyzing... |\n';
+          }
+        });
+        response = summary + details + modelContext;
+      } else {
+        const fileData = parsedFileData[fileName];
+        if (fileData) {
+          response = '🔢 **Channel Count**\n\n**File:** ' + fileName + '\n\n- **Total channels:** ' + fileData.n_channels + '\n- **Channel names:** ' + fileData.channel_names.slice(0, 10).join(', ') + (fileData.n_channels > 10 ? ' ...' : '') + '\n\n' + (fileData.n_channels >= 19 ? '✅ Good channel count for standard 10-20 system analysis.' : '⚠️ Lower than typical 10-20 system (19+ channels recommended).') + modelContext;
+        } else {
+          response = '🔢 **Channel Count**\n\n**File:** ' + fileName + '\n\n- **Estimated channels:** ' + (profile ? profile.channels : 19) + '\n- **Note:** Upload the file to get exact channel count from the file header.' + modelContext;
+        }
       }
 
     } else if (hasFile && (message.includes('sampling frequency') || message.includes('sfreq') || message.includes('sample rate') || message.includes('hz'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '📊 **Sampling Frequency**\n\n**File:** ' + fileName + '\n\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n- **Nyquist frequency:** ' + (fileData.sfreq / 2) + ' Hz\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + 's\n- **Total samples:** ' + fileData.n_times + '\n\n' + (fileData.sfreq >= 200 ? '✅ Good sampling rate for most EEG analysis (captures up to ' + (fileData.sfreq / 2) + ' Hz).' : '⚠️ Lower sampling rate may miss high-frequency components.') + modelContext;
+      if (uploadedFiles.length > 1) {
+        let summary = '📊 **Sampling Frequency Summary**\n\n| File | Sampling Rate | Nyquist Freq | Total Samples | Status |\n|---|---|---|---|---|\n';
+        let details = '\n### 📊 Individual Frequency Reports\n\n';
+        uploadedFiles.forEach(file => {
+          const fileData = parsedFileData[file.name];
+          if (fileData) {
+            summary += '| ' + file.name + ' | **' + fileData.sfreq + ' Hz** | ' + (fileData.sfreq / 2) + ' Hz | ' + fileData.n_times + ' | Ready |\n';
+            details += `**${file.name}**:\n- **Sampling rate:** ${fileData.sfreq} Hz\n- **Nyquist frequency:** ${fileData.sfreq / 2} Hz\n- **Total samples:** ${fileData.n_times}\n\n`;
+          } else {
+            summary += '| ' + file.name + ' | — | — | — | Analyzing... |\n';
+          }
+        });
+        response = summary + details + modelContext;
       } else {
-        response = '📊 **Sampling Frequency**\n\n**File:** ' + fileName + '\n\n- **Estimated sampling rate:** ' + (profile ? profile.sfreq : 250) + ' Hz\n- **Note:** Upload the file to get exact sampling rate from the file header.' + modelContext;
+        const fileData = parsedFileData[fileName];
+        if (fileData) {
+          response = '📊 **Sampling Frequency**\n\n**File:** ' + fileName + '\n\n- **Sampling rate:** ' + fileData.sfreq + ' Hz\n- **Nyquist frequency:** ' + (fileData.sfreq / 2) + ' Hz\n- **Duration:** ' + fileData.duration_sec.toFixed(1) + 's\n- **Total samples:** ' + fileData.n_times + '\n\n' + (fileData.sfreq >= 200 ? '✅ Good sampling rate for most EEG analysis (captures up to ' + (fileData.sfreq / 2) + ' Hz).' : '⚠️ Lower sampling rate may miss high-frequency components.') + modelContext;
+        } else {
+          response = '📊 **Sampling Frequency**\n\n**File:** ' + fileName + '\n\n- **Estimated sampling rate:** ' + (profile ? profile.sfreq : 250) + ' Hz\n- **Note:** Upload the file to get exact sampling rate from the file header.' + modelContext;
+        }
       }
 
     } else if (hasFile && (message.includes('montage') || message.includes('electrode montage') || message.includes('which electrode'))) {
-      const fileData = parsedFileData[fileName];
-      if (fileData) {
-        response = '📍 **Electrode Montage**\n\n**File:** ' + fileName + '\n\n- **Montage:** ' + fileData.montage + '\n- **Channels:** ' + fileData.n_channels + '\n\n' + (fileData.montage && fileData.montage.includes('10-20') ? '✅ Standard 10-20 system montage detected.' : 'ℹ️ Custom or non-standard montage.') + '\n\n**Common 10-20 positions:**\n- Frontal: Fp1, Fp2, F3, F4, F7, F8, Fz\n- Central: C3, C4, Cz\n- Parietal: P3, P4, Pz\n- Occipital: O1, O2\n- Temporal: T3, T4, T5, T6' + modelContext;
+      if (uploadedFiles.length > 1) {
+        let summary = '📍 **Electrode Montage Summary**\n\n| File | Montage | Channels | Status |\n|---|---|---|---|\n';
+        let details = '\n### 📍 Individual Montage Reports\n\n';
+        uploadedFiles.forEach(file => {
+          const fileData = parsedFileData[file.name];
+          if (fileData) {
+            summary += '| ' + file.name + ' | ' + (fileData.montage || '10-20') + ' | ' + fileData.n_channels + ' | Ready |\n';
+            details += `**${file.name}**:\n- **Montage:** ${fileData.montage || '10-20'}\n- **Channels:** ${fileData.n_channels}\n\n`;
+          } else {
+            summary += '| ' + file.name + ' | — | — | Analyzing... |\n';
+          }
+        });
+        response = summary + details + modelContext;
       } else {
-        response = '📍 **Electrode Montage**\n\n**File:** ' + fileName + '\n\n- **Estimated montage:** 10-20 System\n- **Note:** Upload the file to get exact montage information from the file header.' + modelContext;
+        const fileData = parsedFileData[fileName];
+        if (fileData) {
+          response = '📍 **Electrode Montage**\n\n**File:** ' + fileName + '\n\n- **Montage:** ' + fileData.montage + '\n- **Channels:** ' + fileData.n_channels + '\n\n' + (fileData.montage && fileData.montage.includes('10-20') ? '✅ Standard 10-20 system montage detected.' : 'ℹ️ Custom or non-standard montage.') + '\n\n**Common 10-20 positions:**\n- Frontal: Fp1, Fp2, F3, F4, F7, F8, Fz\n- Central: C3, C4, Cz\n- Parietal: P3, P4, Pz\n- Occipital: O1, O2\n- Temporal: T3, T4, T5, T6' + modelContext;
+        } else {
+          response = '📍 **Electrode Montage**\n\n**File:** ' + fileName + '\n\n- **Estimated montage:** 10-20 System\n- **Note:** Upload the file to get exact montage information from the file header.' + modelContext;
+        }
       }
 
     } else if (hasFile && (message.includes('missing channels') || message.includes('missing channel'))) {
@@ -1688,6 +1918,52 @@ function sendMessage() {
     } else if (message.includes('model') || message.includes('recommend') || message.includes('which')) {
       response = '🤖 **Model Recommendations**\n\n**LaBraM** — Best for general-purpose EEG (19ch, 200Hz)\n**EEGPT** — Excellent for longer sequences (19ch, 250Hz)\n**BENDR** — Ideal for high-channel count (66ch, 100Hz)\n**BIOT** — Good for low-channel setups (16ch, 200Hz)\n**CodeBrain** — Versatile all-rounder (19ch, 200Hz)' + modelContext;
 
+    } else if (message.includes('epilepsy') || message.includes('seizure') || message.includes('seiz') || message.includes('epilep') || message.includes('clinical') || message.includes('diagnose') || message.includes('disease') || message.includes('labram')) {
+      const fileData = parsedFileData[fileName];
+      if (fileData && fileData.classification) {
+        const c = fileData.classification;
+        let r = '🧠 **LaBraM Epilepsy Seizure Detection Report**\n\n' +
+          '**File Analyzed:** ' + fileName + '\n' +
+          '**Overall Prediction:** **' + c.prediction + '**\n' +
+          '**Confidence:** ' + (c.confidence * 100).toFixed(1) + '%\n' +
+          '**Condition Target:** ' + c.condition + '\n\n' +
+          '### Model Settings\n' +
+          '- **Pretrained Model Loading:**\n' +
+          '```python\n' +
+          'from braindecode.models import Labram\n' +
+          '# Load pre-trained model from Hugging Face Hub\n' +
+          'model = Labram.from_pretrained("braindecode/labram-pretrained")\n' +
+          '```\n' +
+          '- **Downstream Learning Mode:** Zero-shot and fine-tuning on 1.5% labels\n' +
+          '- **Validation Accuracy:** ' + (c.fine_tuning.validation_accuracy * 100).toFixed(1) + '%\n' +
+          '- **Enforcement:** ' + c.enforcement + '\n\n';
+          
+        if (c.seizure_detected && c.seizure_segments && c.seizure_segments.length > 0) {
+          r += '### ⚡ Detected Seizure Timestamps:\n' +
+            '| Epoch | Time Window | Duration | Confidence |\n' +
+            '|---|---|---|---|\n';
+          c.seizure_segments.forEach(seg => {
+            const dur = seg.end_sec - seg.start_sec;
+            r += '| Epoch ' + seg.epoch_index + ' | **' + seg.start_sec.toFixed(1) + 's – ' + seg.end_sec.toFixed(1) + 's** | ' + dur.toFixed(1) + 's | ' + (seg.confidence * 100).toFixed(1) + '% |\n';
+          });
+          r += '\n⚠️ **Clinical Note:** Seizure activity has been flagged during the above periods. Please review the waveforms at these seconds in the EEG viewer.';
+        } else {
+          r += '✅ **No seizure activity detected** in this recording. All segments are classified as normal baseline EEG activity.';
+        }
+        response = r + modelContext;
+      } else {
+        response = '🧠 **LaBraM Downstream Epilepsy Seizure Detection**\n\n' +
+          'To run seizure detection, select **LaBraM** model and **Epilepsy** condition in the settings, upload an EEG file, and ask your question again.\n\n' +
+          '**Hugging Face Pretrained Model Loading:**\n' +
+          '```python\n' +
+          'from braindecode.models import Labram\n' +
+          '# Load pre-trained model from Hugging Face Hub\n' +
+          'model = Labram.from_pretrained("braindecode/labram-pretrained")\n' +
+          '```\n' +
+          '- **Method:** Zero-shot learning representation and downstream quick fine-tuning (1.5% training samples).';
+      }
+
+
     } else {
       const defaults = [
         "Based on your dataset characteristics, I recommend starting with EEGNet for binary classification tasks. It's lightweight and works well with limited data." + modelContext,
@@ -1709,11 +1985,42 @@ function sendQuickMessage(message) {
 function renderMarkdown(t) {
   if (!t) return '';
   var h = t;
-  h = h.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+  
+  // Code blocks: ```python ... ```
+  h = h.replace(/```([\w]*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+    return '<pre style="background:#1e293b;color:#f8fafc;padding:8px 12px;border-radius:4px;font-size:0.75rem;overflow-x:auto;margin:6px 0;text-align:left;font-family:monospace;white-space:pre;">' + code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+  });
+
+  // Inline code: `code`
+  h = h.replace(/`([^`\n]+)`/g, '<code style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:2px 4px;border-radius:3px;font-family:monospace;font-size:0.85em;">$1</code>');
+
+  // Tables
+  h = h.replace(/(\|.+\|(\n|$))+/g, function(tableBlock) {
+    var rows = tableBlock.trim().split('\n').filter(function(r) { return r.trim().charAt(0) === '|'; });
+    if (rows.length < 2) return tableBlock;
+    var isSep = function(r) { return /^\|[\s|:\-*]+\|$/.test(r.trim()); };
+    var html = '<div style="overflow-x:auto;margin:8px 0;"><table style="border-collapse:collapse;width:100%;font-size:0.8rem;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;">';
+    var headDone = false;
+    rows.forEach(function(row, ri) {
+      if (isSep(row)) { if (!headDone) { html += '</tr></thead><tbody>'; headDone = true; } return; }
+      var cells = row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|');
+      if (!headDone) {
+        html += '<thead><tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">';
+        cells.forEach(function(c) { html += '<th style="padding:6px 10px;font-weight:700;text-align:left;border:1px solid #cbd5e1;">' + c.trim() + '</th>'; });
+      } else {
+        html += '<tr style="border-bottom:1px solid #e2e8f0;">';
+        cells.forEach(function(c) { html += '<td style="padding:5px 10px;border:1px solid #e2e8f0;vertical-align:middle;">' + c.trim() + '</td>'; });
+        html += '</tr>';
+      }
+    });
+    if (!headDone) html += '</tr></thead><tbody>';
+    html += '</tbody></table></div>';
+    return html;
+  });
+
+  // Basic styling
   h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  h = h.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.2);padding:1px 4px;border-radius:3px;">$1</code>');
-  h = h.replace(/```([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,0.2);padding:8px;border-radius:4px;font-size:0.75rem;overflow-x:auto;margin:4px 0;">$1</pre>');
   h = h.replace(/\n/g, '<br>');
   return h;
 }
