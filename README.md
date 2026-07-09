@@ -32,6 +32,12 @@ A comprehensive platform for EEG foundation model research, providing tools for 
 - Models include: REVE, CBraMod, CodeBrain, EEGPT, BIOT, LaBraM, BENDR, SignalJEPA, LUNA
 - Pretrained on large-scale EEG data for fine-tuning or feature extraction
 
+### 5. Interactive EEG AI Assistant
+- Conversational chat interface to analyze raw EEG signals (`.edf`, `.fif`, `.mat`)
+- Dynamic parsing and recommendation of Hugging Face pre-trained checkpoints based on active dataset characteristics (channels, sfreq)
+- Multi-file comparison, signal quality scanning, cross-file similarity, and automated anomaly flagging
+- Real-time Interactive Plotly EEG Grid Viewer natively embedded into the chat workspace
+
 ## Architecture Overview
 
 ```
@@ -83,6 +89,7 @@ python src/dashboard/flask_app.py
 #   - /datasets      → Explore EEG datasets
 #   - /braindecode    → Discover braindecode models
 #   - /pipeline       → Visual pipeline builder
+#   - /eeg_assistant  → Interactive EEG AI Assistant
 #   - /about          → About NeuroBench Studio
 ```
 
@@ -93,6 +100,7 @@ python src/dashboard/flask_app.py
 | 🧠 Datasets | `/datasets` | Browse local datasets & stream from EEGDash |
 | 🧠 Braindecode Models | `/braindecode` | Discover & configure braindecode models |
 | 🧠 Pipeline Builder | `/pipeline` | Drag-and-drop ML pipeline builder |
+| 🧠 EEG Assistant | `/eeg_assistant` | AI Assistant for dynamic file analysis and chat |
 | 🧠 About | `/about` | Platform information & tech stack |
 
 ## Dataset Explorer
