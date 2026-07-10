@@ -459,7 +459,8 @@
                         </thead>
                         <tbody>
                             <tr><td><code>/api/run-pipeline</code></td><td>POST</td><td>Execute a pipeline graph (JSON body)</td></tr>
-                            <tr><td><code>/api/pipeline/progress/<run_id></code></td><td>GET</td><td>SSE stream for pipeline progress</td></tr>
+                            <tr><td><code>/api/pipeline/progress/&lt;run_id&gt;</code></td><td>GET</td><td>SSE stream for pipeline progress</td></tr>
+                            <tr><td><code>/api/pipeline/runs/&lt;run_id&gt;</code></td><td>DELETE</td><td>Delete a pipeline run from the database</td></tr>
                         </tbody>
                     </table>
                 </div>

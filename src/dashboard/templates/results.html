@@ -41,16 +41,17 @@
                 <th>Dataset</th>
                 <th>Model</th>
                 <th class="text-center">Status</th>
-                <th class="text-end">Time</th>
+                <th>Last Run Time</th>
+                <th class="text-end">Duration</th>
                 <th class="text-end pe-4">Accuracy</th>
               </tr>
             </thead>
             <tbody>
-              {% for run in pipeline_runs[-10:] %}
+              {% for run in pipeline_runs[-10:]|reverse %}
               {% set results = run.get('results', {}) %}
               {% set metrics = results.get('metrics', {}) %}
               {% set meta = results.get('pipeline_metadata', {}) %}
-              <tr>
+              <tr class="run-row" style="cursor:pointer;" data-run-id="{{ run.run_id }}">
                 <td class="ps-4">
                   <div class="d-flex align-items-center">
                     <i class="bi bi-{% if meta.get('status') == 'completed' %}check-circle-fill text-success{% else %}exclamation-circle-fill text-danger{% endif %} me-2"></i>
@@ -69,6 +70,14 @@
                   <span class="badge bg-success">Success</span>
                   {% else %}
                   <span class="badge bg-danger">Failed</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if run.timestamp %}
+                  {% set parts = run.timestamp.split('T') %}
+                  <small class="text-muted" title="{{ run.timestamp }}">{{ parts[0] }} {{ parts[1][:5] }}</small>
+                  {% else %}
+                  <small class="text-muted">—</small>
                   {% endif %}
                 </td>
                 <td class="text-end">
@@ -98,8 +107,17 @@
 
     <!-- Training Curves & Visualization -->
     <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-transparent border-bottom py-3">
+      <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center py-3">
         <h6 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Training Curves & Visualization</h6>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary" id="activeRunBadge">Run: {% if latest_run %}{{ latest_run.run_id[:8] }}{% else %}—{% endif %}</span>
+          <button class="btn btn-sm btn-outline-info py-0 px-2" style="font-size:0.75rem; display:none;" id="adjustInCanvasBtn" onclick="adjustSelectedInCanvas()">
+            <i class="bi bi-sliders me-1"></i>Adjust in Canvas
+          </button>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:0.75rem; display:none;" id="deleteRunBtn" onclick="deleteSelectedRun()">
+            <i class="bi bi-trash me-1"></i>Delete Run
+          </button>
+        </div>
       </div>
       <div class="card-body">
         {% if pipeline_runs %}
@@ -107,30 +125,43 @@
         {% set latest_results = latest_run.get('results', {}) %}
         {% set training_history = latest_results.get('training_history', {}) %}
         {% if training_history %}
-        <div class="mb-3">
-          <h6 class="fw-semibold small text-muted text-uppercase mb-2">Latest Run: {{ latest_run.run_id[:8] }}</h6>
-          <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-              <thead class="table-dark">
-                <tr>
-                  <th>Epoch</th>
-                  <th>Train Loss</th>
-                  <th>Train Acc</th>
-                  <th>Val Acc</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for epoch in range(1, training_history.n_epochs + 1) %}
-                {% set idx = epoch - 1 %}
-                <tr>
-                  <td>{{ epoch }}</td>
-                  <td>{{ "%.4f"|format(training_history.train_loss[idx]) if training_history.train_loss[idx] else "—" }}</td>
-                  <td>{{ "%.1f"|format(training_history.train_acc[idx]) if training_history.train_acc[idx] else "—" }}%</td>
-                  <td>{{ "%.1f"|format(training_history.val_acc[idx]) if training_history.val_acc[idx] else "—" }}%</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="fw-semibold small text-muted text-uppercase mb-2"><i class="bi bi-list-ol me-1 text-primary"></i>Latest Run: {{ latest_run.run_id[:8] }}</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Epoch</th>
+                    <th>Train Loss</th>
+                    <th>Train Acc</th>
+                    <th>Val Acc</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for epoch in range(1, training_history.n_epochs + 1) %}
+                  {% set idx = epoch - 1 %}
+                  <tr>
+                    <td>{{ epoch }}</td>
+                    <td>{{ "%.4f"|format(training_history.train_loss[idx]) if training_history.train_loss[idx] else "—" }}</td>
+                    <td>{{ "%.1f"|format(training_history.train_acc[idx]) if training_history.train_acc[idx] else "—" }}%</td>
+                    <td>{{ "%.1f"|format(training_history.val_acc[idx]) if training_history.val_acc[idx] else "—" }}%</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-start border-secondary">
+            {% set roc = latest_results.get('roc_curve') %}
+            {% if roc %}
+              <div id="rocCurveChart" style="height: 180px; width: 100%;"></div>
+            {% else %}
+              <div class="text-center py-4">
+                <i class="bi bi-graph-up-arrow display-6 text-muted mb-2 d-block"></i>
+                <span class="small text-muted">ROC AUC analysis is only computed for binary validation tasks.</span>
+              </div>
+            {% endif %}
           </div>
         </div>
         {% else %}
@@ -159,27 +190,51 @@
       <div class="card-body">
         <div class="row g-2">
           <div class="col-6 col-md-3">
-            <div class="metric-pill text-center">
-              <small class="fw-medium d-block text-muted">Accuracy</small>
-              <strong class="text-primary">{{ "%.1f"|format(latest_metrics.accuracy * 100) if latest_metrics.accuracy else "—" }}%</strong>
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Accuracy</small>
+              <strong class="text-primary fs-5">{{ "%.1f"|format(latest_metrics.accuracy * 100) if latest_metrics.accuracy else "—" }}%</strong>
             </div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="metric-pill text-center">
-              <small class="fw-medium d-block text-muted">Balanced Acc</small>
-              <strong class="text-info">{{ "%.1f"|format(latest_metrics.balanced_accuracy * 100) if latest_metrics.balanced_accuracy else "—" }}%</strong>
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Balanced Acc</small>
+              <strong class="text-info fs-5">{{ "%.1f"|format(latest_metrics.balanced_accuracy * 100) if latest_metrics.balanced_accuracy else "—" }}%</strong>
             </div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="metric-pill text-center">
-              <small class="fw-medium d-block text-muted">F1 Score</small>
-              <strong class="text-success">{{ "%.3f"|format(latest_metrics.f1_score) if latest_metrics.f1_score else "—" }}</strong>
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">F1 Score</small>
+              <strong class="text-success fs-5">{{ "%.3f"|format(latest_metrics.f1_score) if latest_metrics.f1_score else "—" }}</strong>
             </div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="metric-pill text-center">
-              <small class="fw-medium d-block text-muted">Samples</small>
-              <strong class="text-warning">{{ latest_metrics.n_samples if latest_metrics.n_samples else "—" }}</strong>
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Cohen's Kappa</small>
+              <strong class="text-warning fs-5">{{ "%.3f"|format(latest_metrics.cohen_kappa) if latest_metrics.cohen_kappa else "—" }}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Sensitivity (Recall)</small>
+              <strong class="text-danger fs-5">{{ "%.1f"|format(latest_metrics.sensitivity * 100) if latest_metrics.sensitivity else "—" }}%</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Specificity</small>
+              <strong class="text-info fs-5">{{ "%.1f"|format(latest_metrics.specificity * 100) if latest_metrics.specificity else "—" }}%</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Train Samples</small>
+              <strong class="text-secondary fs-5">{{ latest_metrics.n_train if latest_metrics.n_train else "—" }}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="metric-pill text-center py-2 border rounded border-secondary" style="background:rgba(13,202,240,0.05);">
+              <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Test Samples</small>
+              <strong class="text-secondary fs-5">{{ latest_metrics.n_test if latest_metrics.n_test else "—" }}</strong>
             </div>
           </div>
         </div>
@@ -204,11 +259,11 @@
                 <th class="ps-3">#</th>
                 <th>Run ID</th>
                 <th>Model</th>
-                <th class="text-end pe-3">Acc</th>
+                <th class="text-end pe-3">AUC</th>
               </tr>
             </thead>
             <tbody>
-              {% for run in pipeline_runs[-10:] %}
+              {% for run in leaderboard_runs %}
               {% set metrics = run.get('results', {}).get('metrics', {}) %}
               <tr>
                 <td class="ps-3"><span class="badge bg-secondary">{{ loop.index }}</span></td>
@@ -218,8 +273,10 @@
                   <small>{{ model_name }}</small>
                 </td>
                 <td class="text-end pe-3">
-                  {% if metrics.get('accuracy') %}
-                  <strong>{{ "%.1f"|format(metrics.accuracy * 100) }}%</strong>
+                  {% if metrics.get('auc_roc') %}
+                  <strong>{{ "%.3f"|format(metrics.auc_roc) }}</strong>
+                  {% elif metrics.get('accuracy') %}
+                  <strong class="text-muted" title="Accuracy (AUC not available)">{{ "%.3f"|format(metrics.accuracy) }}*</strong>
                   {% else %}
                   <span class="text-muted">—</span>
                   {% endif %}
@@ -288,4 +345,194 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Parse full runs history directly to client side
+const runsHistory = {{ pipeline_runs | tojson if pipeline_runs else '[]' }};
+let selectedRunId = null;
+
+function showRunDetails(runId) {
+  selectedRunId = runId;
+  const run = runsHistory.find(r => r.run_id === runId);
+  if (!run) return;
+
+  // Update active row highlighting
+  document.querySelectorAll('.run-row').forEach(row => {
+    if (row.dataset.runId === runId) {
+      row.classList.add('table-active');
+    } else {
+      row.classList.remove('table-active');
+    }
+  });
+
+  // Update Active Run Badge
+  const activeRunBadge = document.getElementById('activeRunBadge');
+  if (activeRunBadge) {
+    activeRunBadge.textContent = 'Run: ' + runId.substring(0, 8);
+  }
+
+  // Update Adjust in Canvas button visibility
+  const adjustBtn = document.getElementById('adjustInCanvasBtn');
+  if (adjustBtn) {
+    if (run.graph) {
+      adjustBtn.style.display = 'inline-block';
+    } else {
+      adjustBtn.style.display = 'none';
+    }
+  }
+
+  // Update Delete button visibility
+  const deleteBtn = document.getElementById('deleteRunBtn');
+  if (deleteBtn) {
+    deleteBtn.style.display = 'inline-block';
+  }
+
+  const results = run.results || {};
+  const metrics = results.metrics || {};
+  const history = results.training_history || {};
+  const meta = results.pipeline_metadata || {};
+
+  // 1. Update metrics dashboard pills
+  const pAccuracy = document.querySelector('.metric-pill strong.text-primary');
+  const pBalanced = document.querySelector('.metric-pill strong.text-info');
+  const pF1 = document.querySelector('.metric-pill strong.text-success');
+  const pKappa = document.querySelector('.metric-pill strong.text-warning');
+  const pSens = document.querySelector('.metric-pill strong.text-danger');
+  // There are two text-info strong tags, select the specificity one (column 6)
+  const metricPills = document.querySelectorAll('.metric-pill strong');
+  
+  if (metricPills.length >= 8) {
+    metricPills[0].textContent = metrics.accuracy ? (metrics.accuracy * 100).toFixed(1) + '%' : '—%';
+    metricPills[1].textContent = metrics.balanced_accuracy ? (metrics.balanced_accuracy * 100).toFixed(1) + '%' : '—%';
+    metricPills[2].textContent = metrics.f1_score ? metrics.f1_score.toFixed(3) : '—';
+    metricPills[3].textContent = metrics.cohen_kappa ? metrics.cohen_kappa.toFixed(3) : '—';
+    metricPills[4].textContent = metrics.sensitivity ? (metrics.sensitivity * 100).toFixed(1) + '%' : '—%';
+    metricPills[5].textContent = metrics.specificity ? (metrics.specificity * 100).toFixed(1) + '%' : '—%';
+    metricPills[6].textContent = metrics.n_train || '—';
+    metricPills[7].textContent = metrics.n_test || '—';
+  }
+
+  // 2. Re-build training curve epoch table
+  const tbody = document.querySelector('.table-responsive tbody');
+  const tableCardBody = document.querySelector('.card-body');
+  
+  // Find curves block container
+  const curvesRow = document.querySelector('.row.g-3');
+  if (curvesRow && history && history.n_epochs) {
+    // Generate epoch table html
+    let tableHtml = '<table class="table table-sm table-hover mb-0">' +
+      '<thead class="table-dark"><tr><th>Epoch</th><th>Train Loss</th><th>Train Acc</th><th>Val Acc</th></tr></thead>' +
+      '<tbody>';
+    for (let epoch = 1; epoch <= history.n_epochs; epoch++) {
+      let idx = epoch - 1;
+      let loss = history.train_loss[idx] !== null ? history.train_loss[idx].toFixed(4) : '—';
+      let tAcc = history.train_acc[idx] !== null ? history.train_acc[idx].toFixed(1) + '%' : '—';
+      let vAcc = history.val_acc[idx] !== null ? history.val_acc[idx].toFixed(1) + '%' : '—';
+      tableHtml += `<tr><td>${epoch}</td><td>${loss}</td><td>${tAcc}</td><td>${vAcc}</td></tr>`;
+    }
+    tableHtml += '</tbody></table>';
+    
+    // Select the table container (first col-md-6)
+    const tableCol = curvesRow.querySelector('.col-md-6:first-child');
+    if (tableCol) {
+      tableCol.innerHTML = `<h6 class="fw-semibold small text-muted text-uppercase mb-2"><i class="bi bi-list-ol me-1 text-primary"></i>Selected Run: ${runId.substring(0, 8)}</h6><div class="table-responsive">${tableHtml}</div>`;
+    }
+  }
+
+  // 3. Re-draw ROC Curve (Plotly)
+  const rocCol = curvesRow ? curvesRow.querySelector('.col-md-6:last-child') : null;
+  if (rocCol) {
+    const roc = results.roc_curve;
+    if (roc && roc.fpr && roc.tpr) {
+      rocCol.innerHTML = '<div id="rocCurveChart" style="height: 180px; width: 100%;"></div>';
+      var trace1 = {
+        x: roc.fpr,
+        y: roc.tpr,
+        mode: 'lines',
+        name: `ROC Curve (AUC = ${roc.auc.toFixed(3)})`,
+        line: { color: '#0dcaf0', width: 3 }
+      };
+      var trace2 = {
+        x: [0, 1],
+        y: [0, 1],
+        mode: 'lines',
+        name: 'Random Guess',
+        line: { dash: 'dash', color: 'rgba(255,255,255,0.2)', width: 1.5 }
+      };
+      var data = [trace1, trace2];
+      var layout = {
+        title: `ROC Curve (AUC: ${roc.auc.toFixed(3)})`,
+        titlefont: { size: 11, color: '#adb5bd', weight: 'bold' },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        showlegend: false,
+        margin: { l: 30, r: 10, t: 30, b: 30 },
+        xaxis: {
+          title: 'False Positive Rate',
+          titlefont: { size: 8, color: '#6c757d' },
+          tickfont: { size: 7, color: '#6c757d' },
+          gridcolor: 'rgba(255,255,255,0.05)',
+          zeroline: false
+        },
+        yaxis: {
+          title: 'True Positive Rate',
+          titlefont: { size: 8, color: '#6c757d' },
+          tickfont: { size: 7, color: '#6c757d' },
+          gridcolor: 'rgba(255,255,255,0.05)',
+          zeroline: false
+        }
+      };
+      Plotly.newPlot('rocCurveChart', data, layout, {displayModeBar: false});
+    } else {
+      rocCol.innerHTML = '<div class="text-center py-4"><i class="bi bi-graph-up-arrow display-6 text-muted mb-2 d-block"></i><span class="small text-muted">ROC AUC analysis is only computed for binary validation tasks.</span></div>';
+    }
+  }
+}
+
+function adjustSelectedInCanvas() {
+  if (!selectedRunId) return;
+  const run = runsHistory.find(r => r.run_id === selectedRunId);
+  if (run && run.graph) {
+    localStorage.setItem('selected_pipeline_graph', JSON.stringify(run.graph));
+    window.location.href = '/pipeline';
+  }
+}
+
+function deleteSelectedRun() {
+  if (!selectedRunId) return;
+  if (!confirm('Are you sure you want to delete this run from history?')) return;
+  
+  fetch('/api/pipeline/runs/' + selectedRunId, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success') {
+        location.reload();
+      } else {
+        alert('Failed to delete: ' + data.message);
+      }
+    })
+    .catch(err => alert('Error deleting run: ' + err));
+}
+
+window.adjustSelectedInCanvas = adjustSelectedInCanvas;
+window.deleteSelectedRun = deleteSelectedRun;
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Bind row clicks
+  document.querySelectorAll('.run-row').forEach(row => {
+    row.addEventListener('click', function() {
+      const runId = this.dataset.runId;
+      showRunDetails(runId);
+    });
+  });
+
+  // Load latest run details initially
+  if (runsHistory.length > 0) {
+    const latestRun = runsHistory[runsHistory.length - 1];
+    showRunDetails(latestRun.run_id);
+  }
+});
+</script>
 {% endblock %}

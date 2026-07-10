@@ -1853,10 +1853,23 @@ def register_main_routes(app):
             if mdl and mdl not in unique_models:
                 unique_models.append(mdl)
 
+        # Sort runs for the leaderboard by AUC-ROC (descending)
+        # Filter out runs that failed or don't have AUC-ROC
+        benchmark_runs = []
+        for r in pipeline_runs:
+            metrics = r.get('results', {}).get('metrics', {})
+            auc = metrics.get('auc_roc') or metrics.get('accuracy') or 0.0
+            benchmark_runs.append((auc, r))
+        
+        # Sort by AUC descending
+        benchmark_runs.sort(key=lambda x: x[0], reverse=True)
+        leaderboard_runs = [x[1] for x in benchmark_runs[:10]]
+
         return render_template(
             'results.html',
             experiments=experiments,
             pipeline_runs=pipeline_runs,
+            leaderboard_runs=leaderboard_runs,
             pretraining_results=pretraining_results,
             unique_datasets=sorted(unique_datasets),
             unique_models=sorted(unique_models),
@@ -2047,6 +2060,7 @@ def register_main_routes(app):
                         'timestamp': datetime.now().isoformat(),
                         'dataset_id': dataset_id,
                         'model': model_config.get('architecture', 'unknown'),
+                        'graph': graph,
                         'results': results
                     })
                     with open(runs_file, 'w') as f:
@@ -2104,6 +2118,32 @@ def register_main_routes(app):
                 'X-Accel-Buffering': 'no',
             }
         )
+
+
+    @app.route('/api/pipeline/runs/<run_id>', methods=['DELETE'])
+    def delete_pipeline_run(run_id):
+        """Delete a pipeline run from the run history database."""
+        try:
+            runs_file = Path(app.config['RESULTS_BASE_DIR']) / 'pipeline_runs.json'
+            if not runs_file.exists():
+                return jsonify({'status': 'error', 'message': 'Run history file not found.'}), 404
+            
+            with open(runs_file) as f:
+                runs = json.load(f)
+                
+            original_len = len(runs)
+            runs = [r for r in runs if r.get('run_id') != run_id]
+            
+            if len(runs) == original_len:
+                return jsonify({'status': 'error', 'message': f'Run ID {run_id} not found.'}), 404
+                
+            with open(runs_file, 'w') as f:
+                json.dump(runs, f, indent=2)
+                
+            return jsonify({'status': 'success', 'message': f'Run {run_id} deleted successfully.'})
+        except Exception as e:
+            logger.exception('Failed to delete run')
+            return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 # ---------------------------------------------------------------------------

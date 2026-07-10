@@ -373,11 +373,13 @@ var eventSource=null;
 // ── NODE TEMPLATES ──────────────────────────────────────────────
 var NODE_TEMPLATES={
   dataset:{
-    type:'dataset',title:'Local Dataset',
+    type:'dataset',title:'Dataset Config',
     fields:[
-      {name:'dataset_id',label:'Local Dataset',value:'',type:'select',options:['adhd200','tuh_eeg','chb_mit','helsinki_neonatal','sleep_edf']},
-      {name:'n_chans',label:'Num Channels',value:'129',type:'number',readonly:true},
-      {name:'sfreq',label:'Sampling Freq (Hz)',value:'100',type:'number',readonly:true},
+      {name:'source',label:'Dataset Source',value:'EEGDash Stream',type:'select',options:['EEGDash Stream','Local File']},
+      {name:'local_file',label:'Upload Local File',value:'',type:'file'},
+      {name:'dataset_id',label:'EEGDash Dataset',value:'adhd200',type:'select',options:['adhd200','tuh_eeg','chb_mit','helsinki_neonatal','sleep_edf']},
+      {name:'n_chans',label:'Num Channels',value:'129',type:'number'},
+      {name:'sfreq',label:'Sampling Freq (Hz)',value:'100',type:'number'},
     ],
     inputs:[],outputs:['Raw Data']
   },
@@ -502,13 +504,60 @@ function addNode(type,x,y){
   var id='node_'+(++nodeIdCounter);
   var posX=x||(50+Math.random()*200);
   var posY=y||(50+Math.random()*200);
-  var node={id:id,type:type,x:posX,y:posY,fields:tpl.fields,inputs:tpl.inputs,outputs:tpl.outputs,title:tpl.title};
+  var node={id:id,type:type,x:posX,y:posY,fields:tpl.fields.map(function(f){return{...f};}),inputs:tpl.inputs,outputs:tpl.outputs,title:tpl.title};
   nodes.push(node);
   renderNode(node);
   if(type==='dataset'){
     setTimeout(function(){
       var sel=document.getElementById(id).querySelector('[data-field="dataset_id"]');
       if(sel)sel.addEventListener('change',function(){fetchDatasetDimensions(id,sel.value);});
+
+      var sourceSel=document.getElementById(id).querySelector('[data-field="source"]');
+      var localFileWrap=document.getElementById(id).querySelector('[data-field-wrapper="local_file"]');
+      var datasetIdWrap=document.getElementById(id).querySelector('[data-field-wrapper="dataset_id"]');
+      
+      function updateVisibility(){
+        if(!sourceSel) return;
+        if(sourceSel.value==='Local File'){
+          if(localFileWrap)localFileWrap.style.display='block';
+          if(datasetIdWrap)datasetIdWrap.style.display='none';
+          var ch=document.getElementById(id).querySelector('[data-field="n_chans"]');
+          var sf=document.getElementById(id).querySelector('[data-field="sfreq"]');
+          if(ch)ch.value='64';
+          if(sf)sf.value='250';
+        }else{
+          if(localFileWrap)localFileWrap.style.display='none';
+          if(datasetIdWrap)datasetIdWrap.style.display='block';
+          
+          fetch('/api/eegdash/catalog')
+            .then(function(r){return r.json();})
+            .then(function(d){
+              if(d.status!=='success')return;
+              var categories=d.categories||{};
+              var datasets=[];
+              Object.keys(categories).forEach(function(cat){
+                datasets=datasets.concat(categories[cat]||[]);
+              });
+              var savedVal=sel.dataset.savedVal||sel.value;
+              sel.innerHTML='';
+              datasets.forEach(function(ds){
+                var opt=document.createElement('option');
+                opt.value=ds.id||ds.name;
+                opt.textContent=(ds.id||ds.name)+' ('+(ds.disease||'EEG')+')';
+                if(opt.value===savedVal)opt.selected=true;
+                sel.appendChild(opt);
+              });
+              delete sel.dataset.savedVal;
+              if(sel.value)fetchDatasetDimensions(id,sel.value);
+            }).catch(function(){
+              if(sel)fetchDatasetDimensions(id,sel.value);
+            });
+        }
+      }
+      if(sourceSel){
+        sourceSel.addEventListener('change',updateVisibility);
+        updateVisibility();
+      }
     },0);
   }
   if(type==='model'){
@@ -580,7 +629,7 @@ function handleSplitModeChange(nodeId,mode){
   }
 }
 
-function populateModelDropdown(nodeId){
+function populateModelDropdown(nodeId, callback){
   var el=document.getElementById(nodeId);
   var sel=el.querySelector('[data-field="architecture"]');
   if(!sel)return;
@@ -596,6 +645,7 @@ function populateModelDropdown(nodeId){
         if(m==='EEGNet')opt.selected=true;
         sel.appendChild(opt);
       });
+      if(callback) callback();
     }).catch(function(){});
   var body=el.querySelector('.node-body');
   var existing=body.querySelector('.btn-run');
@@ -618,12 +668,15 @@ function renderNode(node){
   var fieldsHtml='';
   node.fields.forEach(function(f){
     if(node.type==='validation'&&['primary_metric','secondary_metrics'].includes(f.name)) return;
+    var readonlyAttr = f.readonly ? ' readonly style="background-color:rgba(0,0,0,0.05);"' : '';
     if(f.type==='select'){
-      fieldsHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><select class="form-select node-field" data-field="'+f.name+'">';
+      fieldsHtml+='<div class="mb-2" data-field-wrapper="'+f.name+'"><label class="form-label">'+f.label+'</label><select class="form-select node-field" data-field="'+f.name+'">';
       f.options.forEach(function(o){fieldsHtml+='<option value="'+o+'"'+(o===f.value?' selected':'')+'>'+o+'</option>';});
       fieldsHtml+='</select></div>';
+    }else if(f.type==='file'){
+      fieldsHtml+='<div class="mb-2" data-field-wrapper="'+f.name+'"><label class="form-label">'+f.label+'</label><input type="file" class="form-control node-field" data-field="'+f.name+'" multiple></div>';
     }else{
-      fieldsHtml+='<div class="mb-2"><label class="form-label">'+f.label+'</label><input type="'+f.type+'" class="form-control node-field" data-field="'+f.name+'" value="'+f.value+'"></div>';
+      fieldsHtml+='<div class="mb-2" data-field-wrapper="'+f.name+'"><label class="form-label">'+f.label+'</label><input type="'+f.type+'" class="form-control node-field" data-field="'+f.name+'" value="'+f.value+'"'+readonlyAttr+'></div>';
     }
   });
 
@@ -938,7 +991,17 @@ function runExperiment(nodeId){
 
   var datasetEl=document.getElementById(upstream);
   if(!datasetEl){showAlert('Dataset node not found.','danger');return;}
-  var datasetId=datasetEl.querySelector('[data-field="dataset_id"]').value;
+  
+  var sourceVal = datasetEl.querySelector('[data-field="source"]').value;
+  var datasetId = 'local_file.edf';
+  if (sourceVal === 'Local File') {
+    var fileInput = datasetEl.querySelector('[data-field="local_file"]');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+      datasetId = fileInput.files[0].name;
+    }
+  } else {
+    datasetId = datasetEl.querySelector('[data-field="dataset_id"]').value;
+  }
 
   var architecture=modelEl.querySelector('[data-field="architecture"]').value;
   var n_outputs=parseInt(modelEl.querySelector('[data-field="n_outputs"]').value)||2;
@@ -956,7 +1019,10 @@ function runExperiment(nodeId){
         var fe=el?el.querySelector('[data-field="'+f.name+'"]'):null;
         fields[f.name]=fe?fe.value:f.value;
       });
-      return{id:n.id,type:n.type,title:n.title,fields:fields,inputs:n.inputs,outputs:n.outputs};
+      if (n.type === 'dataset' && fields.source === 'Local File') {
+        fields.dataset_id = datasetId;
+      }
+      return{id:n.id,type:n.type,title:n.title,fields:fields,inputs:n.inputs,outputs:n.outputs,x:n.x,y:n.y};
     }),connections:connections.map(function(c){return{from:c.from,to:c.to};})},
     dataset_id:datasetId,
     model_config:{architecture:architecture,n_chans:n_chans,n_times:n_times,n_outputs:n_outputs,sfreq:sfreq,batch_size:batch_size,n_epochs:n_epochs}
@@ -1157,24 +1223,9 @@ function generateDefaultPipeline(){
   pn.forEach(function(item,idx){
     var col=idx%cols,row=Math.floor(idx/cols);
     var x=padding+col*(nw+hGap),y=padding+row*(nh+vGap);
-    var tpl=NODE_TEMPLATES[item.type];
-    var id='node_'+(++nodeIdCounter);
-    var node={id:id,type:item.type,x:x,y:y,fields:tpl.fields.map(function(f){return{...f};}),inputs:tpl.inputs,outputs:tpl.outputs,title:item.title};
-    nodes.push(node);
+    var node = addNode(item.type, x, y);
     created.push(node);
-    renderNode(node);
   });
-
-  var mn=created.find(function(n){return n.type==='model';});
-  if(mn)setTimeout(function(){populateModelDropdown(mn.id);},0);
-
-  var sn=created.find(function(n){return n.type==='split_strategy';});
-  if(sn){
-    setTimeout(function(){
-      var sel=document.getElementById(sn.id).querySelector('[data-field="split_mode"]');
-      if(sel)sel.addEventListener('change',function(){handleSplitModeChange(sn.id,sel.value);});
-    },0);
-  }
 
   for(var i=0;i<created.length-1;i++){
     connections.push({from:created[i].id,to:created[i+1].id});
@@ -1322,6 +1373,124 @@ document.addEventListener('mouseup',function(e){
   if(resizeState)resizeState=null;
 });
 
+function loadGraph(graph) {
+  nodes=[];connections=[];
+  document.querySelectorAll('.node').forEach(function(n){n.remove();});
+  svg.innerHTML='';
+  document.getElementById('runPanel').classList.add('d-none');
+  if(document.getElementById('resultsSection')) document.getElementById('resultsSection').classList.add('d-none');
+  
+  if (!graph) return;
+  
+  (graph.nodes || []).forEach(function(nData) {
+    var tpl = NODE_TEMPLATES[nData.type];
+    if (!tpl) return;
+    
+    var numId = parseInt(nData.id.split('_')[1], 10);
+    if (numId > nodeIdCounter) nodeIdCounter = numId;
+    
+    var node = {
+      id: nData.id,
+      type: nData.type,
+      x: nData.x || 100,
+      y: nData.y || 100,
+      fields: tpl.fields.map(function(f) {
+        var savedVal = nData.fields ? nData.fields[f.name] : null;
+        return {
+          name: f.name,
+          label: f.label,
+          value: savedVal !== null && savedVal !== undefined ? savedVal : f.value,
+          type: f.type,
+          options: f.options,
+          readonly: f.readonly
+        };
+      }),
+      inputs: tpl.inputs,
+      outputs: tpl.outputs,
+      title: nData.title || tpl.title
+    };
+    
+    nodes.push(node);
+    renderNode(node);
+    
+    if (node.type === 'dataset') {
+      setTimeout(function() {
+        var sel = document.getElementById(node.id).querySelector('[data-field="dataset_id"]');
+        if (sel) {
+          sel.dataset.savedVal = nData.fields.dataset_id || '';
+        }
+        var sourceSel = document.getElementById(node.id).querySelector('[data-field="source"]');
+        if (sourceSel) {
+          sourceSel.value = nData.fields.source || 'EEGDash Stream';
+          sourceSel.dispatchEvent(new Event('change'));
+        }
+      }, 0);
+    }
+    if (node.type === 'model') {
+      setTimeout(function() {
+        populateModelDropdown(node.id, function() {
+          var sel = document.getElementById(node.id).querySelector('[data-field="architecture"]');
+          if (sel) {
+            sel.value = nData.fields.architecture || 'EEGNet';
+          }
+        });
+      }, 0);
+    }
+    if (node.type === 'split_strategy') {
+      setTimeout(function() {
+        var sel = document.getElementById(node.id).querySelector('[data-field="split_mode"]');
+        if (sel) {
+          sel.value = nData.fields.split_mode || 'standard';
+          sel.dispatchEvent(new Event('change'));
+        }
+      }, 0);
+    }
+  });
+  
+  (graph.connections || []).forEach(function(c) {
+    connections.push({ from: c.from, to: c.to });
+  });
+  
+  setTimeout(function() {
+    renderConnections();
+  }, 100);
+}
+
+// ── AUTO-RUN BY URL QUERY / LOCALSTORAGE ───────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var savedGraph = localStorage.getItem('selected_pipeline_graph');
+  if (savedGraph) {
+    localStorage.removeItem('selected_pipeline_graph');
+    try {
+      loadGraph(JSON.parse(savedGraph));
+      showAlert('Pipeline state loaded successfully.', 'success');
+      return;
+    } catch(e) {}
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var runModel = params.get('run_model');
+  if (runModel) {
+    setTimeout(function() {
+      generateDefaultPipeline();
+      var mn = nodes.find(function(n){return n.type==='model';});
+      if (mn) {
+        var sel = document.getElementById(mn.id).querySelector('[data-field="architecture"]');
+        if (sel) {
+          populateModelDropdown(mn.id, function() {
+            sel.value = runModel;
+            var archField = mn.fields.find(function(f){return f.name==='architecture';});
+            if (archField) archField.value = runModel;
+            setTimeout(function() {
+              runExperiment(mn.id);
+            }, 600);
+          });
+        }
+      }
+    }, 500);
+  }
+});
+
 // ── EXPOSE ─────────────────────────────────────────────────────
 window.clearCanvas=clearCanvas;
 window.validatePipeline=validatePipeline;
@@ -1335,6 +1504,7 @@ window.runExperiment=runExperiment;
 window.editNodeProperties=editNodeProperties;
 window.saveNodeProperties=saveNodeProperties;
 window.runPanelTest=runPanelTest;
+window.loadGraph=loadGraph;
 
 })();
 </script>

@@ -251,6 +251,9 @@
                 <div class="d-flex gap-2 flex-wrap" id="detailBadges"></div>
               </div>
               <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-info" id="runExperimentBtn" title="Run Experiment with this Model">
+                  <i class="bi bi-play-fill me-1"></i>Run Experiment
+                </button>
                 <button class="btn btn-sm btn-outline-info copy-btn" id="copySnippetBtn"
                         title="Copy Python snippet">
                   <i class="bi bi-clipboard me-1"></i>Copy Code
@@ -614,6 +617,11 @@
   });
   document.getElementById('copyCodeBtn').addEventListener('click', function () {
     copyText(document.getElementById('codeSnippet').textContent, this);
+  });
+  document.getElementById('runExperimentBtn').addEventListener('click', function () {
+    if (currentModel) {
+      window.location.href = '/pipeline_builder?run_model=' + encodeURIComponent(currentModel);
+    }
   });
 
   // ── Search ───────────────────────────────────────────────────────
