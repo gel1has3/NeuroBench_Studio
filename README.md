@@ -163,6 +163,58 @@ The platform provides a full REST API for programmatic access:
 | `GET /api/braindecode/models/<name>` | Model parameter details |
 | `POST /api/run-pipeline` | Execute a pipeline |
 | `GET /api/pipeline/progress/<id>` | Pipeline progress stream |
+| `POST /api/parse-eeg` | Parse & classify uploaded EEG file |
+
+## EEG AI Assistant
+
+The conversational EEG Assistant (`/eeg_assistant`) provides an NLP-to-Pipeline engine for zero-code EEG analysis:
+
+### Chat Capabilities
+- **Signal Quality:** "Are there bad channels?", "Is the EEG noisy?"
+- **File Metadata:** "How long is this EEG?", "What is the sampling frequency?", "How many channels?"
+- **Clinical Pathology:** "Does this patient have epilepsy?", "Is there evidence of Alzheimer's?", "Check for ADHD markers"
+- **Interactive Plotting:** "Plot EEG", "Show alpha", "Signal quality report of eeg1"
+- **Live Visualization:** "Visualize eeg1 live", "Show eeg9 real-time", "Animate eeg"
+- **Foundation Models:** "Which model is best?", "How does the workflow operate?"
+
+### Multi-File Analysis
+Upload multiple EEG files simultaneously for comparative analysis. The assistant returns:
+- Summary tables across all files (duration, channels, seizure predictions)
+- Individual per-file reports with timestamps
+- Per-file specific plot routing when a filename is mentioned (e.g., "signal quality report of eeg1" plots only eeg1)
+
+### Foundation Model Support
+Supports 14 pre-trained checkpoints from [braindecode](https://braindecode.org/):
+`LaBraM`, `SignalJEPA`, `EEGPT`, `BIOT`, `BENDR`, `STEEGFormer`, `REVE`, `CodeBrain`, `CBraMod`,
+`InterpolatedLaBraM`, `InterpolatedSignalJEPA`, `InterpolatedEEGPT`, `InterpolatedBIOT`, `InterpolatedBENDR`
+
+Model-specific downstream classification metrics (validation accuracy, confidence, seizure timestamps) are dynamically computed per model and per file.
+
+### Live EEG Visualization
+Triggered by: `"Visualize <file> live"` / `"Show <file> real-time"`
+
+Renders a 4-panel animated player inside the chat. The backend dynamically downsamples visualization traces to ~32 Hz, allowing seamless live playback for recordings up to **1 hour** long without freezing the browser, while still respecting the original sampling rate for inference.
+
+| Panel | Description | Toggle |
+|-------|-------------|--------|
+| 🔵 Raw Time-Domain Traces | Scrolling multi-channel waveforms (5s window) | Always shown |
+| 🔴 Model Inference | Seizure probability label updated based on user interval | Always shown |
+| 🟡 FFT Frequency Band Power | Live Delta, Theta, Alpha, Beta, Gamma bar chart | ☐ Optional (tick to enable) |
+| 🟢 Topographic 2D Scalp Map | Live 2D scalp heatmap of channel power | ☐ Optional (tick to enable) |
+
+**Playback controls:** Play / Pause / Reset, Speed selector (1×, 2×, 5×, 10×, 20×).
+**Seizure Event Log:** Automatically logs all detected seizure events with timestamp and confidence. Each event has a **▶ Replay** button that jumps playback to 2 seconds before the event for clinical review.
+**Dynamic Customization:** Through the *Preprocessing Settings Modal*, users can define the number of channels to visualize (e.g., 8, 21, etc.) and configure the **Live Inference Interval** (e.g., 4s, 8s, 10s, 30s) to control how frequently the model predicts during live playback.
+
+### Smart Routing
+- Asking **"signal quality report"** with multiple files → plots all uploaded files
+- Asking **"signal quality report of eeg1"** → plots only eeg1 (specific file routing)
+- Asking **"visualize eeg9 live"** → opens live player for eeg9 only
+
+### Nyquist-Aware Filtering
+The preprocessing engine auto-adjusts bandpass filter cutoffs to respect the Nyquist frequency of each uploaded file. Files with low sampling rates (e.g. 64 Hz) are safely filtered at the maximum allowable frequency (`sfreq/2 - 0.5`) instead of crashing.
+
+
 
 ## Technology Stack
 

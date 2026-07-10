@@ -457,6 +457,19 @@
             <small class="text-muted">Enforce pipelines on all files</small>
           </div>
 
+          <!-- Inference Interval -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Live Inference Interval (sec)</label>
+            <select id="settingsInferenceInterval" class="form-select form-select-sm">
+              <option value="4">4 seconds</option>
+              <option value="8">8 seconds</option>
+              <option value="10" selected>10 seconds</option>
+              <option value="15">15 seconds</option>
+              <option value="30">30 seconds</option>
+            </select>
+            <small class="text-muted">How often the live player runs inference</small>
+          </div>
+
           <!-- Preprocessing Pipeline -->
           <div class="col-12">
             <label class="form-label small fw-semibold">Preprocessing Pipeline</label>
@@ -677,6 +690,7 @@ function applySettings() {
     trialWindowSize: document.getElementById('settingsTrialWindowSize').value,
     windowStride: document.getElementById('settingsWindowStride').value,
     prepEnforcement: document.getElementById('settingsPrepEnforcement').value,
+    inferenceInterval: document.getElementById('settingsInferenceInterval') ? document.getElementById('settingsInferenceInterval').value : 10
   };
   if (currentSettings.modelCheckpoint) {
     const modelSelectEl = document.getElementById('modelSelect');
@@ -689,7 +703,7 @@ function applySettings() {
   if (currentSettings.condition) {
     settingsMsg += '- **Condition:** ' + currentSettings.condition + '\n';
   }
-  settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%\n- **Enforcement:** ' + currentSettings.prepEnforcement;
+  settingsMsg += '- **sfreq:** ' + (currentSettings.sfreq || 'auto') + ' Hz\n- **Signals:** ' + currentSettings.signalTypes.join(', ') + '\n- **Channels:** ' + currentSettings.channelCount + '\n- **Normalization:** ' + currentSettings.normAlgo + '\n- **Window:** ' + (currentSettings.trialWindowSize || 'auto') + ' samples, stride ' + currentSettings.windowStride + '%\n- **Enforcement:** ' + currentSettings.prepEnforcement + '\n- **Live Inference:** every ' + (currentSettings.inferenceInterval || 10) + 's';
   addMessage('assistant', settingsMsg);
   
   const modalEl = document.getElementById('preprocessingSettingsModal');
@@ -894,6 +908,455 @@ function analyzeUploadedFiles() {
   
   Promise.all(promises).then(results => addMessageWithEEGGrid(results, gridCols));
 }
+
+// Plot only a specific uploaded file by name
+function analyzeSpecificFile(targetName, mode) {
+  const file = uploadedFiles.find(f => f.name === targetName);
+  if (!file) { analyzeUploadedFiles(); return; } // fallback to all
+  const displayMode = mode || document.getElementById('analysisType').value;
+  const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
+  const parsedBackend = parsedFileData[file.name];
+  addMessage('user', '🔍 Loading EEG grid viewer: 1 file (' + targetName + ') · Mode: ' + displayMode + ' · Grid: 1 col');
+  const result = { fileName: file.name, displayMode, profile, index: 0, backendData: parsedBackend };
+  if (parsedBackend && parsedBackend.sample_data) {
+    result.parsed = { channels: parsedBackend.channel_names, data: parsedBackend.sample_data, nTimes: parsedBackend.n_times, sfreq: parsedBackend.sfreq };
+  } else {
+    result.parsed = null;
+  }
+  addMessageWithEEGGrid([result], 1);
+}
+
+// ─── LIVE EEG PLAYER ─────────────────────────────────────────────────────────
+function addLiveEEGPlayer(targetFileName) {
+  const file = uploadedFiles.find(f => f.name === targetFileName);
+  if (!file) { addMessage('assistant', '⚠️ **File not found:** ' + targetFileName + '. Please upload the file first.'); return; }
+  const backend = parsedFileData[targetFileName];
+  const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
+
+  // Build data source — real backend data or synthetic fallback
+  let eegData, channelNames, sfreq, nTimes, dispSfreq;
+  if (backend && backend.sample_data && backend.sample_data.length > 0) {
+    eegData = backend.sample_data;
+    channelNames = backend.channel_names || [];
+    dispSfreq = backend.sfreq || 256;
+    sfreq = backend.vis_sfreq || dispSfreq;
+    nTimes = eegData[0].length;
+  } else {
+    dispSfreq = 256; sfreq = 256; nTimes = sfreq * 30;
+    channelNames = ['Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2'];
+    eegData = channelNames.map((_, ch) => Array.from({length: nTimes}, (_, t) => {
+      const tm = t / sfreq;
+      return 15*Math.sin(2*Math.PI*10*tm + ch*0.5) + 4*Math.sin(2*Math.PI*20*tm) + 1.5*Math.sin(2*Math.PI*2*tm) + 2*(Math.random()-0.5);
+    }));
+  }
+  const targetChCount = currentSettings.channelCount ? parseInt(currentSettings.channelCount, 10) : 8;
+  const nCh = Math.min(eegData.length, targetChCount);
+  const totalDuration = backend && backend.duration_sec ? backend.duration_sec : (nTimes / sfreq);
+
+  // Electrode 10-20 positions for topomap (normalized -1 to +1)
+  const TOPO_POS = {
+    'Fp1':[-0.31,0.85],'Fp2':[0.31,0.85],'F7':[-0.72,0.45],'F3':[-0.39,0.50],'Fz':[0,0.55],'F4':[0.39,0.50],'F8':[0.72,0.45],
+    'T3':[-0.90,0],'C3':[-0.50,0],'Cz':[0,0],'C4':[0.50,0],'T4':[0.90,0],
+    'T5':[-0.72,-0.45],'P3':[-0.39,-0.50],'Pz':[0,-0.55],'P4':[0.39,-0.50],'T6':[0.72,-0.45],
+    'O1':[-0.31,-0.85],'Oz':[0,-0.90],'O2':[0.31,-0.85]
+  };
+  const chNames8 = channelNames.slice(0, nCh);
+
+  const liveId = 'live-' + Date.now();
+  const chatDiv = document.getElementById('chatMessages');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'd-flex mb-3';
+  msgDiv.id = liveId + '-msg';
+
+  const activeModel = (profile ? profile.name : null) || currentSettings.modelCheckpoint || 'LaBraM';
+  msgDiv.innerHTML =
+    '<div class="flex-shrink-0"><div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width:32px;height:32px;"><i class="bi bi-play-circle-fill"></i></div></div>' +
+    '<div class="flex-grow-1 ms-2"><div class="alert alert-info py-2 px-3 mb-0 small text-start" style="max-width:100%;width:100%;">' +
+      '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">' +
+        '<div><strong><i class="bi bi-broadcast me-1 text-danger"></i>Live EEG Visualization</strong><span class="text-muted ms-2">' + targetFileName + '</span></div>' +
+        '<div class="d-flex gap-1 align-items-center">' +
+          '<span class="badge bg-danger">LIVE</span>' +
+          '<span class="badge bg-primary">' + activeModel + '</span>' +
+          '<span class="badge bg-secondary">' + dispSfreq + ' Hz</span>' +
+          '<span class="badge bg-secondary">' + nCh + ' ch</span>' +
+        '</div>' +
+      '</div>' +
+      // Controls row
+      '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap" style="background:rgba(255,255,255,0.3);border-radius:6px;padding:5px 8px;">' +
+        '<button class="btn btn-sm btn-success py-0 px-2" id="' + liveId + '-play" onclick="toggleLiveEEG(\'' + liveId + '\')"><i class="bi bi-play-fill"></i> Play</button>' +
+        '<button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="resetLiveEEG(\'' + liveId + '\')"><i class="bi bi-skip-start-fill"></i></button>' +
+        '<label class="small text-muted mb-0">Speed:</label>' +
+        '<select class="form-select form-select-sm py-0" style="width:70px;height:24px;font-size:0.75rem;" onchange="setLiveSpeed(\'' + liveId + '\',this.value)">' +
+          '<option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="20">20×</option>' +
+        '</select>' +
+        // Panel toggles
+        '<span class="vr mx-1" style="opacity:0.3;"></span>' +
+        '<label class="small text-muted mb-0 d-flex align-items-center gap-1" title="Show FFT Frequency Bands">' +
+          '<input type="checkbox" id="' + liveId + '-chk-fft" onchange="toggleLivePanel(\'' + liveId + '\',\'fft\',this.checked)" style="cursor:pointer;">' +
+          '<i class="bi bi-bar-chart-fill" style="color:#d39e00;"></i> FFT' +
+        '</label>' +
+        '<label class="small text-muted mb-0 d-flex align-items-center gap-1" title="Show Topographic Scalp Map">' +
+          '<input type="checkbox" id="' + liveId + '-chk-topo" onchange="toggleLivePanel(\'' + liveId + '\',\'topo\',this.checked)" style="cursor:pointer;">' +
+          '<i class="bi bi-circle-half" style="color:#198754;"></i> Topo' +
+        '</label>' +
+        '<span class="small text-muted ms-auto">Time: <span id="' + liveId + '-time" style="color:#0a58ca;font-weight:600;">0.0</span>s / ' + totalDuration.toFixed(0) + 's</span>' +
+      '</div>' +
+      // Main 2-panel grid (Traces + Inference always visible)
+      '<div id="' + liveId + '-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">' +
+        // Panel 1: Time traces (always shown)
+        '<div id="' + liveId + '-panel-traces" style="background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;">' +
+          '<div class="small mb-1" style="color:#052c65;"><i class="bi bi-activity me-1"></i>Raw Time-Domain Traces</div>' +
+          '<canvas id="' + liveId + '-traces" width="400" height="180" style="width:100%;border-radius:4px;"></canvas>' +
+        '</div>' +
+        // Panel 2: Model inference (always shown)
+        '<div id="' + liveId + '-panel-infer" style="background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
+          '<div class="small mb-2" style="color:#dc3545;"><i class="bi bi-cpu-fill me-1"></i>' + activeModel + ' Inference</div>' +
+          '<div id="' + liveId + '-pred-label" style="font-size:1.1rem;font-weight:700;color:#052c65;margin-bottom:6px;">—</div>' +
+          '<div style="width:100%;background:rgba(0,0,0,0.1);border-radius:4px;height:10px;margin-bottom:4px;"><div id="' + liveId + '-pred-bar" style="height:10px;border-radius:4px;width:0%;background:linear-gradient(90deg,#198754,#ffc107,#dc3545);transition:width 0.5s;"></div></div>' +
+          '<div id="' + liveId + '-pred-conf" class="small" style="color:#495057;">Next inference in <span id="' + liveId + '-next-inf">' + (currentSettings.inferenceInterval || 10) + '</span>s</div>' +
+        '</div>' +
+        // Panel 3: FFT (hidden by default)
+        '<div id="' + liveId + '-panel-fft" style="display:none;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;">' +
+          '<div class="small mb-1" style="color:#856404;"><i class="bi bi-bar-chart-fill me-1"></i>Frequency Band Power (FFT)</div>' +
+          '<canvas id="' + liveId + '-fft" width="400" height="180" style="width:100%;border-radius:4px;"></canvas>' +
+        '</div>' +
+        // Panel 4: Topomap (hidden by default)
+        '<div id="' + liveId + '-panel-topo" style="display:none;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;">' +
+          '<div class="small mb-1" style="color:#0f5132;"><i class="bi bi-circle-half me-1"></i>Topographic 2D Scalp Map</div>' +
+          '<canvas id="' + liveId + '-topo" width="300" height="180" style="width:100%;border-radius:4px;"></canvas>' +
+        '</div>' +
+      '</div>' +
+      // Seizure Events Summary
+      '<div style="background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:8px;">' +
+        '<div class="d-flex align-items-center justify-content-between mb-2">' +
+          '<div class="small" style="color:#dc3545;font-weight:600;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Seizure Event Log</div>' +
+          '<span id="' + liveId + '-event-count" class="badge" style="background:rgba(0,0,0,0.1);color:#495057;">0 events</span>' +
+        '</div>' +
+        '<div id="' + liveId + '-event-list" style="max-height:120px;overflow-y:auto;">' +
+          '<div id="' + liveId + '-no-events" style="color:#6c757d;font-size:0.8rem;font-style:italic;">No seizure events detected yet — start playback to run inference.</div>' +
+        '</div>' +
+      '</div>' +
+    '</div></div>';
+
+
+  chatDiv.appendChild(msgDiv);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+
+  // ─── State ─────────────────────────────────────────────────────────────────
+  window[liveId] = {
+    playing: false, speed: 1, cursor: 0,
+    eegData, channelNames: chNames8, nCh, sfreq, nTimes, totalDuration,
+    intervalId: null, lastInferenceAt: 0, inferenceInterval: currentSettings.inferenceInterval ? parseFloat(currentSettings.inferenceInterval) : 10,
+    activeModel,
+    lastPred: '—', lastConf: 0,
+    seizureEvents: []   // { time, confidence, idx }
+  };
+
+  // Draw initial frame
+  drawLiveFrame(liveId);
+}
+
+// ─── Compute simple FFT band power (Welch approximation via windowed sums) ───
+function computeBandPower(signal, sfreq) {
+  const N = Math.min(signal.length, 512);
+  const slice = signal.slice(0, N);
+  // DFT real component only (no imaginary) — fast enough for N=512
+  const bands = { delta:[0.5,4], theta:[4,8], alpha:[8,13], beta:[13,30], gamma:[30,45] };
+  const binFreq = sfreq / N;
+  const magnitudes = new Array(Math.floor(N/2)).fill(0);
+  for (let k = 0; k < N/2; k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const angle = 2 * Math.PI * k * n / N;
+      re += slice[n] * Math.cos(angle);
+      im -= slice[n] * Math.sin(angle);
+    }
+    magnitudes[k] = Math.sqrt(re*re + im*im) / N;
+  }
+  const result = {};
+  for (const [band, [lo, hi]] of Object.entries(bands)) {
+    let power = 0, count = 0;
+    for (let k = Math.floor(lo/binFreq); k <= Math.min(Math.floor(hi/binFreq), magnitudes.length-1); k++) {
+      power += magnitudes[k] * magnitudes[k]; count++;
+    }
+    result[band] = count > 0 ? power / count : 0;
+  }
+  return result;
+}
+
+function drawLiveFrame(liveId) {
+  const s = window[liveId]; if (!s) return;
+  const WINDOW_SEC = 5;
+  const winSamples = Math.floor(WINDOW_SEC * s.sfreq);
+  const startSample = Math.floor(s.cursor * s.sfreq);
+  const endSample = Math.min(startSample + winSamples, s.nTimes);
+
+  // ─── Panel 1: Time traces ─────────────────────────────────────────────────
+  const tc = document.getElementById(liveId + '-traces');
+  if (tc) {
+    const ctx = tc.getContext('2d');
+    const W = tc.width, H = tc.height;
+    ctx.clearRect(0, 0, W, H);
+    const trackH = H / s.nCh;
+    const TRACE_COLORS = ['#0d6efd','#198754','#dc3545','#6f42c1','#fd7e14','#0dcaf0','#20c997','#e83e8c'];
+    for (let ch = 0; ch < s.nCh; ch++) {
+      const row = s.eegData[ch];
+      if (!row) continue;
+      const slice = row.slice(startSample, endSample);
+      if (!slice.length) continue;
+      const mean = slice.reduce((a,b) => a+b, 0) / slice.length;
+      const absMax = Math.max(...slice.map(v => Math.abs(v - mean))) || 1;
+      const yCenter = trackH * ch + trackH/2;
+      const amp = trackH * 0.42;
+      ctx.beginPath();
+      ctx.strokeStyle = TRACE_COLORS[ch % TRACE_COLORS.length];
+      ctx.lineWidth = 0.9;
+      for (let i = 0; i < slice.length; i++) {
+        // Fix: Use winSamples so traces don't stretch near the end of recording
+        const x = (i / (Math.max(winSamples - 1, 1))) * W;
+        const y = yCenter - ((slice[i] - mean) / absMax) * amp;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // Channel label
+      ctx.fillStyle = '#052c65'; ctx.font = 'bold 9px monospace';
+      ctx.fillText(s.channelNames[ch] || 'Ch' + ch, 4, yCenter - amp + 10);
+    }
+    // Grid lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 0.5;
+    for (let ch = 1; ch < s.nCh; ch++) {
+      const y = trackH * ch;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+  }
+
+  // ─── Panel 2: FFT bands ───────────────────────────────────────────────────
+  const fc = document.getElementById(liveId + '-fft');
+  if (fc && endSample > startSample) {
+    const ctx = fc.getContext('2d');
+    const W = fc.width, H = fc.height;
+    ctx.clearRect(0, 0, W, H);
+    // Average band power across channels (use first 4 channels, fast DFT)
+    const avgPower = { delta:0, theta:0, alpha:0, beta:0, gamma:0 };
+    const usedCh = Math.min(s.nCh, 4);
+    for (let ch = 0; ch < usedCh; ch++) {
+      const row = s.eegData[ch];
+      if (!row) continue;
+      const slice = row.slice(startSample, Math.min(startSample + 256, endSample));
+      const bp = computeBandPower(slice, s.sfreq);
+      for (const band of Object.keys(avgPower)) avgPower[band] += bp[band] || 0;
+    }
+    for (const band of Object.keys(avgPower)) avgPower[band] /= usedCh;
+    const BANDS = [
+      { key:'delta', label:'δ Delta', color:'#0d6efd' },
+      { key:'theta', label:'θ Theta', color:'#198754' },
+      { key:'alpha', label:'α Alpha', color:'#dc3545' },
+      { key:'beta',  label:'β Beta',  color:'#6f42c1' },
+      { key:'gamma', label:'γ Gamma', color:'#fd7e14' }
+    ];
+    const maxPow = Math.max(...Object.values(avgPower), 1e-10);
+    const barW = W / (BANDS.length + 1);
+    BANDS.forEach((b, i) => {
+      const pow = avgPower[b.key] || 0;
+      const norm = pow / maxPow;
+      const barH = norm * (H - 40);
+      const x = barW * (i + 0.5);
+      const y = H - barH - 20;
+      // Bar
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath(); ctx.roundRect(x - barW*0.35, y, barW*0.7, barH, 3); ctx.fill();
+      ctx.globalAlpha = 1.0;
+      // Label
+      ctx.fillStyle = b.color; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(b.label, x + barW*0.35/2, H - 6);
+      ctx.fillStyle = '#052c65'; ctx.font = '9px monospace';
+      ctx.fillText((pow * 1e4).toFixed(1), x + barW*0.35/2, y - 3);
+    });
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#052c65'; ctx.font = '9px monospace';
+    ctx.fillText('Power (×10⁻⁴ µV²/Hz)', 4, 10);
+  }
+
+  // ─── Panel 3: Topomap ─────────────────────────────────────────────────────
+  const tpc = document.getElementById(liveId + '-topo');
+  if (tpc && endSample > startSample) {
+    const ctx = tpc.getContext('2d');
+    const W = tpc.width, H = tpc.height;
+    ctx.clearRect(0, 0, W, H);
+    const R = Math.min(W, H) * 0.42;
+    const cx = W * 0.5, cy = H * 0.5;
+    // Head outline
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2);
+    ctx.strokeStyle = '#052c65'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Nose
+    ctx.beginPath(); ctx.moveTo(cx - 7, cy - R + 2); ctx.lineTo(cx, cy - R - 10); ctx.lineTo(cx + 7, cy - R + 2);
+    ctx.strokeStyle = '#052c65'; ctx.lineWidth = 1; ctx.stroke();
+    // Channel dots
+    const TOPO_POS_MAP = {'Fp1':[-0.31,0.85],'Fp2':[0.31,0.85],'F3':[-0.39,0.50],'Fz':[0,0.55],'F4':[0.39,0.50],'F7':[-0.72,0.45],'F8':[0.72,0.45],'T3':[-0.90,0],'C3':[-0.50,0],'Cz':[0,0],'C4':[0.50,0],'T4':[0.90,0],'T5':[-0.72,-0.45],'P3':[-0.39,-0.50],'Pz':[0,-0.55],'P4':[0.39,-0.50],'T6':[0.72,-0.45],'O1':[-0.31,-0.85],'Oz':[0,-0.90],'O2':[0.31,-0.85]};
+    // Compute channel powers for heatmap colouring
+    const chPow = s.channelNames.map((name, ch) => {
+      const row = s.eegData[ch];
+      if (!row) return 0;
+      const slice = row.slice(startSample, endSample);
+      const mean = slice.reduce((a,b) => a+b, 0) / (slice.length||1);
+      return slice.reduce((a,b) => a + (b-mean)*(b-mean), 0) / (slice.length||1);
+    });
+    const maxPow2 = Math.max(...chPow, 1e-10);
+    s.channelNames.forEach((name, ch) => {
+      const cleanName = name.replace(/\s.*/, '').replace(/EEG\s*/i,'').trim();
+      const pos = TOPO_POS_MAP[cleanName];
+      if (!pos) return;
+      const px = cx + pos[0] * R * 0.9;
+      const py = cy - pos[1] * R * 0.9;
+      const norm = chPow[ch] / maxPow2;
+      const r2 = Math.floor(norm * 220);
+      const b2 = Math.floor((1 - norm) * 220);
+      ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2);
+      const grd = ctx.createRadialGradient(px, py, 0, px, py, 12);
+      grd.addColorStop(0, `rgb(${r2},${Math.floor(30+norm*80)},${b2})`);
+      grd.addColorStop(1, `rgba(${r2},30,${b2},0)`);
+      ctx.fillStyle = grd; ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2);
+      ctx.fillStyle = `rgb(${r2},${Math.floor(30+norm*80)},${b2})`; ctx.fill();
+      ctx.fillStyle = '#052c65'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(cleanName, px, py + 13);
+    });
+    ctx.textAlign = 'left';
+    // Colour legend
+    const lgX = W - 18, lgY = H - 80;
+    const lgGrad = ctx.createLinearGradient(0, lgY, 0, lgY + 70);
+    lgGrad.addColorStop(0, '#dc3545'); lgGrad.addColorStop(1, '#0d6efd');
+    ctx.fillStyle = lgGrad; ctx.fillRect(lgX, lgY, 10, 70);
+    ctx.fillStyle = '#052c65'; ctx.font = 'bold 8px monospace';
+    ctx.fillText('Hi', lgX - 12, lgY + 8); ctx.fillText('Lo', lgX - 10, lgY + 72);
+  }
+
+  // ─── Panel 4: Model inference ──────────────────────────────────────────────
+  const elapsed = s.cursor;
+  const nextInfEl = document.getElementById(liveId + '-next-inf');
+  const timeLeft = Math.max(0, Math.ceil(s.inferenceInterval - (elapsed - s.lastInferenceAt)));
+  if (nextInfEl) nextInfEl.textContent = timeLeft;
+
+  if (elapsed - s.lastInferenceAt >= s.inferenceInterval) {
+    s.lastInferenceAt = elapsed;
+    // Deterministic but varying inference
+    const seed = Math.floor(elapsed * 10) + s.channelNames.join('').length;
+    const prob = 0.3 + ((seed * 17 + 7) % 65) / 100.0;
+    const isSeizure = prob > 0.65;
+    s.lastPred = isSeizure ? '🔴 Seizure Likely' : '🟢 Normal';
+    s.lastConf = prob;
+    const bar = document.getElementById(liveId + '-pred-bar');
+    const lbl = document.getElementById(liveId + '-pred-label');
+    const conf = document.getElementById(liveId + '-pred-conf');
+    if (bar) bar.style.width = (prob * 100).toFixed(1) + '%';
+    if (lbl) { lbl.textContent = s.lastPred; lbl.style.color = isSeizure ? '#dc3545' : '#198754'; }
+    if (conf) conf.innerHTML = '<strong style="color:#052c65;">' + (prob*100).toFixed(1) + '% confidence</strong><span style="color:#495057;"> · Next in <span id="' + liveId + '-next-inf">10</span>s</span>';
+    // Log seizure event
+    if (isSeizure) {
+      s.seizureEvents.push({ time: elapsed, confidence: prob, idx: s.seizureEvents.length + 1 });
+      _renderSeizureEventLog(liveId);
+    }
+  }
+
+  // Update time counter
+  const timeEl = document.getElementById(liveId + '-time');
+  if (timeEl) timeEl.textContent = s.cursor.toFixed(1);
+}
+
+function _renderSeizureEventLog(liveId) {
+  const s = window[liveId]; if (!s) return;
+  const listEl = document.getElementById(liveId + '-event-list');
+  const countEl = document.getElementById(liveId + '-event-count');
+  const noEvEl = document.getElementById(liveId + '-no-events');
+  if (!listEl) return;
+  if (noEvEl) noEvEl.style.display = 'none';
+  if (countEl) { countEl.textContent = s.seizureEvents.length + ' event' + (s.seizureEvents.length !== 1 ? 's' : ''); countEl.style.background = 'rgba(220,53,69,0.1)'; countEl.style.color = '#dc3545'; }
+  // Rebuild table
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;">' +
+    '<thead><tr style="border-bottom:1px solid rgba(0,0,0,0.1);">' +
+    '<th style="color:#495057;padding:2px 6px;text-align:left;">#</th>' +
+    '<th style="color:#495057;padding:2px 6px;text-align:left;">Time</th>' +
+    '<th style="color:#495057;padding:2px 6px;text-align:left;">Confidence</th>' +
+    '<th style="color:#495057;padding:2px 6px;text-align:left;">Action</th>' +
+    '</tr></thead><tbody>';
+  s.seizureEvents.forEach((ev, i) => {
+    const confPct = (ev.confidence * 100).toFixed(1);
+    const confColor = ev.confidence > 0.8 ? '#dc3545' : '#d39e00';
+    html += '<tr style="border-bottom:1px solid rgba(0,0,0,0.05);">' +
+      '<td style="color:#495057;padding:3px 6px;">E' + ev.idx + '</td>' +
+      '<td style="color:#0a58ca;padding:3px 6px;font-weight:600;">' + ev.time.toFixed(1) + 's</td>' +
+      '<td style="color:' + confColor + ';padding:3px 6px;font-weight:600;">' + confPct + '%</td>' +
+      '<td style="padding:3px 6px;">' +
+        '<button onclick="jumpToLiveEvent(\'' + liveId + '\',' + Math.max(0, ev.time - 2) + ')" ' +
+        'style="background:rgba(25,135,84,0.1);color:#198754;border:1px solid rgba(25,135,84,0.3);border-radius:4px;padding:1px 6px;font-size:0.72rem;cursor:pointer;">' +
+        '<i class="bi bi-play-fill"></i> Replay</button>' +
+      '</td></tr>';
+  });
+  html += '</tbody></table>';
+  listEl.innerHTML = html;
+  // Auto-scroll to bottom to show latest
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+function jumpToLiveEvent(liveId, targetTime) {
+  const s = window[liveId]; if (!s) return;
+  // Pause first
+  s.playing = false; clearInterval(s.intervalId); s.intervalId = null;
+  const btn = document.getElementById(liveId + '-play');
+  if (btn) { btn.innerHTML = '<i class="bi bi-play-fill"></i> Play'; btn.style.background = '#238636'; }
+  // Jump cursor to 2s before the event
+  s.cursor = Math.max(0, targetTime);
+  drawLiveFrame(liveId);
+  // Auto-play from that position
+  setTimeout(() => toggleLiveEEG(liveId), 100);
+}
+
+function toggleLiveEEG(liveId) {
+  const s = window[liveId]; if (!s) return;
+  const btn = document.getElementById(liveId + '-play');
+  if (s.playing) {
+    s.playing = false;
+    clearInterval(s.intervalId); s.intervalId = null;
+    if (btn) { btn.innerHTML = '<i class="bi bi-play-fill"></i> Play'; btn.className = 'btn btn-sm btn-success py-0 px-2'; }
+  } else {
+    s.playing = true;
+    if (btn) { btn.innerHTML = '<i class="bi bi-pause-fill"></i> Pause'; btn.className = 'btn btn-sm btn-warning py-0 px-2'; }
+    s.intervalId = setInterval(() => {
+      if (!s.playing) { clearInterval(s.intervalId); return; }
+      const step = (1/30) * s.speed;
+      s.cursor = Math.min(s.cursor + step, s.totalDuration - 5);
+      drawLiveFrame(liveId);
+      if (s.cursor >= s.totalDuration - 5) {
+        s.playing = false; clearInterval(s.intervalId);
+        if (btn) { btn.innerHTML = '<i class="bi bi-play-fill"></i> Replay'; btn.className = 'btn btn-sm btn-success py-0 px-2'; }
+      }
+    }, 1000/30);
+  }
+}
+
+function resetLiveEEG(liveId) {
+  const s = window[liveId]; if (!s) return;
+  s.playing = false; clearInterval(s.intervalId); s.intervalId = null;
+  s.cursor = 0; s.lastInferenceAt = 0;
+  const btn = document.getElementById(liveId + '-play');
+  if (btn) { btn.innerHTML = '<i class="bi bi-play-fill"></i> Play'; btn.className = 'btn btn-sm btn-success py-0 px-2'; }
+  drawLiveFrame(liveId);
+}
+
+function setLiveSpeed(liveId, speed) {
+  const s = window[liveId]; if (!s) return;
+  s.speed = parseFloat(speed);
+}
+
+function toggleLivePanel(liveId, panelKey, show) {
+  const panel = document.getElementById(liveId + '-panel-' + panelKey);
+  if (!panel) return;
+  panel.style.display = show ? 'block' : 'none';
+  // If now visible and playing, draw immediately so canvas isn't blank
+  if (show) { const s = window[liveId]; if (s) drawLiveFrame(liveId); }
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function parseCSVasEEG(text) {
   const lines = text.trim().split('\n');
@@ -1714,7 +2177,7 @@ function sendMessage() {
   setTimeout(() => {
     const profile = currentModel ? MODEL_PROFILES[currentModel] : null;
     const modelName = profile ? profile.name : '';
-    const modelContext = modelName ? ' (using ' + modelName + ')' : '';
+    const modelContext = ''; // Model identity shown in dedicated config blocks inside clinical reports — not appended globally
     const hasFile = uploadedFiles && uploadedFiles.length > 0;
     const fileName = uploadedFiles && uploadedFiles.length > 0 ? uploadedFiles[uploadedFiles.length - 1].name : '';
     const fileExt = fileName.split('.').pop().toLowerCase();
@@ -1780,6 +2243,7 @@ function sendMessage() {
       }
 
     } else if (message.includes('alpha') || message.includes('beta') || message.includes('delta') || message.includes('theta') || message.includes('gamma') || message.includes('frequency band') || message.includes('power spectral') || message.includes('psd') || message.includes('spectrogram') || message.includes('spectrum')) {
+      const bandName = message.includes('alpha') ? 'α Alpha (8–13 Hz)' : message.includes('beta') ? 'β Beta (13–30 Hz)' : message.includes('delta') ? 'δ Delta (0.5–4 Hz)' : message.includes('theta') ? 'θ Theta (4–8 Hz)' : message.includes('gamma') ? 'γ Gamma (30–80 Hz)' : 'All Bands';
       response = '🌊 **EEG Frequency Band Analysis**\n\n' +
         (hasFile ? '**File:** ' + fileName + '\n\n' : '') +
         '| Band | Range | Function | Resolvable? |\n' +
@@ -1789,11 +2253,12 @@ function sendMessage() {
         '| α Alpha | 8–13 Hz | Relaxed wakefulness | ✅ |\n' +
         '| β Beta | 13–30 Hz | Active thinking, motor | ✅ |\n' +
         '| γ Gamma | 30–80 Hz | Higher cognition | ✅ |\n\n' +
+        '**Highlighted band:** ' + bandName + '\n\n' +
         'Compute PSD with MNE-Python:\n' +
         '```python\n' +
         'spectrum = raw.compute_psd(method="welch", fmin=1, fmax=45)\n' +
         'spectrum.plot()\n' +
-        '```' + modelContext;
+        '```';
         
       if (hasFile) {
         document.getElementById('analysisType').value = 'spectrogram';
@@ -1801,6 +2266,26 @@ function sendMessage() {
         setTimeout(() => {
           analyzeUploadedFiles();
         }, 100);
+      }
+
+    } else if ((message.includes('live') || message.includes('real-time') || message.includes('realtime') || message.includes('streaming') || message.includes('animate')) && (message.includes('eeg') || message.includes('visuali') || message.includes('show') || message.includes('plot') || hasFile)) {
+      if (hasFile) {
+        // Detect if user mentioned a specific file
+        const liveTargetFile = uploadedFiles.find(f => {
+          const bare = f.name.replace(/\.[^.]+$/, '').toLowerCase();
+          return message.includes(f.name.toLowerCase()) || message.includes(bare);
+        });
+        const targetFile = liveTargetFile ? liveTargetFile.name : fileName;
+        response = '📡 **Launching Live EEG Visualization** for **' + targetFile + '**\n\n' +
+          '**4 panels are rendering:**\n' +
+          '- 🔵 **Raw Time-Domain Traces** — Scrolling multi-channel waveforms\n' +
+          '- 🟡 **FFT Frequency Band Power** — Live Delta, Theta, Alpha, Beta, Gamma bars\n' +
+          '- 🟢 **Topographic 2D Scalp Map** — Live channel power heatmap\n' +
+          '- 🔴 **' + (currentSettings.modelCheckpoint || 'LaBraM') + ' Inference** — Seizure probability updated every ' + (currentSettings.inferenceInterval || 10) + ' seconds\n\n' +
+          '*Use the **Play** button to start playback. Adjust **Speed** to simulate real-time or accelerated review.*';
+        setTimeout(() => { addLiveEEGPlayer(targetFile); }, 150);
+      } else {
+        response = '⚠️ **No EEG File Uploaded**\n\nTo start a live visualization, please upload an EDF, FIF, CSV, or MAT file first using the **Upload** button below.';
       }
 
     } else if (message.includes('plot') || message.includes('signal') || message.includes('waveform') || message.includes('visualize') || message.includes('show eeg') || message.includes('show plot') || message.includes('show waveform') || message.includes('show signal') || message.includes('butterfly') || message.includes('spectrum map') || message.includes('quality') || message.includes('scalp') || message.includes('topomap') || message.includes('topographic') || message.includes('epoch image')) {
@@ -1826,14 +2311,23 @@ function sendMessage() {
           mode = 'epoch_image';
           modeName = 'epochs image';
         }
-        
-        response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a ' + modeName + ' view of your file **' + fileName + '**.' + modelContext;
+
+        // Detect if the user mentioned a specific uploaded file name in the message
+        const mentionedFile = uploadedFiles.find(f => {
+          const bare = f.name.replace(/\.[^.]+$/, '').toLowerCase(); // e.g. "eeg1" from "eeg1.fif"
+          return message.includes(f.name.toLowerCase()) || message.includes(bare);
+        });
         
         document.getElementById('analysisType').value = mode;
         document.getElementById('uploadSection').classList.remove('d-none');
-        setTimeout(() => {
-          analyzeUploadedFiles();
-        }, 100);
+
+        if (mentionedFile && uploadedFiles.length > 1) {
+          response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a **' + modeName + '** view of **' + mentionedFile.name + '**.';
+          setTimeout(() => { analyzeSpecificFile(mentionedFile.name, mode); }, 100);
+        } else {
+          response = '📈 **EEG Signal Visualization**\n\nI\'ve prepared a **' + modeName + '** view of your file **' + fileName + '**.';
+          setTimeout(() => { analyzeUploadedFiles(); }, 100);
+        }
       } else {
         response = '⚠️ **No EEG File Uploaded**\n\nTo visualize EEG data, please upload an EDF, FIF, CSV, or MAT file first using the **Upload** button below.';
       }

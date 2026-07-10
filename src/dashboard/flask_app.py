@@ -1254,11 +1254,15 @@ def register_api_routes(app):
                         result['epoching'] = None
                         result['evoked'] = None
                     
-                    # Extract sample data (first 10 seconds or up to 2500 samples)
-                    max_samples = min(2500, raw.n_times)
+                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    sfreq = raw.info['sfreq']
+                    max_samples = min(int(sfreq * 3600), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
-                    result['sample_data'] = data.tolist()
-                    result['sample_times'] = (np.arange(max_samples) / raw.info['sfreq']).tolist()
+                    
+                    stride = max(1, int(sfreq / 32.0))
+                    vis_data = data[:, ::stride]
+                    result['sample_data'] = vis_data.tolist()
+                    result['vis_sfreq'] = float(sfreq / stride)
                     
                     # Channel info summary
                     result['channel_summary'] = {
@@ -1366,11 +1370,15 @@ def register_api_routes(app):
                         result['epoching'] = None
                         result['evoked'] = None
                     
-                    # Extract sample data
-                    max_samples = min(2500, raw.n_times)
+                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    sfreq = raw.info['sfreq']
+                    max_samples = min(int(sfreq * 3600), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
-                    result['sample_data'] = data.tolist()
-                    result['sample_times'] = (np.arange(max_samples) / raw.info['sfreq']).tolist()
+                    
+                    stride = max(1, int(sfreq / 32.0))
+                    vis_data = data[:, ::stride]
+                    result['sample_data'] = vis_data.tolist()
+                    result['vis_sfreq'] = float(sfreq / stride)
                     
                     # Channel info summary
                     result['channel_summary'] = {
@@ -1441,11 +1449,14 @@ def register_api_routes(app):
                         'other': 0
                     }
                     
-                    # Extract sample data
-                    max_samples = min(2500, n_times)
+                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    max_samples = min(int(sfreq * 3600), n_times)
                     data = eeg_data[:, :max_samples]
-                    result['sample_data'] = data.tolist()
-                    result['sample_times'] = (np.arange(max_samples) / sfreq).tolist()
+                    
+                    stride = max(1, int(sfreq / 32.0))
+                    vis_data = data[:, ::stride]
+                    result['sample_data'] = vis_data.tolist()
+                    result['vis_sfreq'] = float(sfreq / stride)
                     
                 except Exception as e:
                     logger.error(f"Failed to parse MAT: {e}")
@@ -1482,11 +1493,15 @@ def register_api_routes(app):
                         'other': 0
                     }
                     
-                    # Extract sample data
-                    max_samples = min(2500, len(df))
+                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    sfreq = 250.0
+                    max_samples = min(int(sfreq * 3600), len(df))
                     data = df[channel_cols].head(max_samples).values.T
-                    result['sample_data'] = data.tolist()
-                    result['sample_times'] = (np.arange(max_samples) / 250.0).tolist()
+                    
+                    stride = max(1, int(sfreq / 32.0))
+                    vis_data = data[:, ::stride]
+                    result['sample_data'] = vis_data.tolist()
+                    result['vis_sfreq'] = float(sfreq / stride)
                     
                 except Exception as e:
                     logger.error(f"Failed to parse CSV: {e}")
