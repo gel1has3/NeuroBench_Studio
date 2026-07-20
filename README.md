@@ -1,12 +1,14 @@
-# NeuroBench Studio — EEG Foundation Model Platform
+# NeuroBench Studio — Prompting the Brain: Conversational AI via Natural Language Interfaces and Visual MLOps for Reproducible EEG AI
+
+
 Project link: https://neurobenchstudio.github.io/#
 Paper Link: will be available soon
 
-NeuroBench Studio platform for EEG foundation model research, featuring a **conversational EEG AI Assistant** equipped with a Cascading Fallback Router, and an intuitive **visual MLOps pipeline builder**. These tools empower both coders and non-coders to seamlessly explore datasets, discover braindecode models, and orchestrate complex deep learning workflows without writing a single line of code.
+NeuroBench Studio platform for EEG foundation model research, featuring a **conversational EEG AI Assistant** equipped with a Cascading Fallback Router, and an intuitive **visual MLOps pipeline builder (Drag-and-drop interface for building EEG ML pipelines)**. These tools empower both coders and non-coders to seamlessly explore datasets, discover braindecode models, and orchestrate complex deep learning workflows without writing a single line of code.
 
 ## Core Mission
 
-> Democratize EEG deep learning by providing a unified platform that combines EEGDash dataset streaming, Braindecode foundation models, and an intuitive MLOps pipeline builder accessible to neuroscientists, clinicians, and machine learning researchers.
+> Democratize EEG deep learning by providing a unified platform that combines EEGDash dataset streaming, Braindecode foundation models, an intuitive visual MLOps pipeline builder, and a conversational EEG AI assistant—making advanced analysis accessible to neuroscientists, clinicians, and machine learning researchers alike.
 
 ## Platform Features
 
