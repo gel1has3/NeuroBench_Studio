@@ -11,35 +11,57 @@ NeuroBench Studio platform for EEG foundation model research, featuring a **conv
 
 ## Platform Features
 
-### 1. EEG Dataset Explorer
+### 1. Conversational EEG AI Assistant
+- Conversational chat interface to analyze raw EEG signals (`.edf`, `.fif`, `.mat`)
+- Dynamic parsing and recommendation of Hugging Face pre-trained checkpoints based on active dataset characteristics (channels, sfreq)
+- Multi-file comparison, signal quality scanning, cross-file similarity, and automated anomaly flagging
+- Real-time Interactive Plotly EEG Grid Viewer natively embedded into the chat workspace
+
+<div align="center">
+  <img src="Screenshoots/conversational-eeg-assistant-screenshot.png" width="800" alt="Conversational EEG AI Assistant">
+</div>
+
+### 2. EEG Dataset Explorer
 - Browse and explore curated local EEG datasets
 - Stream remote OpenNeuro datasets via **EEGDash** integration
 - View subject metadata, channel configurations, and data quality metrics
 - Auto-configure braindecode models based on dataset characteristics
 
-### 2. Braindecode Model Discoverer
+<div align="center">
+  <img src="Screenshoots/dataset-explorer-screenshot.png" width="800" alt="EEG Dataset Explorer">
+</div>
+
+### 3. Braindecode Model Discoverer
 - Dynamically discover all models available in `braindecode.models`
 - Inspect model parameters, architectures, and default values
 - Generate ready-to-use Python code snippets
 - Filter models by type (Transformer, CNN, Sleep, etc.)
 
-### 3. Visual MLOps Pipeline Builder
+<div align="center">
+  <img src="Screenshoots/model-discoverer-screenshot.png" width="800" alt="Braindecode Model Discoverer">
+</div>
+
+### 4. Visual MLOps Pipeline Builder
 - Drag-and-drop interface for building EEG ML pipelines
 - No coding required — accessible to non-programmers
 - Configure preprocessing steps, model selection, and validation strategies
 - Execute pipelines with real-time progress streaming
 - Suitable for both rapid prototyping and production workflows
 
-### 4. Foundation Model Reference
+<div align="center">
+  <img src="Screenshoots/pipeline-builder-screenshot.png" width="800" alt="Visual MLOps Pipeline Builder">
+</div>
+
+### 5. Foundation Model Reference
 - Comprehensive documentation of all 9+ foundation models available via braindecode v1.5+
 - Models include: REVE, CBraMod, CodeBrain, EEGPT, BIOT, LaBraM, BENDR, SignalJEPA, LUNA
 - Pretrained on large-scale EEG data for fine-tuning or feature extraction
 
-### 5. Interactive EEG AI Assistant
-- Conversational chat interface to analyze raw EEG signals (`.edf`, `.fif`, `.mat`)
-- Dynamic parsing and recommendation of Hugging Face pre-trained checkpoints based on active dataset characteristics (channels, sfreq)
-- Multi-file comparison, signal quality scanning, cross-file similarity, and automated anomaly flagging
-- Real-time Interactive Plotly EEG Grid Viewer natively embedded into the chat workspace
+<div align="center">
+  <img src="Screenshoots/foundation-model-inference-screenshot.png" width="800" alt="Foundation Model Reference">
+</div>
+
+
 
 ## Architecture Overview
 
