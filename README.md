@@ -278,8 +278,10 @@ MIT License
 
 ```bibtex
 @software{NeuroBenchStudio,
-  title={NeuroBench Studio: Vibe Coding for EEG — A No-Code Platform for EEG Deep Learning, Foundation Models, and Visual Pipeline Orchestration},
-  author={Geletaw Sahle Tegenaw and Tomas Ward},
+  title={NeuroBench Studio — Prompting the Brain: Conversational AI via Natural Language Interfaces, Visual MLOps, and Real-Time Streaming Inference for Reproducible EEG AI},
+  author={Geletaw Sahle Tegenaw, Norman Delanty, and Tomas Ward},
   year={2026},
-  url={https://github.com/your-repo/NeuroBenchStudio}
+  note={EU Horizon 2020 Marie Sk{\l}odowska-Curie Grant No. 101034252. Powered by Neuro-Insight, Insight-DCU},
+  url={https://neurobenchstudio.github.io/#, https://github.com/gel1has3/NeuroBench_Studio}
 }
+
