@@ -39,9 +39,9 @@ NeuroBench Studio platform for EEG foundation model research, featuring a **conv
 <div align="center">
   <video src="Screenshoots//EEGConversationalAI.mp4" width="800" controls></video>
 </div>
-<div align="center">
+<!-- <div align="center">
   <img src="Screenshoots/foundation-model-inference-screenshot.png" width="800" alt="Foundation Model Reference">
-</div>
+</div> -->
 
 
 
