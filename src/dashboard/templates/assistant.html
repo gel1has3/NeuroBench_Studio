@@ -2166,6 +2166,17 @@ function renderEEGPlot(plotId, time, allData, channelNames, displayMode, sfreq) 
 }
 
 // Chat Functions
+/**
+ * Cascading Fallback Router Architecture
+ * To balance computational efficiency with robust natural language understanding, 
+ * we implemented a Cascading Fallback Router. The primary layer utilizes a zero-latency 
+ * Heuristic Rule-Based Engine to instantly parse highly deterministic clinical keywords. 
+ * When a query is classified as Out-of-Distribution (OOD) by the primary layer—indicating 
+ * novel phrasing or synonyms—the system triggers a secondary Semantic Router using the 
+ * intfloat/e5-base-v2 dense embedding model. This hybrid approach guarantees strict 
+ * predictability for standard clinical commands while leveraging deep vector similarity 
+ * to seamlessly handle natural language variation.
+ */
 function sendMessage() {
   const input = document.getElementById('chatInput');
   const message = input.value.trim().toLowerCase();
@@ -2916,17 +2927,36 @@ function sendMessage() {
 
 
     } else {
-      response = '🤖 **I am not sure how to answer that.**\n\n' +
-        'However, I am fully equipped to help you with the following EEG tasks:\n' +
-        '- **Signal Quality:** "Are there bad channels?", "Is the EEG noisy?"\n' +
-        '- **File Metadata:** "How long is this EEG?", "What is the sampling frequency?"\n' +
-        '- **Clinical Pathology:** "Does this patient have epilepsy?", "Is there evidence of Alzheimer\'s?"\n' +
-        '- **Interactive Plotting:** "Plot EEG", "Show spectrogram", "Quality heatmap"\n' +
-        '- **Foundation Models:** "How does the workflow operate?", "Which model is best?"\n\n' +
-        '*Please try rephrasing your question or selecting one of the topics above!*';
+      // Query classified as Out-of-Distribution (OOD). Trigger secondary Semantic Router.
+      const spinnerHtml = '<div class="spinner-border spinner-border-sm text-info me-2" role="status"></div><em>Semantic Router analyzing with e5-base-v2...</em>';
+      addMessage('assistant', spinnerHtml);
+      
+      fetch('/api/chat/semantic_route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: message })
+      })
+      .then(res => res.json())
+      .then(data => {
+          updateLastMessage(data.answer); 
+      })
+      .catch(err => {
+          updateLastMessage('⚠️ Semantic routing failed. The backend endpoint is unreachable.');
+      });
+      return;
     }
     addMessage('assistant', response);
   }, 800);
+}
+
+function updateLastMessage(newHtml) {
+  const chatMessages = document.getElementById('chatMessages');
+  const messageBlocks = chatMessages.querySelectorAll('.alert');
+  if (messageBlocks.length > 0) {
+    const lastBlock = messageBlocks[messageBlocks.length - 1];
+    lastBlock.innerHTML = '<strong>EEG Assistant</strong><br>' + renderMarkdown(newHtml);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
 }
 
 function sendQuickMessage(message) {

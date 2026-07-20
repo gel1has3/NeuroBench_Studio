@@ -1797,6 +1797,25 @@ def register_main_routes(app):
             refresh_interval=app.config['REFRESH_INTERVAL'],
         )
 
+    @app.route('/research')
+    def research_dashboard():
+        """Academic research page presenting conversational AI benchmarks and model profiling."""
+        from src.dashboard.conversational_eval import run_conversational_evaluation
+        import json
+        
+        # Get selected model from query parameter (default to LaBraM)
+        model_checkpoint = request.args.get('model', 'LaBraM')
+        report = run_conversational_evaluation(model_checkpoint=model_checkpoint)
+        experiments = discover_experiments(app)
+        
+        return render_template(
+            'research.html',
+            report=report,
+            experiments=experiments,
+            selected_model=model_checkpoint,
+            refresh_interval=app.config['REFRESH_INTERVAL'],
+        )
+
     @app.route('/pipeline')
     def pipeline_builder():
         """Visual MLOps Pipeline Builder page."""
@@ -1897,6 +1916,7 @@ def register_main_routes(app):
         return render_template(
             'report.html',
             run=run,
+            project_name=run.get('project_name'),
             dataset_id=meta.get('dataset_id') or run.get('dataset_id'),
             architecture=model_info.get('architecture') or run.get('model'),
             status=meta.get('status', 'completed'),
@@ -1956,10 +1976,25 @@ def register_main_routes(app):
 
         import threading
         
-        data = request.get_json(silent=True) or {}
+        import json
+        import os
+        
+        if request.content_type and request.content_type.startswith('multipart/form-data'):
+            data = json.loads(request.form.get('payload', '{}'))
+            files = request.files.getlist('files')
+            if files:
+                project_root = Path(__file__).parent.parent.parent
+                upload_dir = project_root / 'data' / 'uploaded'
+                upload_dir.mkdir(parents=True, exist_ok=True)
+                for f in files:
+                    if f.filename:
+                        f.save(upload_dir / f.filename)
+        else:
+            data = request.get_json(silent=True) or {}
 
         graph = data.get('graph', {})
         dataset_id = data.get('dataset_id', 'unknown')
+        project_name = data.get('project_name', dataset_id)
         model_config = data.get('model_config', {})
 
         architecture = model_config.get('architecture', 'EEGNet')
@@ -2041,7 +2076,7 @@ def register_main_routes(app):
                     split_config=split_config,
                     validation_config=validation_config,
                     progress_callback=progress,
-                    max_subjects=1,
+                    max_subjects=-1,
                     n_epochs=min(10, data.get('n_epochs', 5))
                 )
                 event_queue.put({'stage': 'complete', 'progress': 100, 'message': 'Done', 'results': results})
@@ -2055,10 +2090,27 @@ def register_main_routes(app):
                     if runs_file.exists():
                         with open(runs_file) as f:
                             runs = json.load(f)
+                    
+                    # Update the graph with true data summary if available
+                    if 'data_summary' in results:
+                        ds = results['data_summary']
+                        for node in graph.get('nodes', []):
+                            if node.get('type') == 'dataset' and 'fields' in node:
+                                node['fields']['n_chans'] = str(ds.get('n_channels', node['fields'].get('n_chans')))
+                                node['fields']['sfreq'] = str(ds.get('sfreq', node['fields'].get('sfreq')))
+                                break
+                    elif results.get('status') == 'error':
+                        for node in graph.get('nodes', []):
+                            if node.get('type') == 'dataset' and 'fields' in node:
+                                node['fields']['n_chans'] = 'Failed to load file'
+                                node['fields']['sfreq'] = 'Failed to load file'
+                                break
+                    
                     runs.append({
                         'run_id': run_id,
                         'timestamp': datetime.now().isoformat(),
                         'dataset_id': dataset_id,
+                        'project_name': project_name,
                         'model': model_config.get('architecture', 'unknown'),
                         'graph': graph,
                         'results': results
@@ -2144,6 +2196,50 @@ def register_main_routes(app):
         except Exception as e:
             logger.exception('Failed to delete run')
             return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+    @app.route('/api/chat/semantic_route', methods=['POST'])
+    def semantic_route():
+        data = request.json
+        query = data.get('query', '')
+        
+        try:
+            from sentence_transformers import SentenceTransformer
+            from sklearn.metrics.pairwise import cosine_similarity
+            import numpy as np
+            
+            # Load model safely (cached after first load)
+            if not hasattr(app, 'embedding_model'):
+                app.embedding_model = SentenceTransformer('intfloat/e5-base-v2')
+                
+                # Define a small knowledge base for the semantic router to match against
+                app.semantic_kb = [
+                    {"text": "query: How do I export my EEG pipeline report to PDF?", "answer": "You can export your analysis report by navigating to the Results tab and clicking the 'Export PDF' button."},
+                    {"text": "query: What is the maximum file size for EDF uploads?", "answer": "The studio currently supports EDF file uploads up to 500MB. For larger files, consider downsampling first."},
+                    {"text": "query: How to change the normalization algorithm?", "answer": "Click the sliders icon next to the Assistant badge to open the Settings modal. From there, you can select Z-Score, Min-Max, or Exponential Moving Std."}
+                ]
+                app.kb_embeddings = app.embedding_model.encode([item['text'] for item in app.semantic_kb])
+
+            # Prefix query as required by e5 models
+            query_embedding = app.embedding_model.encode([f"query: {query}"])
+            
+            # Compute cosine similarity
+            similarities = cosine_similarity(query_embedding, app.kb_embeddings)[0]
+            best_match_idx = np.argmax(similarities)
+            best_score = similarities[best_match_idx]
+            
+            if best_score > 0.8:  # Threshold for a confident match
+                return jsonify({"answer": app.semantic_kb[best_match_idx]['answer'], "score": float(best_score)})
+            else:
+                return jsonify({"answer": "I'm sorry, I couldn't find a confident answer for your specific phrasing. Please try using standard clinical keywords.", "score": float(best_score)})
+
+        except ImportError:
+            # Failsafe if sentence-transformers is not installed
+            return jsonify({
+                "answer": "⚠️ Semantic Router is currently offline. To enable deep vector similarity, please install the required backend dependencies: `pip install sentence-transformers scikit-learn`"
+            })
+        except Exception as e:
+            return jsonify({"answer": f"⚠️ Semantic Router encountered an error: {str(e)}"})
 
 
 # ---------------------------------------------------------------------------

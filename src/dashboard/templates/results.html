@@ -38,6 +38,7 @@
             <thead class="table-dark">
               <tr>
                 <th class="ps-4">Run ID</th>
+                <th>Project Name</th>
                 <th>Dataset</th>
                 <th>Model</th>
                 <th class="text-center">Status</th>
@@ -59,7 +60,25 @@
                   </div>
                 </td>
                 <td>
-                  <small class="text-muted">{{ meta.get('dataset_id', '—') }}</small>
+                  <strong>{{ run.get('project_name', '—') }}</strong>
+                </td>
+                <td>
+                  {% set ds_id = meta.get('dataset_id') or run.get('dataset_id') or '—' %}
+                  {% set n_files = meta.get('n_subjects') %}
+                  {% if not n_files or n_files == -1 %}
+                    {% if ',' in ds_id %}
+                      {% set n_files = ds_id.split(',')|length %}
+                    {% else %}
+                      {% set n_files = 1 %}
+                    {% endif %}
+                  {% endif %}
+                  <small class="text-muted" title="{{ ds_id }}">
+                    {% if ',' in ds_id or ds_id.lower().endswith('.fif') or ds_id.lower().endswith('.edf') or ds_id.lower().endswith('.csv') or ds_id.lower().endswith('.set') %}
+                      {{ n_files }}
+                    {% else %}
+                      {{ ds_id }} ({{ n_files }})
+                    {% endif %}
+                  </small>
                 </td>
                 <td>
                   {% set model_name = results.get('model_info', {}).get('architecture', '—') %}
@@ -125,8 +144,8 @@
         {% set latest_results = latest_run.get('results', {}) %}
         {% set training_history = latest_results.get('training_history', {}) %}
         {% if training_history %}
-        <div class="row g-3">
-          <div class="col-md-6">
+        <div class="row g-3" id="trainingCurvesRow">
+          <div class="col-md-6" id="trainingEpochsContainer">
             <h6 class="fw-semibold small text-muted text-uppercase mb-2"><i class="bi bi-list-ol me-1 text-primary"></i>Latest Run: {{ latest_run.run_id[:8] }}</h6>
             <div class="table-responsive">
               <table class="table table-sm table-hover mb-0">
@@ -152,14 +171,14 @@
               </table>
             </div>
           </div>
-          <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-start border-secondary">
+          <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-start border-secondary" id="rocCurveContainer">
             {% set roc = latest_results.get('roc_curve') %}
             {% if roc %}
               <div id="rocCurveChart" style="height: 180px; width: 100%;"></div>
             {% else %}
               <div class="text-center py-4">
                 <i class="bi bi-graph-up-arrow display-6 text-muted mb-2 d-block"></i>
-                <span class="small text-muted">ROC AUC analysis is only computed for binary validation tasks.</span>
+                <span class="small text-muted">ROC AUC analysis is not available for this run.</span>
               </div>
             {% endif %}
           </div>
@@ -236,6 +255,67 @@
               <small class="fw-medium d-block text-muted" style="font-size:0.75rem;">Test Samples</small>
               <strong class="text-secondary fs-5">{{ latest_metrics.n_test if latest_metrics.n_test else "—" }}</strong>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Pipeline Configuration (Dynamic) -->
+    <div class="card border-0 shadow-sm mt-3" id="pipelineConfigCard" style="{% if not latest_run.get('graph') %}display:none;{% endif %}">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-gear me-2"></i>Pipeline Configuration</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="fw-semibold small text-muted text-uppercase mb-2">Preprocessing Steps</h6>
+            <ul class="list-group list-group-flush border" id="prepStepsList" style="font-size: 0.85rem;">
+              {% if latest_run.get('graph') and latest_run.graph.nodes %}
+                {% for node in latest_run.graph.nodes %}
+                  {% if node.type.startswith('preprocess_') or node.type == 'dataset' %}
+                    <li class="list-group-item d-flex flex-column">
+                        <strong>{{ node.title }}</strong>
+                        <span class="text-muted mt-1">
+                        {% set fields = [] %}
+                        {% for k, v in node.fields.items() %}
+                            {% if k not in ['source', 'local_file'] and v %}
+                                {% set _ = fields.append('<b>' ~ k ~ '</b>: ' ~ v) %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ fields|join(', ') or 'Default Settings' }}
+                        </span>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <li class="list-group-item text-muted">No preprocessing steps recorded.</li>
+              {% endif %}
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-semibold small text-muted text-uppercase mb-2">Model & Validation Settings</h6>
+            <ul class="list-group list-group-flush border" id="modelSettingsList" style="font-size: 0.85rem;">
+              {% if latest_run.get('graph') and latest_run.graph.nodes %}
+                {% for node in latest_run.graph.nodes %}
+                  {% if node.type in ['model', 'split_strategy', 'validation'] %}
+                    <li class="list-group-item d-flex flex-column">
+                        <strong>{{ node.title }}</strong>
+                        <span class="text-muted mt-1">
+                        {% set fields = [] %}
+                        {% for k, v in node.fields.items() %}
+                            {% if v %}
+                                {% set _ = fields.append('<b>' ~ k ~ '</b>: ' ~ v) %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ fields|join(', ') or 'Default Settings' }}
+                        </span>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <li class="list-group-item text-muted">No model settings recorded.</li>
+              {% endif %}
+            </ul>
           </div>
         </div>
       </div>
@@ -414,12 +494,54 @@ function showRunDetails(runId) {
     metricPills[7].textContent = metrics.n_test || '—';
   }
 
-  // 2. Re-build training curve epoch table
+  // 3. Populate Pipeline Configuration
+  const prepList = document.getElementById('prepStepsList');
+  const modelList = document.getElementById('modelSettingsList');
+  const configCard = document.getElementById('pipelineConfigCard');
+  if (configCard && prepList && modelList) {
+    if (run.graph && run.graph.nodes && run.graph.nodes.length > 0) {
+      prepList.innerHTML = '';
+      modelList.innerHTML = '';
+      let hasPrep = false;
+      let hasModel = false;
+      
+      run.graph.nodes.forEach(node => {
+        let fieldsHtml = '';
+        if (node.fields) {
+          let fEntries = [];
+          for (let k in node.fields) {
+            if (['source', 'local_file'].includes(k) || !node.fields[k]) continue;
+            fEntries.push(`<b>${k}</b>: ${node.fields[k]}`);
+          }
+          if (fEntries.length > 0) fieldsHtml = fEntries.join(', ');
+          else fieldsHtml = 'Default Settings';
+        }
+        
+        const li = `<li class="list-group-item d-flex flex-column"><strong>${node.title}</strong><span class="text-muted mt-1">${fieldsHtml}</span></li>`;
+        
+        if (node.type.startsWith('preprocess_') || node.type === 'dataset') {
+          prepList.innerHTML += li;
+          hasPrep = true;
+        } else if (['model', 'split_strategy', 'validation'].includes(node.type)) {
+          modelList.innerHTML += li;
+          hasModel = true;
+        }
+      });
+      
+      if (!hasPrep) prepList.innerHTML = '<li class="list-group-item text-muted">No preprocessing steps recorded.</li>';
+      if (!hasModel) modelList.innerHTML = '<li class="list-group-item text-muted">No model settings recorded.</li>';
+      configCard.style.display = 'block';
+    } else {
+      configCard.style.display = 'none';
+    }
+  }
+
+  // 4. Update training curve epoch table
   const tbody = document.querySelector('.table-responsive tbody');
   const tableCardBody = document.querySelector('.card-body');
   
   // Find curves block container
-  const curvesRow = document.querySelector('.row.g-3');
+  const curvesRow = document.getElementById('trainingCurvesRow');
   if (curvesRow && history && history.n_epochs) {
     // Generate epoch table html
     let tableHtml = '<table class="table table-sm table-hover mb-0">' +
@@ -434,15 +556,15 @@ function showRunDetails(runId) {
     }
     tableHtml += '</tbody></table>';
     
-    // Select the table container (first col-md-6)
-    const tableCol = curvesRow.querySelector('.col-md-6:first-child');
+    // Select the table container
+    const tableCol = document.getElementById('trainingEpochsContainer');
     if (tableCol) {
       tableCol.innerHTML = `<h6 class="fw-semibold small text-muted text-uppercase mb-2"><i class="bi bi-list-ol me-1 text-primary"></i>Selected Run: ${runId.substring(0, 8)}</h6><div class="table-responsive">${tableHtml}</div>`;
     }
   }
 
   // 3. Re-draw ROC Curve (Plotly)
-  const rocCol = curvesRow ? curvesRow.querySelector('.col-md-6:last-child') : null;
+  const rocCol = document.getElementById('rocCurveContainer');
   if (rocCol) {
     const roc = results.roc_curve;
     if (roc && roc.fpr && roc.tpr) {
@@ -486,7 +608,7 @@ function showRunDetails(runId) {
       };
       Plotly.newPlot('rocCurveChart', data, layout, {displayModeBar: false});
     } else {
-      rocCol.innerHTML = '<div class="text-center py-4"><i class="bi bi-graph-up-arrow display-6 text-muted mb-2 d-block"></i><span class="small text-muted">ROC AUC analysis is only computed for binary validation tasks.</span></div>';
+      rocCol.innerHTML = '<div class="text-center py-4"><i class="bi bi-graph-up-arrow display-6 text-muted mb-2 d-block"></i><span class="small text-muted">ROC AUC analysis is not available for this run.</span></div>';
     }
   }
 }
@@ -495,7 +617,7 @@ function adjustSelectedInCanvas() {
   if (!selectedRunId) return;
   const run = runsHistory.find(r => r.run_id === selectedRunId);
   if (run && run.graph) {
-    localStorage.setItem('selected_pipeline_graph', JSON.stringify(run.graph));
+    localStorage.setItem('selected_pipeline_run', JSON.stringify(run));
     window.location.href = '/pipeline';
   }
 }

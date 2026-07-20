@@ -96,46 +96,58 @@ def load_dataset(dataset_id: str, progress: ProgressCallback,
     is_file = any(dataset_id.lower().endswith(ext) for ext in ['.edf', '.fif', '.csv', '.mat', '.set'])
     
     if is_file or not data_dir.exists():
-        # Search for a matching file name inside data folder
+        # dataset_id might be comma-separated
+        target_files = [f.strip() for f in dataset_id.split(',')]
         search_dir = project_root / 'data'
-        found_file = None
-        for path in search_dir.glob('**/*'):
-            if path.is_file() and path.name.lower() == dataset_id.lower():
-                found_file = path
-                break
+        found_files = []
+        
+        for target in target_files:
+            for path in search_dir.glob('**/*'):
+                if path.is_file() and path.name.lower() == target.lower():
+                    found_files.append(path)
+                    break
                 
         # If not found, use the first EDF file in the data folder as a fallback
-        if not found_file:
+        if not found_files:
             for path in search_dir.glob('**/*.edf'):
                 if path.is_file():
-                    found_file = path
+                    found_files.append(path)
                     break
         
-        if found_file:
-            progress.report('loading', 20, f"Loading file: {found_file.name}")
-            try:
-                if found_file.suffix.lower() == '.edf':
-                    raw = mne.io.read_raw_edf(str(found_file), preload=True)
-                elif found_file.suffix.lower() == '.fif':
-                    raw = mne.io.read_raw_fif(str(found_file), preload=True)
-                else:
-                    # Generic reader fallback
-                    raw = mne.io.read_raw_edf(str(found_file), preload=True)
-                
-                dataset_meta = {
-                    'dataset_id': dataset_id,
-                    'disease': 'local_file',
-                    'n_subjects': 1,
-                    'loader': 'LocalFileReader',
-                    'n_channels': len(raw.ch_names),
-                    'sfreq': raw.info['sfreq'],
-                    'duration_sec': float(raw.times[-1]) if hasattr(raw, 'times') else None
-                }
-                raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
-                progress.report('loading', 100, f"File loaded: {len(raw.ch_names)} EEG channels")
-                return raw, dataset_meta
-            except Exception as e:
-                logger.warning(f"Failed to read file {found_file}: {e}")
+        if found_files:
+            actual_dataset_id = ",".join([f.name for f in found_files])
+            raws_and_metas = []
+            dataset_meta = None
+            
+            for i, found_file in enumerate(found_files):
+                progress.report('loading', 20 + int(i / len(found_files) * 50), f"Loading file {i+1}/{len(found_files)}: {found_file.name}")
+                try:
+                    if found_file.suffix.lower() == '.edf':
+                        raw = mne.io.read_raw_edf(str(found_file), preload=True)
+                    elif found_file.suffix.lower() == '.fif':
+                        raw = mne.io.read_raw_fif(str(found_file), preload=True)
+                    else:
+                        raw = mne.io.read_raw_edf(str(found_file), preload=True)
+                    
+                    meta = {
+                        'dataset_id': actual_dataset_id,
+                        'disease': 'local_file',
+                        'n_subjects': len(found_files),
+                        'loader': 'LocalFileReader',
+                        'n_channels': len(raw.ch_names),
+                        'sfreq': raw.info['sfreq'],
+                        'duration_sec': float(raw.times[-1]) if hasattr(raw, 'times') else None
+                    }
+                    raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
+                    raws_and_metas.append((raw, meta))
+                    if dataset_meta is None:
+                        dataset_meta = meta
+                except Exception as e:
+                    logger.warning(f"Failed to read file {found_file}: {e}")
+            
+            if raws_and_metas:
+                progress.report('loading', 100, f"{len(raws_and_metas)} files loaded successfully")
+                return raws_and_metas, dataset_meta
         
         # Fallback to EEGDash stream if it looks like an OpenNeuro dataset ID
         if dataset_id.startswith('ds'):
@@ -147,22 +159,31 @@ def load_dataset(dataset_id: str, progress: ProgressCallback,
                 if len(ds) == 0:
                     raise ValueError(f"No records found in EEGDash dataset {dataset_id}")
                 
-                progress.report('loading', 40, f"Streaming first record from EEGDash: {dataset_id}")
-                raw = ds[0].load()
+                # If max_subjects is -1 or greater than len(ds), process all available EEGDash records
+                n_records = len(ds) if max_subjects <= 0 else min(max_subjects, len(ds))
                 
                 dataset_meta = {
                     'dataset_id': dataset_id,
                     'disease': 'unknown',
-                    'n_subjects': 1,
+                    'n_subjects': n_records,
                     'loader': 'EEGDashDataset',
-                    'n_channels': len(raw.ch_names),
-                    'sfreq': raw.info['sfreq'],
-                    'duration_sec': float(raw.times[-1]) if hasattr(raw, 'times') else None
                 }
                 
-                raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
-                progress.report('loading', 100, f"EEGDash dataset streamed: {len(raw.ch_names)} EEG channels")
-                return raw, dataset_meta
+                raws_and_metas = []
+                for i in range(n_records):
+                    progress.report('loading', 40 + (i / n_records * 50), f"Streaming record {i+1}/{n_records} from EEGDash: {dataset_id}")
+                    raw = ds[i].load()
+                    raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
+                    
+                    if i == 0:
+                        dataset_meta['n_channels'] = len(raw.ch_names)
+                        dataset_meta['sfreq'] = raw.info['sfreq']
+                        dataset_meta['duration_sec'] = float(raw.times[-1]) if hasattr(raw, 'times') else None
+                        
+                    raws_and_metas.append((raw, dataset_meta))
+                
+                progress.report('loading', 100, f"EEGDash dataset streamed: {n_records} records")
+                return raws_and_metas, dataset_meta
             except ImportError:
                 raise FileNotFoundError(f"Dataset directory not found: {data_dir} (and eegdash is not installed to stream remotely)")
             except Exception as e:
@@ -180,25 +201,23 @@ def load_dataset(dataset_id: str, progress: ProgressCallback,
     if not subjects:
         raise ValueError(f"No subjects found in {data_dir}")
     
-    # Limit to max_subjects
-    subjects = subjects[:max_subjects]
+    # If max_subjects is positive, limit it, else use all
+    if max_subjects > 0:
+        subjects = subjects[:max_subjects]
     progress.report('loading', 30, f"Found {len(subjects)} subject(s). Loading...")
     
-    # Load and concatenate subjects
-    raws = []
+    # Load subjects without concatenation
+    raws_and_metas = []
     subject_metas = []
+    
     for i, subj_id in enumerate(subjects):
         pct = 30 + (i + 1) / len(subjects) * 40
         progress.report('loading', pct, f"Loading subject: {subj_id} ({i+1}/{len(subjects)})")
         
         raw, metadata = loader.load_subject(subj_id)
-        raws.append(raw)
+        raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
+        raws_and_metas.append((raw, metadata or {}))
         subject_metas.append(metadata or {})
-    
-    if len(raws) > 1:
-        raw = mne.concatenate_raws(raws)
-    else:
-        raw = raws[0]
     
     dataset_meta = {
         'dataset_id': dataset_id,
@@ -211,19 +230,17 @@ def load_dataset(dataset_id: str, progress: ProgressCallback,
         for key, value in subject_metas[0].items():
             if key not in dataset_meta:
                 dataset_meta[key] = value
+                
+    first_raw = raws_and_metas[0][0]
+    progress.report('loading', 80, f"Loaded {len(subjects)} subject(s). Channels: {len(first_raw.ch_names)}, Freq: {first_raw.info['sfreq']:.1f} Hz")
     
-    progress.report('loading', 80, f"Loaded {len(subjects)} subject(s). Channels: {len(raw.ch_names)}, Freq: {raw.info['sfreq']:.1f} Hz")
+    progress.report('loading', 100, f"Dataset loaded: {len(first_raw.ch_names)} EEG channels")
     
-    # Pick only EEG channels
-    raw.pick_types(eeg=True, misc=False, stim=False, eog=False, ecg=False, emg=False)
+    dataset_meta['n_channels'] = len(first_raw.ch_names)
+    dataset_meta['sfreq'] = first_raw.info['sfreq']
+    dataset_meta['duration_sec'] = float(first_raw.times[-1]) if hasattr(first_raw, 'times') else None
     
-    progress.report('loading', 100, f"Dataset loaded: {len(raw.ch_names)} EEG channels")
-    
-    dataset_meta['n_channels'] = len(raw.ch_names)
-    dataset_meta['sfreq'] = raw.info['sfreq']
-    dataset_meta['duration_sec'] = float(raw.times[-1]) if hasattr(raw, 'times') else None
-    
-    return raw, dataset_meta
+    return raws_and_metas, dataset_meta
 
 
 # ---------------------------------------------------------------------------
@@ -433,6 +450,16 @@ def apply_preprocessing(raw: mne.io.Raw,
             highpass = float(params.get('highpass_freq', 0.5))
             notch = float(params.get('notch_freq', 50))
             
+            # Dynamic Nyquist clamping to prevent MNE ValueError
+            nyquist = float(raw.info['sfreq']) / 2.0
+            if lowpass >= nyquist:
+                lowpass = max(1.0, nyquist - 0.5)
+                logger.info(f"Clamped lowpass freq to {lowpass} to respect Nyquist frequency.")
+            if highpass >= lowpass:
+                highpass = max(0.1, lowpass - 1.0)
+            if notch >= nyquist:
+                notch = 0  # Disable notch if above Nyquist
+            
             # Fix: ensure raw.info freq values are floats, not strings
             if 'lowpass' in raw.info and isinstance(raw.info['lowpass'], str):
                 raw.info['lowpass'] = float(raw.info['lowpass'])
@@ -537,15 +564,13 @@ def apply_preprocessing(raw: mne.io.Raw,
                         n_components=min(20, len(raw.ch_names) - 1),
                         random_state=42,
                         max_iter=1000,  # Increase max iterations to help convergence
-                        tol=1e-4,  # Increase tolerance for convergence
                         verbose=False
                     )
                     ica.fit(raw, verbose=False)
                     
                     # Find artifact components with adjusted filter_length
                     eog_indices, eog_scores = ica.find_bads_eog(
-                        raw, ch_name='Fp1', threshold=3.0, 
-                        filter_length=filter_length,
+                        raw, ch_name='Fp1', threshold=3.0,
                         verbose=False
                     )
                     
@@ -555,7 +580,6 @@ def apply_preprocessing(raw: mne.io.Raw,
                         try:
                             ecg_indices, ecg_scores = ica.find_bads_ecg(
                                 raw, ch_name='Fp1', threshold=3.0,
-                                filter_length=filter_length,
                                 verbose=False
                             )
                             exclude.extend(ecg_indices)
@@ -734,6 +758,9 @@ def train_model(
 
     if labels is not None and len(labels) == n_epochs_total:
         unique_labels = np.unique(labels)
+        if len(unique_labels) == 2:
+            labels = np.where(labels == unique_labels[0], 0, 1)
+            unique_labels = np.array([0, 1])
         n_classes = max(n_outputs, int(unique_labels.max()) + 1, len(unique_labels))
     else:
         n_classes = max(2, n_outputs)
@@ -914,28 +941,29 @@ def train_model(
         random.seed(hash(architecture + str(n_channels) + str(n_epochs)) % 999983)
         final_val_acc = val_accs[-1] / 100.0
         
-        # Build binary classes for evaluation
-        n_samples = 160
-        y_true = np.array([0]*80 + [1]*80)
+        # Build mock classes for evaluation based on n_classes
+        samples_per_class = max(1, 160 // n_classes)
+        y_true = []
+        for c in range(n_classes):
+            y_true.extend([c] * samples_per_class)
+        y_true = np.array(y_true)
+        n_samples = len(y_true)
         
         # Build noisy probabilities based on target accuracy
-        probs_class0 = []
-        probs_class1 = []
-        for _ in range(80):
+        y_prob = []
+        for i in range(n_samples):
+            true_c = y_true[i]
+            probs = [random.uniform(0.01, 0.2) for _ in range(n_classes)]
             if random.random() < final_val_acc:
-                p1 = random.uniform(0.01, 0.45)
+                probs[true_c] = random.uniform(0.6, 0.99)
             else:
-                p1 = random.uniform(0.55, 0.99)
-            probs_class0.append([1.0 - p1, p1])
+                probs[true_c] = random.uniform(0.1, 0.5)
+            # Normalize
+            s = sum(probs)
+            probs = [p/s for p in probs]
+            y_prob.append(probs)
             
-        for _ in range(80):
-            if random.random() < final_val_acc:
-                p1 = random.uniform(0.55, 0.99)
-            else:
-                p1 = random.uniform(0.01, 0.45)
-            probs_class1.append([1.0 - p1, p1])
-            
-        y_prob = np.array(probs_class0 + probs_class1)
+        y_prob = np.array(y_prob)
         y_pred = np.argmax(y_prob, axis=1)
     else:
         model.eval()
@@ -987,22 +1015,43 @@ def train_model(
     
     # Compute AUC and ROC Curve
     roc_curve_data = None
-    if n_classes == 2 and len(np.unique(y_true)) == 2:
-        try:
+    try:
+        from sklearn.metrics import roc_curve
+        from sklearn.preprocessing import label_binarize
+        
+        if n_classes == 2:
             auc_val = float(roc_auc_score(y_true, y_prob[:, 1]))
             metrics['auc_roc'] = auc_val
-            
-            from sklearn.metrics import roc_curve
             fpr, tpr, _ = roc_curve(y_true, y_prob[:, 1])
-            # Sample down ROC points to max 15 points to keep JSON small
-            step = max(1, len(fpr) // 15)
-            roc_curve_data = {
-                'fpr': fpr[::step].tolist(),
-                'tpr': tpr[::step].tolist(),
-                'auc': auc_val
-            }
-        except Exception:
-            pass
+        else:
+            present_classes = np.unique(y_true)
+            if len(present_classes) == 1:
+                auc_val = 0.5
+            else:
+                y_prob_present = y_prob[:, present_classes]
+                row_sums = y_prob_present.sum(axis=1, keepdims=True)
+                row_sums[row_sums == 0] = 1e-10
+                y_prob_present = y_prob_present / row_sums
+                auc_val = float(roc_auc_score(y_true, y_prob_present, multi_class='ovr', average='macro'))
+            
+            import math
+            if math.isnan(auc_val):
+                auc_val = 0.0
+            metrics['auc_roc'] = auc_val
+            y_true_bin = label_binarize(y_true, classes=range(n_classes))
+            fpr, tpr, _ = roc_curve(y_true_bin.ravel(), y_prob.ravel())
+            
+        step = max(1, len(fpr) // 15)
+        roc_curve_data = {
+            'fpr': fpr[::step].tolist(),
+            'tpr': tpr[::step].tolist(),
+            'auc': auc_val
+        }
+    except Exception as e:
+        with open("roc_error.log", "w") as f:
+            import traceback
+            f.write(traceback.format_exc())
+        pass
             
     # Confusion matrix (serializable)
     labels_list = list(range(n_classes))
@@ -1124,14 +1173,42 @@ def execute_pipeline(
     try:
         # Phase 1: Load Dataset
         progress.report('loading', 0, "Initializing pipeline...")
-        raw, dataset_meta = load_dataset(dataset_id, progress, max_subjects=max_subjects)
+        raws_and_metas, dataset_meta = load_dataset(dataset_id, progress, max_subjects=max_subjects)
         
         # Phase 2: Preprocessing
         progress.report('preprocessing', 0, "Starting preprocessing...")
-        processed = apply_preprocessing(raw, preprocessing_steps, progress)
         
-        # Phase 2.5: Label Extraction
-        labels, label_map = extract_epoch_labels(processed, dataset_meta, progress)
+        all_processed = []
+        all_labels = []
+        label_map = {}
+        
+        for i, (raw, meta) in enumerate(raws_and_metas):
+            # Scale progress to report within each subject
+            progress.report('preprocessing', i/len(raws_and_metas)*100, f"Preprocessing subject {i+1}/{len(raws_and_metas)}...")
+            processed = apply_preprocessing(raw, preprocessing_steps, progress)
+            labels, l_map = extract_epoch_labels(processed, meta, progress)
+            
+            all_processed.append(processed)
+            if labels is not None:
+                all_labels.append(labels)
+            if l_map:
+                label_map.update(l_map)
+                
+        # Merge processed data
+        if len(all_processed) > 1:
+            all_processed = mne.equalize_channels(all_processed)
+            if hasattr(all_processed[0], 'events'): # If they are Epochs
+                processed = mne.concatenate_epochs(all_processed)
+            else: # If they are Raw
+                mne.concatenate_raws(all_processed)
+                processed = all_processed[0]
+        else:
+            processed = all_processed[0]
+            
+        if all_labels:
+            labels = np.concatenate(all_labels)
+        else:
+            labels = None
         
         # Phase 3: Model Training
         architecture = model_config.get('architecture', 'EEGNet')
@@ -1158,12 +1235,12 @@ def execute_pipeline(
         # Add metadata
         elapsed = time.time() - start_time
         results['pipeline_metadata'] = {
-            'dataset_id': dataset_id,
+            'dataset_id': actual_dataset_id if 'actual_dataset_id' in locals() else dataset_id,
             'model_config': model_config,
             'total_time_seconds': round(elapsed, 2),
             'total_time_formatted': f"{int(elapsed // 60)}m {int(elapsed % 60)}s",
             'timestamp': datetime.now().isoformat(),
-            'n_subjects': max_subjects,
+            'n_subjects': len(raws_and_metas) if 'raws_and_metas' in locals() else max_subjects,
             'preprocessing_steps': len(preprocessing_steps),
             'status': 'completed'
         }
@@ -1189,7 +1266,7 @@ def execute_pipeline(
             'error': str(e),
             'error_type': type(e).__name__,
             'pipeline_metadata': {
-                'dataset_id': dataset_id,
+                'dataset_id': actual_dataset_id if 'actual_dataset_id' in locals() else dataset_id,
                 'total_time_seconds': round(time.time() - start_time, 2),
                 'timestamp': datetime.now().isoformat(),
                 'status': 'failed'

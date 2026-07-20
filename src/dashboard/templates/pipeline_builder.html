@@ -376,7 +376,7 @@ var NODE_TEMPLATES={
     type:'dataset',title:'Dataset Config',
     fields:[
       {name:'source',label:'Dataset Source',value:'EEGDash Stream',type:'select',options:['EEGDash Stream','Local File']},
-      {name:'local_file',label:'Upload Local File',value:'',type:'file'},
+      {name:'local_file',label:'Upload Local File(s)',value:'',type:'file', multiple:true},
       {name:'dataset_id',label:'EEGDash Dataset',value:'adhd200',type:'select',options:['adhd200','tuh_eeg','chb_mit','helsinki_neonatal','sleep_edf']},
       {name:'n_chans',label:'Num Channels',value:'129',type:'number'},
       {name:'sfreq',label:'Sampling Freq (Hz)',value:'100',type:'number'},
@@ -512,8 +512,29 @@ function addNode(type,x,y){
       var sel=document.getElementById(id).querySelector('[data-field="dataset_id"]');
       if(sel)sel.addEventListener('change',function(){fetchDatasetDimensions(id,sel.value);});
 
-      var sourceSel=document.getElementById(id).querySelector('[data-field="source"]');
       var localFileWrap=document.getElementById(id).querySelector('[data-field-wrapper="local_file"]');
+      var localFileInput=document.getElementById(id).querySelector('[data-field="local_file"]');
+      if (localFileInput) {
+        localFileInput.addEventListener('change', function(e) {
+          if (localFileInput.files && localFileInput.files.length > 0) {
+            var formData = new FormData();
+            formData.append('file', localFileInput.files[0]);
+            fetch('/api/parse-eeg', {
+              method: 'POST',
+              body: formData
+            }).then(r => r.json()).then(d => {
+              if (d.status === 'success' && d.sfreq) {
+                var sf=document.getElementById(id).querySelector('[data-field="sfreq"]');
+                var ch=document.getElementById(id).querySelector('[data-field="n_chans"]');
+                if(sf) sf.value = d.sfreq;
+                if(ch) ch.value = d.n_channels;
+                adjustFilterForSfreq(d.sfreq);
+              }
+            }).catch(e => console.error(e));
+          }
+        });
+      }
+      var sourceSel=document.getElementById(id).querySelector('[data-field="source"]');
       var datasetIdWrap=document.getElementById(id).querySelector('[data-field-wrapper="dataset_id"]');
       
       function updateVisibility(){
@@ -604,8 +625,35 @@ function fetchDatasetDimensions(nodeId,name){
       var ch=el.querySelector('[data-field="n_chans"]');
       var sf=el.querySelector('[data-field="sfreq"]');
       if(ch&&ds.n_channels)ch.value=ds.n_channels;
-      if(sf&&ds.sfreq)sf.value=ds.sfreq;
+      if(sf&&ds.sfreq) {
+        sf.value=ds.sfreq;
+        adjustFilterForSfreq(ds.sfreq);
+      }
     }).catch(function(){});
+}
+
+function adjustFilterForSfreq(sfreq) {
+  var sf = parseFloat(sfreq);
+  if (isNaN(sf) || sf <= 0) return;
+  var maxFreq = (sf / 2) - 1; // slightly below Nyquist
+  if (maxFreq < 1) return;
+  
+  var tempFilterNode = nodes.find(function(n) { return n.type === 'preprocess_step2'; });
+  if (tempFilterNode) {
+    var lowpassField = tempFilterNode.fields.find(function(f) { return f.name === 'lowpass_freq'; });
+    if (lowpassField) {
+      var currentLow = parseFloat(lowpassField.value);
+      if (isNaN(currentLow) || currentLow > maxFreq) {
+        lowpassField.value = maxFreq.toString();
+        var el = document.getElementById(tempFilterNode.id);
+        if (el) {
+          var input = el.querySelector('[data-field="lowpass_freq"]');
+          if (input) input.value = maxFreq.toString();
+        }
+        showAlert('Adjusted Lowpass Cutoff Freq to ' + maxFreq + ' Hz to satisfy Nyquist frequency for sfreq ' + sf + ' Hz', 'info');
+      }
+    }
+  }
 }
 
 function handleSplitModeChange(nodeId,mode){
@@ -997,7 +1045,15 @@ function runExperiment(nodeId){
   if (sourceVal === 'Local File') {
     var fileInput = datasetEl.querySelector('[data-field="local_file"]');
     if (fileInput && fileInput.files && fileInput.files.length > 0) {
-      datasetId = fileInput.files[0].name;
+      datasetId = Array.from(fileInput.files).map(function(f){ return f.name; }).join(',');
+    } else {
+      var savedId = datasetEl.dataset.savedVal || datasetEl.querySelector('[data-field="dataset_id"]').value;
+      if (savedId && savedId !== 'unknown' && savedId !== '') {
+        datasetId = savedId;
+      } else {
+        showAlert('Please select local files to upload before running.', 'danger');
+        return;
+      }
     }
   } else {
     datasetId = datasetEl.querySelector('[data-field="dataset_id"]').value;
@@ -1007,8 +1063,15 @@ function runExperiment(nodeId){
   var n_outputs=parseInt(modelEl.querySelector('[data-field="n_outputs"]').value)||2;
   var n_epochs=parseInt(modelEl.querySelector('[data-field="n_epochs"]').value)||5;
   var batch_size=parseInt(modelEl.querySelector('[data-field="batch_size"]').value)||32;
-  var n_chans=129;
-  var sfreq=100;
+  
+  var n_chans = parseInt(datasetEl.querySelector('[data-field="n_chans"]').value) || 0;
+  var sfreq = parseFloat(datasetEl.querySelector('[data-field="sfreq"]').value) || 0;
+  
+  // We allow n_chans and sfreq to be 0 or invalid here because the backend 
+  // will rigorously extract and overwrite them with the true values upon execution.
+  if (n_chans === 0) n_chans = 64; // Safe fallback for backend payload
+  if (sfreq === 0) sfreq = 250;
+  
   var n_times=Math.floor(sfreq*2);
 
   var payload={
@@ -1025,6 +1088,7 @@ function runExperiment(nodeId){
       return{id:n.id,type:n.type,title:n.title,fields:fields,inputs:n.inputs,outputs:n.outputs,x:n.x,y:n.y};
     }),connections:connections.map(function(c){return{from:c.from,to:c.to};})},
     dataset_id:datasetId,
+    project_name: globalProjectName,
     model_config:{architecture:architecture,n_chans:n_chans,n_times:n_times,n_outputs:n_outputs,sfreq:sfreq,batch_size:batch_size,n_epochs:n_epochs}
   };
 
@@ -1054,10 +1118,30 @@ function runExperiment(nodeId){
 
   showRunMsg('🚀 Sending pipeline request...','#58a6ff');
 
+  var formData = new FormData();
+  formData.append('payload', JSON.stringify(payload));
+  
+  if (datasetEl.querySelector('[data-field="source"]').value === 'Local File') {
+    var fileInput = datasetEl.querySelector('[data-field="local_file"]');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+      for (var i = 0; i < fileInput.files.length; i++) {
+        formData.append('files', fileInput.files[i]);
+      }
+    } else {
+      var savedId = datasetEl.dataset.savedVal || datasetEl.querySelector('[data-field="dataset_id"]').value;
+      if (savedId && savedId !== 'local_file.edf') {
+         showAlert('Browser security cleared the file input. Please re-select the file "' + savedId + '" before running.', 'warning');
+      } else {
+         showAlert('Please select a local file to upload before running the pipeline.', 'warning');
+      }
+      finishRun();
+      return;
+    }
+  }
+
   fetch('/api/run-pipeline',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
+    body: formData
   }).then(function(r){return r.json();}).then(function(d){
     if(d.status==='queued'){
       showRunMsg('✅ Pipeline queued (ID: '+d.run_id+')','#7ee787');
@@ -1149,7 +1233,8 @@ function showResults(results){
     {k:'balanced_accuracy',l:'Balanced',c:'#17a2b8'},
     {k:'f1_score',l:'F1 Score',c:'#ffc107'},
     {k:'precision',l:'Precision',c:'#007bff'},
-    {k:'recall',l:'Recall',c:'#6610f2'}
+    {k:'recall',l:'Recall',c:'#6610f2'},
+    {k:'auc_roc',l:'AUC ROC',c:'#fd7e14'}
   ];
   items.forEach(function(it){
     var v=metrics[it.k];
@@ -1194,7 +1279,13 @@ function clearCanvas(){
   if(eventSource){eventSource.close();eventSource=null;}
 }
 
+var globalProjectName = "My EEG Project";
+
 function generateDefaultPipeline(){
+  var projectName = prompt("Enter a Project Name for this pipeline:", globalProjectName);
+  if (projectName === null) return; // User cancelled
+  globalProjectName = projectName;
+  
   nodes=[];connections=[];
   document.querySelectorAll('.node').forEach(function(n){n.remove();});
   svg.innerHTML='';
@@ -1206,7 +1297,7 @@ function generateDefaultPipeline(){
   var cols=Math.max(1,Math.floor((aw+hGap)/(nw+hGap)));
 
   var pn=[
-    {type:'dataset',title:'Dataset'},
+    {type:'dataset',title:'Dataset Config'},
     {type:'preprocess_step2',title:'1. Temporal Filtering'},
     {type:'preprocess_step3',title:'2. Downsampling'},
     {type:'preprocess_step4',title:'3. Bad Channel Detection'},
@@ -1330,8 +1421,17 @@ canvas.addEventListener('drop',function(e){
     var cr=canvas.getBoundingClientRect();
     var x=e.clientX-cr.left-140;
     var y=e.clientY-cr.top-40;
-    if(nt==='preprocess'){addPreprocessingPipeline(x,y);}
-    else{addNode(nt,x,y);}
+    if(nt==='preprocess'){
+      addPreprocessingPipeline(x,y);
+    } else if (nt === 'dataset') {
+      var projectName = prompt("Enter a Project Name for this dataset:", globalProjectName);
+      if (projectName !== null) {
+          globalProjectName = projectName;
+      }
+      addNode(nt,x,y);
+    } else {
+      addNode(nt,x,y);
+    }
   }
 });
 
@@ -1458,6 +1558,31 @@ function loadGraph(graph) {
 
 // ── AUTO-RUN BY URL QUERY / LOCALSTORAGE ───────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  var savedRunStr = localStorage.getItem('selected_pipeline_run');
+  if (savedRunStr) {
+    localStorage.removeItem('selected_pipeline_run');
+    try {
+      var savedRun = JSON.parse(savedRunStr);
+      if (savedRun.project_name) globalProjectName = savedRun.project_name;
+      loadGraph(savedRun.graph);
+      
+      // Also show results if present
+      if (savedRun.results) {
+        // We delay showing results so UI has time to render
+        setTimeout(function() {
+          showResults(savedRun.results);
+          document.getElementById('runStatusBadge').textContent = '✅ Completed (Loaded)';
+          document.getElementById('runStatusBadge').className = 'badge bg-success';
+        }, 500);
+      }
+      
+      showAlert('Pipeline state loaded successfully.', 'success');
+      return;
+    } catch(e) {
+      console.error('Failed to load run:', e);
+    }
+  }
+
   var savedGraph = localStorage.getItem('selected_pipeline_graph');
   if (savedGraph) {
     localStorage.removeItem('selected_pipeline_graph');

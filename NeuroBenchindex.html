@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>NeuroBench Studio: An Open-Source Platform for Reproducible EEG AI and Benchmarking (Beta)</title>
+  <meta name="description" content="NeuroBench Studio is an open-source platform for reproducible EEG AI, benchmarking, visual drag-and-drop neural network pipeline building, and ChatGPT-like brainwave analytics.">
+  
+  <!-- Curated Typography & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <style>
+    :root {
+      --bg-dark: #090b11;
+      --bg-card: #111422;
+      --border-color: rgba(255, 255, 255, 0.05);
+      --primary: #8a2be2;
+      --primary-glow: rgba(138, 43, 226, 0.4);
+      --secondary: #00f2fe;
+      --secondary-glow: rgba(0, 242, 254, 0.3);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --gradient-main: linear-gradient(135deg, #8a2be2 0%, #4a00e0 50%, #00f2fe 100%);
+      --gradient-text: linear-gradient(135deg, #fff 30%, #00f2fe 100%);
+      --shadow: 0 10px 30px rgba(0, 242, 254, 0.1);
+      --nav-bg: rgba(9, 11, 17, 0.7);
+    }
+
+    body.light-theme {
+      --bg-dark: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --primary-glow: rgba(138, 43, 226, 0.15);
+      --secondary-glow: rgba(0, 242, 254, 0.15);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --gradient-text: linear-gradient(135deg, #0f172a 30%, #4a00e0 100%);
+      --shadow: 0 10px 30px rgba(138, 43, 226, 0.08);
+      --nav-bg: rgba(248, 250, 252, 0.8);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1, h2, h3, h4, .brand-font {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+    }
+
+    /* Floating Bottom Navigation Bar for Mobile/Tablet */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-color);
+      display: none;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 500;
+      gap: 0.2rem;
+      transition: color 0.3s;
+      padding: 0.35rem 0.5rem;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .bottom-nav-item i {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+
+    .bottom-nav-item.active, .bottom-nav-item:active,
+    .bottom-nav-item.active i, .bottom-nav-item:active i {
+      color: var(--primary);
+    }
+
+    /* Glassmorphic Navbar */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 1.4rem;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+      background: var(--gradient-main);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .btn-nav-download {
+      background: rgba(138, 43, 226, 0.1);
+      border: 1px solid var(--primary);
+      color: var(--primary) !important;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      transition: all 0.3s;
+    }
+
+    .btn-nav-download:hover {
+      background: var(--primary);
+      color: #fff !important;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .btn-theme-toggle {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      font-size: 1.1rem;
+      transition: all 0.3s;
+    }
+
+    .btn-theme-toggle:hover {
+      background: rgba(138, 43, 226, 0.08);
+      border-color: var(--primary);
+    }
+
+    /* Hero Section with Glowing Background */
+    .hero {
+      position: relative;
+      padding: 10rem 2rem 6rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      background: var(--primary-glow);
+      filter: blur(150px);
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 10%;
+      left: 30%;
+      width: 300px;
+      height: 300px;
+      background: var(--secondary-glow);
+      filter: blur(120px);
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    .hero-tagline {
+      background: rgba(138, 43, 226, 0.08);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 1.2rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hero h1 {
+      font-size: 3.8rem;
+      line-height: 1.15;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin-bottom: 3rem;
+    }
+
+    .download-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .download-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.8rem;
+      flex: 1;
+      min-width: 250px;
+      text-align: left;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .download-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .download-card i.os-icon {
+      font-size: 2.2rem;
+      color: var(--text-main);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .download-card h3 {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      margin-bottom: 0.3rem;
+    }
+
+    .download-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-download-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--gradient-main);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      justify-content: center;
+      transition: opacity 0.3s;
+      touch-action: manipulation;
+    }
+
+    .btn-download-action:hover {
+      opacity: 0.9;
+    }
+
+    /* Features Section */
+    .features-section {
+      padding: 6rem 2rem;
+      background: rgba(138, 43, 226, 0.01);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(138, 43, 226, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(138, 43, 226, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-icon-wrapper i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .feature-card h3 {
+      font-size: 1.4rem;
+      color: var(--text-main);
+      margin-bottom: 0.8rem;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Spec / Preview Section */
+    .preview-section {
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .preview-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 4rem 3rem;
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .preview-text {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .preview-text h2 {
+      font-size: 2.2rem;
+      color: var(--text-main);
+      margin-bottom: 1.5rem;
+    }
+
+    .preview-text ul {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .preview-text li {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .preview-text li i {
+      color: var(--primary);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .preview-graphic {
+      flex: 1;
+      min-width: 300px;
+      background: rgba(138, 43, 226, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .code-line {
+      font-family: monospace;
+      color: var(--primary);
+      font-size: 0.9rem;
+      word-break: break-all;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 4rem 2rem;
+      background: rgba(0,0,0,0.02);
+      text-align: center;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .footer-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* === RESPONSIVE BREAKPOINTS === */
+
+    /* Tablet and smaller */
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 70px;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      .bottom-nav-item:hover {
+        color: var(--text-muted);
+      }
+      .bottom-nav-item:hover i {
+        color: var(--text-muted);
+      }
+      .bottom-nav-item:active,
+      .bottom-nav-item:active i {
+        color: var(--primary);
+      }
+      .bottom-nav-item.active,
+      .bottom-nav-item.active i {
+        color: var(--primary);
+      }
+      .nav-links li:not(:nth-last-child(2)) {
+        display: none;
+      }
+      .logo span span {
+        display: none !important;
+      }
+      .nav-container {
+        padding: 1rem 1.2rem;
+      }
+      .hero {
+        padding: 7rem 1rem 4rem;
+        min-height: auto;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .hero p {
+        font-size: 1rem;
+      }
+      .hero-tagline {
+        font-size: 0.75rem;
+        padding: 0.35rem 1rem;
+      }
+      .download-grid {
+        gap: 1rem;
+      }
+      .download-card {
+        padding: 1.2rem;
+        min-width: 200px;
+      }
+      .features-section {
+        padding: 4rem 1rem;
+      }
+      .section-header {
+        margin-bottom: 2.5rem;
+      }
+      .section-header h2 {
+        font-size: 1.8rem;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .feature-card {
+        padding: 1.8rem;
+      }
+      .preview-card {
+        padding: 2rem 1.5rem;
+        gap: 2rem;
+      }
+      .preview-text h2 {
+        font-size: 1.8rem;
+      }
+      .preview-text {
+        min-width: 100%;
+      }
+      .preview-graphic {
+        min-width: 100%;
+      }
+      .preview-section {
+        padding: 3rem 1rem;
+      }
+      footer {
+        padding: 3rem 1.5rem;
+      }
+    }
+
+    /* Small phones (480px and below) */
+    @media (max-width: 480px) {
+      .nav-container {
+        padding: 0.8rem 0.8rem;
+      }
+      .logo {
+        font-size: 1.1rem;
+        gap: 0.5rem;
+      }
+      .logo i {
+        font-size: 1.4rem;
+      }
+      .btn-theme-toggle {
+        width: 34px;
+        height: 34px;
+        font-size: 0.95rem;
+        padding: 0.4rem;
+      }
+      .btn-nav-download {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+      }
+      .nav-links {
+        gap: 1rem;
+      }
+      .hero h1 {
+        font-size: 1.75rem;
+      }
+      .hero p {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+      .hero {
+        padding: 6rem 0.75rem 3rem;
+      }
+      .download-grid {
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+      .download-card {
+        min-width: 0;
+        padding: 1rem;
+      }
+      .download-card i.os-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.6rem;
+      }
+      .download-card h3 {
+        font-size: 1.1rem;
+      }
+      .download-card p {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .btn-download-action {
+        font-size: 0.82rem;
+        padding: 0.65rem;
+      }
+      .features-section {
+        padding: 3rem 0.75rem;
+      }
+      .section-header h2 {
+        font-size: 1.5rem;
+      }
+      .section-header p {
+        font-size: 0.9rem;
+      }
+      .feature-card {
+        padding: 1.4rem;
+        border-radius: 16px;
+      }
+      .feature-card h3 {
+        font-size: 1.15rem;
+      }
+      .feature-card p {
+        font-size: 0.85rem;
+      }
+      .feature-icon-wrapper {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 1rem;
+      }
+      .feature-icon-wrapper i {
+        font-size: 1.25rem;
+      }
+      .preview-card {
+        padding: 1.5rem 1rem;
+        border-radius: 18px;
+      }
+      .preview-text h2 {
+        font-size: 1.5rem;
+      }
+      .preview-text li {
+        font-size: 0.85rem;
+        gap: 0.6rem;
+      }
+      .preview-graphic {
+        padding: 1.2rem;
+      }
+      .code-line {
+        font-size: 0.78rem;
+      }
+      .preview-section {
+        padding: 2rem 0.75rem;
+      }
+      .preview-card[style*="padding: 3rem"] {
+        padding: 1.5rem 1rem !important;
+      }
+      .preview-card pre {
+        font-size: 0.7rem;
+        padding: 0.8rem !important;
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      .preview-card div[style*="font-family: monospace"] {
+        font-size: 0.75rem !important;
+        padding: 1rem !important;
+        word-break: break-all;
+      }
+      footer {
+        padding: 2rem 1rem;
+      }
+      .footer-text {
+        font-size: 0.7rem;
+      }
+      .bottom-nav {
+        height: 58px;
+      }
+      .bottom-nav-item {
+        font-size: 0.6rem;
+        gap: 0.15rem;
+        padding: 0.25rem 0.4rem;
+      }
+      .bottom-nav-item i {
+        font-size: 1.1rem;
+      }
+    }
+
+    /* Very small screens (360px) */
+    @media (max-width: 360px) {
+      .hero h1 {
+        font-size: 1.5rem;
+      }
+      .logo {
+        font-size: 0.95rem;
+      }
+      .btn-nav-download {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.72rem;
+      }
+    }
+  </style>
+</head>
+<body class="light-theme">
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <i class="bi bi-brain"></i>
+        <span>NeuroBench Studio <span style="font-size: 0.65rem; padding: 0.2rem 0.5rem; background: rgba(138, 43, 226, 0.2); border: 1px solid var(--primary); border-radius: 50px; color: var(--primary); font-family: sans-serif; font-weight: 600; vertical-align: middle; margin-left: 0.3rem;">BETA</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#demos">Showcases</a></li>
+        <li><a href="#about">About</a></li>
+        <li>
+          <button class="btn-theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+            <i class="bi bi-moon-stars" id="theme-icon"></i>
+          </button>
+        </li>
+        <li><a href="#downloads" class="btn-nav-download">Download Platform</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Floating Bottom Navigation for Mobile/Tablet -->
+  <div class="bottom-nav">
+    <a href="#home" class="bottom-nav-item active" onclick="setActiveNav(this)">
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+    <a href="#features" class="bottom-nav-item" onclick="setActiveNav(this)">
+      <i class="bi bi-grid"></i>
+      <span>Features</span>
+    </a>
+    <a href="#demos" class="bottom-nav-item" onclick="setActiveNav(this)">
+      <i class="bi bi-play-circle"></i>
+      <span>Showcases</span>
+    </a>
+    <a href="#downloads" class="bottom-nav-item" onclick="setActiveNav(this)">
+      <i class="bi bi-download"></i>
+      <span>Download</span>
+    </a>
+  </div>
+
+  <!-- Hero Section -->
+  <main class="hero" id="home">
+    <div class="hero-tagline">
+      <i class="bi bi-cpu"></i> Zero-Code EEG Intelligence (Beta)
+    </div>
+    <h1>Vibe Coding for EEG — Visual MLOps for Conversational AI EEG Model Training</h1>
+    <p>
+      Democratize EEG deep learning by providing a unified platform that combines EEGDash dataset streaming, Braindecode foundation models, and an intuitive MLOps pipeline builder accessible to neuroscientists, clinicians, and machine learning researchers.
+    </p>
+
+    <!-- Downloads Grid -->
+    <div class="download-grid" id="downloads">
+      <!-- Windows -->
+      <div class="download-card">
+        <i class="bi bi-windows os-icon"></i>
+        <h3>Windows Desktop</h3>
+        <p>Supports Windows 10/11 (x64) with native MNE bindings.</p>
+        <a href="downloads/NeuroBench_Studio_Setup.exe" class="btn-download-action">
+          <i class="bi bi-download"></i> Download setup.exe
+        </a>
+      </div>
+
+      <!-- macOS -->
+      <div class="download-card">
+        <i class="bi bi-apple os-icon"></i>
+        <h3>macOS Desktop</h3>
+        <p>Compatible with Intel and Apple Silicon (M1/M2/M3) chips.</p>
+        <a href="downloads/NeuroBench_Studio.dmg" class="btn-download-action" style="margin-bottom: 0.5rem;">
+          <i class="bi bi-download"></i> Download .dmg installer
+        </a>
+        <a href="downloads/NeuroBench_Studio.pkg" class="btn-download-action" style="background: rgba(138,43,226,0.05); border: 1px solid rgba(138,43,226,0.1); color: var(--primary);">
+          <i class="bi bi-download"></i> Download .pkg bundle
+        </a>
+      </div>
+
+      <!-- Linux / Source -->
+      <div class="download-card">
+        <i class="bi bi-terminal os-icon"></i>
+        <h3>Linux / Source</h3>
+        <p>Standalone app bundle and repository setup scripts.</p>
+        <a href="https://github.com/gel1has3/NeuroBench_Studio" class="btn-download-action">
+          <i class="bi bi-git"></i> Clone Repository
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Built for Researchers & Clinicians</h2>
+        <p>Empower your clinical investigations with visual data engineering and deep learning models.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Visual Pipeline Builder -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="bi bi-sliders"></i>
+          </div>
+          <h3>MLOps Pipeline Canvas</h3>
+          <p>Drag-and-drop datasets, temporal bandpass filters, re-referencing nodes, split strategies, and deep models. Adjust, re-run, and compare metrics instantly.</p>
+        </div>
+
+        <!-- Conversational EEG Assistant -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="bi bi-chat-left-text"></i>
+          </div>
+          <h3>Conversational AI</h3>
+          <p>An NLP-to-pipeline chat interface that answers signal quality questions, builds preprocessing routines, and generates dynamic multi-channel charts (e.g. <i>"Visualize eeg1 live"</i>, <i>"Is this patient epilepsy positive?"</i>, <i>"How long is the EEG recording?"</i>, etc.).</p>
+        </div>
+
+        <!-- Real-Time 4-Panel Player -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">
+            <i class="bi bi-activity"></i>
+          </div>
+          <h3>Live EEG Stream Player</h3>
+          <p>Downsamples raw waves to 32 Hz for lightweight rendering of records up to 1 hour, alongside 2D topographic power heatmaps and FFT brain metrics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Showcases Section -->
+  <section class="features-section" id="demos" style="border-top: 1px solid var(--border-color); padding-top: 4rem;">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Interactive Platform Showcases</h2>
+        <p>Watch short 1-3 minute screen recordings showing NeuroBench Studio in action.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Demo 1: Pipeline Canvas -->
+        <div class="feature-card" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-sliders"></i>
+            </div>
+            <h3 style="font-size: 1.25rem;">MLOps Pipeline Canvas</h3>
+            <p style="font-size: 0.85rem; margin-bottom: 1rem;">Visual drag-and-drop neural network training and validation pipeline assembly.</p>
+          </div>
+          <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: #000; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+            <video controls playsinline webkit-playsinline preload="auto" style="width: 100%; height: 100%; display: block; object-fit: cover;">
+              <source src="PipelineBuilder.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        <!-- Demo 2: Conversational AI -->
+        <div class="feature-card" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-chat-left-text"></i>
+            </div>
+            <h3 style="font-size: 1.25rem;">Conversational AI Assistant</h3>
+            <p style="font-size: 0.85rem; margin-bottom: 1rem;">Natural language querying of signal quality and real-time report generation.</p>
+          </div>
+          <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: #000; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+            <video controls playsinline webkit-playsinline preload="auto" style="width: 100%; height: 100%; display: block; object-fit: cover;">
+              <source src="EEGConversationalAI.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        <!-- Demo 3: Live EEG Player -->
+        <div class="feature-card" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <div class="feature-icon-wrapper">
+              <i class="bi bi-activity"></i>
+            </div>
+            <h3 style="font-size: 1.25rem;">Live EEG Stream Player</h3>
+            <p style="font-size: 0.85rem; margin-bottom: 1rem;">Downsampled multi-channel wave visualization with interactive 2D scalp maps.</p>
+          </div>
+          <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: #000; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+            <video controls playsinline webkit-playsinline preload="auto" style="width: 100%; height: 100%; display: block; object-fit: cover;">
+              <source src="LiveEEGStreaming.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spec / Details Section -->
+  <section class="preview-section" id="about">
+    <div class="preview-card">
+      <div class="preview-text">
+        <h2>State-of-the-Art Deep Learning</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">
+          Deploy 14 foundation neural network checkpoints instantly. Compare performance metrics on your local datasets or streams from EEGDash.
+        </p>
+        <ul>
+          <li><i class="bi bi-check2-circle"></i> Supports 10+ foundation models in the EEG Assistant, and 60+ models in the drag-and-drop pipeline builder</li>
+          <li><i class="bi bi-check2-circle"></i> Dynamic ROC-AUC curves and training curve visualization</li>
+          <li><i class="bi bi-check2-circle"></i> Cohen's Kappa, Sensitivity, Specificity, and balanced accuracy metrics</li>
+        </ul>
+      </div>
+      <div class="preview-graphic">
+        <div class="code-line">// Instantiating model wrapper</div>
+        <div class="code-line" style="color: #8a2be2;">from braindecode.models import EEGNet</div>
+        <div class="code-line" style="color: var(--text-main);">model = EEGNet(n_chans=129, n_outputs=2)</div>
+        <div class="code-line" style="color: var(--text-muted);">// Auto-tuned preprocessing parameters applied.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Citation Section -->
+  <section class="preview-section" id="citation" style="padding-top: 2rem;">
+    <div class="section-header">
+      <h2>How to Cite</h2>
+      <p>If you use NeuroBench Studio in your research or clinical trials, please cite it as follows:</p>
+    </div>
+    <div class="preview-card" style="display: flex; flex-direction: column; gap: 2rem; align-items: stretch; padding: 3rem;">
+      <div>
+        <h4 style="color: var(--text-main); margin-bottom: 1rem;"><i class="bi bi-file-earmark-text me-2 text-primary"></i>APA / IEEE Format</h4>
+        <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 12px; font-family: monospace; font-size: 0.9rem; color: var(--text-main); position: relative;">
+          Tegenaw, G. S., Delanty, N., & Ward, T. (2026). NeuroBench Studio: An Open-Source Platform for Reproducible EEG AI and Benchmarking. Powered by Neuro-Insight, Insight, and DCU. EU H2020 Marie Skłodowska-Curie Grant No. 101034252.
+        </div>
+      </div>
+      <div>
+        <h4 style="color: var(--text-main); margin-bottom: 1rem;"><i class="bi bi-code-slash me-2 text-primary"></i>BibTeX Format</h4>
+        <pre style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 12px; font-family: monospace; font-size: 0.85rem; color: var(--text-muted); overflow-x: auto; margin: 0;">@misc{tegenaw2026neurobench,
+  title={NeuroBench Studio: An Open-Source Platform for Reproducible EEG AI and Benchmarking},
+  author={Tegenaw, Geletaw Sahle and Delanty, Norman and Ward, Tomas},
+  year={2026},
+  note={EU Horizon 2020 Marie Sk{\l}odowska-Curie Grant No. 101034252. Powered by Neuro-Insight, Insight, and DCU}
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <a href="#" class="logo" style="margin-bottom: 1rem;">
+        <i class="bi bi-brain"></i>
+        <span>NeuroBench Studio</span>
+      </a>
+      <p class="footer-text" style="max-width: 800px; margin: 0 auto; font-size: 0.8rem; line-height: 1.6; opacity: 0.85;">
+        NeuroBench Studio: An Open-Source Platform for Reproducible EEG AI and Benchmarking powered by Neuro-Insight, Insight, and DCU. 
+        European Union's Horizon 2020 research and innovation programme under the Marie Sklodowska-Curie grant agreement No 101034252. 
+        By Geletaw Sahle Tegenaw (Ph.D), Prof Norman Delanty, and Prof Tomas Ward. Collaborator Prof. Robert Whelan.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const icon = document.getElementById('theme-icon');
+      
+      body.classList.toggle('light-theme');
+      
+      if (body.classList.contains('light-theme')) {
+        icon.className = 'bi bi-sun';
+        localStorage.setItem('theme', 'light');
+      } else {
+        icon.className = 'bi bi-moon-stars';
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    function setActiveNav(element) {
+      document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      element.classList.add('active');
+    }
+
+    // Load saved theme on load (defaults to light)
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.remove('light-theme');
+        document.getElementById('theme-icon').className = 'bi bi-moon-stars';
+      } else {
+        document.body.classList.add('light-theme');
+        document.getElementById('theme-icon').className = 'bi bi-sun';
+      }
+    });
+  </script>
+
+</body>
+</html>

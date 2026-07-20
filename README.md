@@ -1,6 +1,8 @@
 # NeuroBench Studio — EEG Foundation Model Platform
+Project link: https://neurobenchstudio.github.io/#
+Paper Link: will be available soon
 
-A comprehensive platform for EEG foundation model research, providing tools for **dataset exploration**, **braindecode model discovery**, and **visual pipeline building** for both coders and non-coders.
+NeuroBench Studio platform for EEG foundation model research, featuring a **conversational EEG AI Assistant** equipped with a Cascading Fallback Router, and an intuitive **visual MLOps pipeline builder**. These tools empower both coders and non-coders to seamlessly explore datasets, discover braindecode models, and orchestrate complex deep learning workflows without writing a single line of code.
 
 ## Core Mission
 
@@ -220,6 +222,11 @@ Renders a 4-panel animated player inside the chat. The backend dynamically downs
 
 ### Nyquist-Aware Filtering
 The preprocessing engine auto-adjusts bandpass filter cutoffs to respect the Nyquist frequency of each uploaded file. Files with low sampling rates (e.g. 64 Hz) are safely filtered at the maximum allowable frequency (`sfreq/2 - 0.5`) instead of crashing.
+
+### Cascading Fallback Router
+To balance computational efficiency with robust natural language understanding, the assistant implements a hybrid **Cascading Fallback Router**:
+- **Heuristic Rule-Based Engine (Primary Layer):** A zero-latency engine that instantly parses highly deterministic clinical keywords.
+- **Semantic Router (Secondary Layer):** When a query is classified as Out-of-Distribution (OOD) by the primary layer—indicating novel phrasing or synonyms—the system gracefully falls back to a Semantic Router using the `intfloat/e5-base-v2` dense embedding model (requires `sentence-transformers`). This provides strict predictability for standard clinical commands while leveraging deep vector similarity to seamlessly handle natural language variation.
 
 
 

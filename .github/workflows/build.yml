@@ -1,0 +1,213 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .github/workflows/build.yml
+# NeuroBench Studio — Cross-Platform Build & Release
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers:
+#   • On push of a version tag: git tag v2.0.0 && git push origin v2.0.0
+#   • Manually via Actions → Run workflow
+#
+# Produces a GitHub Release with:
+#   • NeuroBench_Studio.dmg              (macOS)
+#   • NeuroBench_Studio_Setup_*.exe      (Windows)
+#   • NeuroBench_Studio-x86_64.AppImage  (Linux)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: "Build & Release"
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:           # allow manual trigger
+
+permissions:
+  contents: write              # needed to create GitHub Releases
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Shared setup steps (reused via composite action-like pattern)
+# ─────────────────────────────────────────────────────────────────────────────
+env:
+  PYTHON_VERSION: "3.11"
+  # Exclude torch from pip install during CI build
+  PIP_NO_DEPS_TORCH: "true"
+
+jobs:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # macOS build  →  .dmg
+  # ───────────────────────────────────────────────────────────────────────────
+  build-mac:
+    name: "macOS → .dmg"
+    runs-on: macos-14            # Apple Silicon runner (arm64)
+    timeout-minutes: 60
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Set up Python ${{ env.PYTHON_VERSION }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: "Install dependencies (no torch)"
+        run: |
+          pip install --upgrade pip
+          # Install everything EXCEPT torch/torchvision/torchaudio
+          grep -vE "^(torch|torchvision|torchaudio|skorch|transformers|mlflow|streamlit)" requirements.txt \
+            | pip install -r /dev/stdin
+          pip install pyinstaller pywebview
+
+      - name: "Install create-dmg"
+        run: brew install create-dmg
+
+      - name: "Build (PyInstaller + DMG)"
+        run: bash build/build_mac.sh
+        env:
+          APPLE_DEV_ID: ${{ secrets.APPLE_DEV_ID }}   # optional — set in repo secrets
+
+      - name: "Upload DMG artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-dmg
+          path: dist/NeuroBench_Studio.dmg
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Windows build  →  .exe installer
+  # ───────────────────────────────────────────────────────────────────────────
+  build-windows:
+    name: "Windows → .exe"
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Set up Python ${{ env.PYTHON_VERSION }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: "Install dependencies (no torch)"
+        shell: bash
+        run: |
+          pip install --upgrade pip
+          grep -vE "^(torch|torchvision|torchaudio|skorch|transformers|mlflow|streamlit)" requirements.txt \
+            | pip install -r /dev/stdin
+          pip install pyinstaller "pywebview[cef2]"
+
+      - name: "Install Inno Setup"
+        run: choco install innosetup --yes
+        shell: powershell
+
+      - name: "Build (PyInstaller + Inno Setup)"
+        shell: cmd
+        run: build\build_windows.bat
+
+      - name: "Upload EXE artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/NeuroBench_Studio_Setup_*.exe
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Linux build  →  .AppImage
+  # ───────────────────────────────────────────────────────────────────────────
+  build-linux:
+    name: "Linux → .AppImage"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Install system packages for pywebview GTK backend"
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            python3-gi \
+            gir1.2-webkit2-4.0 \
+            libgirepository1.0-dev \
+            libcairo2-dev \
+            pkg-config \
+            libfuse2          # required by AppImage
+
+      - name: "Set up Python ${{ env.PYTHON_VERSION }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: "Install dependencies (no torch)"
+        run: |
+          pip install --upgrade pip
+          grep -vE "^(torch|torchvision|torchaudio|skorch|transformers|mlflow|streamlit)" requirements.txt \
+            | pip install -r /dev/stdin
+          pip install pyinstaller pywebview
+
+      - name: "Download appimagetool"
+        run: |
+          curl -fsSL -o /usr/local/bin/appimagetool \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x /usr/local/bin/appimagetool
+
+      - name: "Build (PyInstaller + AppImage)"
+        run: bash build/build_linux.sh
+        env:
+          APPIMAGETOOL: /usr/local/bin/appimagetool
+
+      - name: "Upload AppImage artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: dist/NeuroBench_Studio-x86_64.AppImage
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Create GitHub Release — runs after all platform builds succeed
+  # ───────────────────────────────────────────────────────────────────────────
+  release:
+    name: "Create GitHub Release"
+    needs: [build-mac, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: "Download all artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: "List release assets"
+        run: find release-assets -type f
+
+      - name: "Create Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "NeuroBench Studio ${{ github.ref_name }}"
+          body: |
+            ## NeuroBench Studio ${{ github.ref_name }}
+
+            ### Downloads
+            | Platform | File | Notes |
+            |---|---|---|
+            | 🍎 macOS | `NeuroBench_Studio.dmg` | Drag to Applications. Requires macOS 11+ |
+            | 🪟 Windows | `NeuroBench_Studio_Setup_*.exe` | Installs per-user, no admin required |
+            | 🐧 Linux | `NeuroBench_Studio-x86_64.AppImage` | `chmod +x` then run |
+
+            ### Notes
+            - PyTorch is **not** bundled. The app will prompt you to install it (`pip install torch`) the first time you run a deep-learning pipeline.
+            - User data (results, configs) is stored in `~/NeuroBench_Studio/`
+          files: |
+            release-assets/mac-dmg/NeuroBench_Studio.dmg
+            release-assets/windows-installer/*.exe
+            release-assets/linux-appimage/NeuroBench_Studio-x86_64.AppImage
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
