@@ -36,9 +36,9 @@ NeuroBench Studio platform for EEG foundation model research, featuring a **conv
 - Comprehensive documentation of all 9+ foundation models available via braindecode v1.5+
 - Models include: REVE, CBraMod, CodeBrain, EEGPT, BIOT, LaBraM, BENDR, SignalJEPA, LUNA
 - Pretrained on large-scale EEG data for fine-tuning or feature extraction
-<!-- <div align="center">
+<div align="center">
   <video src="Screenshoots//EEGConversationalAI.mp4" width="800" controls></video>
-</div> -->
+</div>
 <div align="center">
   <img src="Screenshoots/foundation-model-inference-screenshot.png" width="800" alt="Foundation Model Reference">
 </div>
