@@ -1,5 +1,4 @@
-# NeuroBench Studio — Prompting the Brain: Conversational AI via Natural Language Interfaces and Visual MLOps for Reproducible EEG AI
-
+# NeuroBench Studio — Prompting the Brain: Conversational AI via Natural Language Interfaces, Visual MLOps, and Real-Time Streaming Inference for Reproducible EEG AI
 
 Project link: https://neurobenchstudio.github.io/#
 Paper Link: will be available soon
