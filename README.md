@@ -273,8 +273,9 @@ To balance computational efficiency with robust natural language understanding, 
 See `requirements.txt` for the full list of dependencies.
 
 ## License
+The code in this repository is released under the MIT License. 
 
-MIT License
+Any data, materials, or resources included with or associated with this project are provided under their respective licences and terms of use. Users are responsible for reviewing and complying with all applicable licensing, attribution, privacy, and ethical requirements. Please use the code and associated resources responsibly, cite relevant sources where appropriate, and respect the privacy and rights of others when reproducing, extending, or applying this work.
 
 ## Citation
 
