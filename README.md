@@ -3,7 +3,7 @@
 Project link: https://neurobenchstudio.github.io/#
 Paper Link: will be available soon
 
-NeuroBench Studio platform for EEG foundation model research, featuring a **conversational EEG AI Assistant** equipped with a Cascading Fallback Router, and an intuitive **visual MLOps pipeline builder (Drag-and-drop interface for building EEG ML pipelines)**. These tools empower both coders and non-coders to seamlessly explore datasets, discover braindecode models, and orchestrate complex deep learning workflows without writing a single line of code.
+NeuroBench Studio platform for EEG foundation model research, featuring a **conversational EEG AI Assistant** equipped with a Cascading Fallback Router (Layer 1: A zero-latency heuristic engine that instantly matches standard clinical keywords. Layer 2: A semantic fallback router (e5-base-v2) that uses dense embeddings to understand complex or novel queries, ensuring both strict reliability and natural language flexibility.), and an intuitive **visual MLOps pipeline builder (Drag-and-drop interface for building EEG ML pipelines)**. These tools empower both coders and non-coders to seamlessly explore datasets, discover braindecode models, and orchestrate complex deep learning workflows without writing a single line of code.
 
 ## Core Mission
 
