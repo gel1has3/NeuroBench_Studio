@@ -282,9 +282,9 @@ Any data, materials, or resources included with or associated with this project 
 ```bibtex
 @software{NeuroBenchStudio,
   title={NeuroBench Studio — Prompting the Brain: Conversational AI via Natural Language Interfaces, Visual MLOps, and Real-Time Streaming Inference for Reproducible EEG AI},
-  author={Geletaw Sahle Tegenaw, Norman Delanty, and Tomas Ward},
+  author={Geletaw Sahle Tegenaw and Tomas Ward},
   year={2026},
-  note={EU Horizon 2020 Marie Skłodowska-Curie Grant No. 101034252. Powered by Neuro-Insight, Insight-DCU},
+  note={},
   url={https://neurobenchstudio.github.io/#, https://github.com/gel1has3/NeuroBench_Studio}
 }
 
