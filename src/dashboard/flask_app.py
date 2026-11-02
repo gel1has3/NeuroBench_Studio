@@ -46,6 +46,69 @@ from src.models.foundation import (
     get_model_info,
 )
 
+
+# ---------------------------------------------------------------------------
+# EEG Visualization Helpers
+# ---------------------------------------------------------------------------
+
+def _compute_band_power(data: "np.ndarray", sfreq: float) -> dict:
+    """
+    Compute per-channel, per-band mean power using Welch's method at the
+    ORIGINAL sampling rate (before any decimation).
+
+    This is the only correct way to capture gamma (30-100 Hz): the display
+    layer is downsampled to ~32 Hz for animation, but band power must be
+    computed at full sfreq so that gamma bins are not empty or aliased.
+
+    Returns a dict:
+      {
+        "avg":  {"delta": float, "theta": float, "alpha": float,
+                 "beta": float,  "gamma": float},          # mean across EEG channels
+        "per_channel": {"Fp1": {"delta":…, …}, …}         # per-channel scalars
+      }
+    All values are in µV²/Hz (assuming data is already in µV).
+    """
+    import numpy as np
+    from scipy.signal import welch
+
+    BANDS = {
+        "delta": (0.5, 4.0),
+        "theta": (4.0, 8.0),
+        "alpha": (8.0, 13.0),
+        "beta":  (13.0, 30.0),
+        "gamma": (30.0, 100.0),
+    }
+
+    n_ch, n_times = data.shape
+    # Use up to 10 s of data to keep computation fast
+    use_samples = min(n_times, int(sfreq * 10))
+    segment = data[:, :use_samples]
+
+    nperseg = min(int(sfreq * 2), use_samples)   # 2-second window
+    noverlap = nperseg // 2
+
+    avg_power = {b: 0.0 for b in BANDS}
+    per_channel = {}
+
+    for ch_idx in range(n_ch):
+        freqs, psd = welch(segment[ch_idx], fs=sfreq,
+                           nperseg=nperseg, noverlap=noverlap,
+                           window="hann", scaling="density")
+        ch_bands = {}
+        for band, (lo, hi) in BANDS.items():
+            mask = (freqs >= lo) & (freqs <= hi)
+            ch_bands[band] = float(np.mean(psd[mask])) if mask.any() else 0.0
+        per_channel[str(ch_idx)] = ch_bands
+        for band in BANDS:
+            avg_power[band] += ch_bands[band]
+
+    if n_ch > 0:
+        for band in BANDS:
+            avg_power[band] /= n_ch
+
+    return {"avg": avg_power, "per_channel": per_channel}
+
+
 # ---------------------------------------------------------------------------
 # App Factory
 # ---------------------------------------------------------------------------
@@ -1258,13 +1321,23 @@ def register_api_routes(app):
                     sfreq = raw.info['sfreq']
                     max_samples = min(int(sfreq * 3600), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
-                    
+
+                    # ── Band power at FULL sfreq (before any decimation) ──────────────────
+                    # Gamma (30-100 Hz) requires full-resolution data; compute here server-side
+                    # so the browser receives lightweight scalars, not raw high-rate samples.
+                    result['band_power'] = _compute_band_power(data, sfreq)
+                    result['band_power_sfreq'] = float(sfreq)
+
                     stride = max(1, int(sfreq / 32.0))
-                    vis_data = data[:, ::stride]
+                    if stride > 1:
+                        # decimate applies a Chebyshev anti-alias filter before subsampling,
+                        # preventing high-frequency content from folding into the display band.
+                        from scipy.signal import decimate
+                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
+                    else:
+                        vis_data = data
                     result['sample_data'] = vis_data.tolist()
                     result['vis_sfreq'] = float(sfreq / stride)
-                    
-                    # Channel info summary
                     result['channel_summary'] = {
                         'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
                         'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
@@ -1374,13 +1447,23 @@ def register_api_routes(app):
                     sfreq = raw.info['sfreq']
                     max_samples = min(int(sfreq * 3600), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
-                    
+
+                    # ── Band power at FULL sfreq (before any decimation) ──────────────────
+                    # Gamma (30-100 Hz) requires full-resolution data; compute here server-side
+                    # so the browser receives lightweight scalars, not raw high-rate samples.
+                    result['band_power'] = _compute_band_power(data, sfreq)
+                    result['band_power_sfreq'] = float(sfreq)
+
                     stride = max(1, int(sfreq / 32.0))
-                    vis_data = data[:, ::stride]
+                    if stride > 1:
+                        # decimate applies a Chebyshev anti-alias filter before subsampling,
+                        # preventing high-frequency content from folding into the display band.
+                        from scipy.signal import decimate
+                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
+                    else:
+                        vis_data = data
                     result['sample_data'] = vis_data.tolist()
                     result['vis_sfreq'] = float(sfreq / stride)
-                    
-                    # Channel info summary
                     result['channel_summary'] = {
                         'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
                         'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
@@ -1452,9 +1535,17 @@ def register_api_routes(app):
                     # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
                     max_samples = min(int(sfreq * 3600), n_times)
                     data = eeg_data[:, :max_samples]
-                    
+
+                    # Band power at FULL sfreq before decimation (gamma needs full rate)
+                    result['band_power'] = _compute_band_power(data, sfreq)
+                    result['band_power_sfreq'] = float(sfreq)
+
                     stride = max(1, int(sfreq / 32.0))
-                    vis_data = data[:, ::stride]
+                    if stride > 1:
+                        from scipy.signal import decimate
+                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
+                    else:
+                        vis_data = data
                     result['sample_data'] = vis_data.tolist()
                     result['vis_sfreq'] = float(sfreq / stride)
                     
@@ -1497,9 +1588,17 @@ def register_api_routes(app):
                     sfreq = 250.0
                     max_samples = min(int(sfreq * 3600), len(df))
                     data = df[channel_cols].head(max_samples).values.T
-                    
+
+                    # Band power at FULL sfreq before decimation (gamma needs full rate)
+                    result['band_power'] = _compute_band_power(data, sfreq)
+                    result['band_power_sfreq'] = float(sfreq)
+
                     stride = max(1, int(sfreq / 32.0))
-                    vis_data = data[:, ::stride]
+                    if stride > 1:
+                        from scipy.signal import decimate
+                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
+                    else:
+                        vis_data = data
                     result['sample_data'] = vis_data.tolist()
                     result['vis_sfreq'] = float(sfreq / stride)
                     

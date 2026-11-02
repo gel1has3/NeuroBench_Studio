@@ -1017,12 +1017,18 @@ function addLiveEEGPlayer(targetFileName) {
         '</div>' +
         // Panel 3: FFT (hidden by default)
         '<div id="' + liveId + '-panel-fft" style="display:none;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;">' +
-          '<div class="small mb-1" style="color:#856404;"><i class="bi bi-bar-chart-fill me-1"></i>Frequency Band Power (FFT)</div>' +
+          '<div class="small mb-1" style="color:#856404;"><i class="bi bi-bar-chart-fill me-1"></i>Frequency Band Power — computed at <span id="' + liveId + '-fft-sfreq">full</span> Hz via Welch PSD</div>' +
           '<canvas id="' + liveId + '-fft" width="400" height="180" style="width:100%;border-radius:4px;"></canvas>' +
         '</div>' +
         // Panel 4: Topomap (hidden by default)
         '<div id="' + liveId + '-panel-topo" style="display:none;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px;">' +
-          '<div class="small mb-1" style="color:#0f5132;"><i class="bi bi-circle-half me-1"></i>Topographic 2D Scalp Map</div>' +
+          '<div class="small mb-1 d-flex align-items-center gap-2" style="color:#0f5132;"><i class="bi bi-circle-half me-1"></i>Band Power Scalp Map — ' +
+            '<select id="' + liveId + '-topo-band" onchange="setTopoBand(\'' + liveId + '\',this.value)" style="font-size:0.7rem;padding:0 4px;height:20px;border-radius:3px;border:1px solid #ccc;">' +
+              '<option value="delta">δ Delta</option><option value="theta">θ Theta</option>' +
+              '<option value="alpha" selected>α Alpha</option><option value="beta">β Beta</option>' +
+              '<option value="gamma">γ Gamma</option>' +
+            '</select>' +
+          '</div>' +
           '<canvas id="' + liveId + '-topo" width="300" height="180" style="width:100%;border-radius:4px;"></canvas>' +
         '</div>' +
       '</div>' +
@@ -1049,7 +1055,12 @@ function addLiveEEGPlayer(targetFileName) {
     intervalId: null, lastInferenceAt: 0, inferenceInterval: currentSettings.inferenceInterval ? parseFloat(currentSettings.inferenceInterval) : 10,
     activeModel,
     lastPred: '—', lastConf: 0,
-    seizureEvents: []   // { time, confidence, idx }
+    seizureEvents: [],   // { time, confidence, idx }
+    // Pre-computed full-resolution band power from backend (includes gamma at native sfreq)
+    bandPower: (backend && backend.band_power) ? backend.band_power : null,
+    bandPowerSfreq: (backend && backend.band_power_sfreq) ? backend.band_power_sfreq : sfreq,
+    // Active band for topomap colouring (user-selectable)
+    topoActiveBand: 'alpha'
   };
 
   // Draw initial frame
@@ -1136,17 +1147,30 @@ function drawLiveFrame(liveId) {
     const ctx = fc.getContext('2d');
     const W = fc.width, H = fc.height;
     ctx.clearRect(0, 0, W, H);
-    // Average band power across channels (use first 4 channels, fast DFT)
-    const avgPower = { delta:0, theta:0, alpha:0, beta:0, gamma:0 };
-    const usedCh = Math.min(s.nCh, 4);
-    for (let ch = 0; ch < usedCh; ch++) {
-      const row = s.eegData[ch];
-      if (!row) continue;
-      const slice = row.slice(startSample, Math.min(startSample + 256, endSample));
-      const bp = computeBandPower(slice, s.sfreq);
-      for (const band of Object.keys(avgPower)) avgPower[band] += bp[band] || 0;
+
+    // ── Use pre-computed Welch band power from backend (full sfreq, includes gamma) ──
+    // Fall back to live DFT from decimated data only when no backend data is available.
+    let avgPower;
+    const sfreqLabel = document.getElementById(liveId + '-fft-sfreq');
+    if (s.bandPower && s.bandPower.avg) {
+      // Server computed at s.bandPowerSfreq — gamma is valid here
+      avgPower = Object.assign({ delta:0, theta:0, alpha:0, beta:0, gamma:0 }, s.bandPower.avg);
+      if (sfreqLabel) sfreqLabel.textContent = Math.round(s.bandPowerSfreq);
+    } else {
+      // Fallback: live DFT on decimated vis data — gamma will be 0 if vis_sfreq ≤ 32Hz
+      avgPower = { delta:0, theta:0, alpha:0, beta:0, gamma:0 };
+      const usedCh = Math.min(s.nCh, 4);
+      for (let ch = 0; ch < usedCh; ch++) {
+        const row = s.eegData[ch];
+        if (!row) continue;
+        const slice = row.slice(startSample, Math.min(startSample + 256, endSample));
+        const bp = computeBandPower(slice, s.sfreq);
+        for (const band of Object.keys(avgPower)) avgPower[band] += bp[band] || 0;
+      }
+      for (const band of Object.keys(avgPower)) avgPower[band] /= Math.max(1, Math.min(s.nCh, 4));
+      if (sfreqLabel) sfreqLabel.textContent = Math.round(s.sfreq) + ' (vis)';
     }
-    for (const band of Object.keys(avgPower)) avgPower[band] /= usedCh;
+
     const BANDS = [
       { key:'delta', label:'δ Delta', color:'#0d6efd' },
       { key:'theta', label:'θ Theta', color:'#198754' },
@@ -1194,14 +1218,24 @@ function drawLiveFrame(liveId) {
     ctx.strokeStyle = '#052c65'; ctx.lineWidth = 1; ctx.stroke();
     // Channel dots
     const TOPO_POS_MAP = {'Fp1':[-0.31,0.85],'Fp2':[0.31,0.85],'F3':[-0.39,0.50],'Fz':[0,0.55],'F4':[0.39,0.50],'F7':[-0.72,0.45],'F8':[0.72,0.45],'T3':[-0.90,0],'C3':[-0.50,0],'Cz':[0,0],'C4':[0.50,0],'T4':[0.90,0],'T5':[-0.72,-0.45],'P3':[-0.39,-0.50],'Pz':[0,-0.55],'P4':[0.39,-0.50],'T6':[0.72,-0.45],'O1':[-0.31,-0.85],'Oz':[0,-0.90],'O2':[0.31,-0.85]};
-    // Compute channel powers for heatmap colouring
+
+    // ── Band-specific power per channel (use backend Welch if available) ──────
+    // Previously: broadband RMS variance (incorrect — not band-specific).
+    // Now: per-channel power for the selected band from server-side Welch PSD.
+    const activeBand = s.topoActiveBand || 'alpha';
     const chPow = s.channelNames.map((name, ch) => {
+      // Path 1: backend supplied per-channel band power at full sfreq
+      if (s.bandPower && s.bandPower.per_channel && s.bandPower.per_channel[String(ch)]) {
+        return s.bandPower.per_channel[String(ch)][activeBand] || 0;
+      }
+      // Path 2: fallback — live broadband RMS from decimated data (labelled as such)
       const row = s.eegData[ch];
       if (!row) return 0;
       const slice = row.slice(startSample, endSample);
       const mean = slice.reduce((a,b) => a+b, 0) / (slice.length||1);
       return slice.reduce((a,b) => a + (b-mean)*(b-mean), 0) / (slice.length||1);
     });
+
     const maxPow2 = Math.max(...chPow, 1e-10);
     s.channelNames.forEach((name, ch) => {
       const cleanName = name.replace(/\s.*/, '').replace(/EEG\s*/i,'').trim();
@@ -1355,6 +1389,14 @@ function toggleLivePanel(liveId, panelKey, show) {
   panel.style.display = show ? 'block' : 'none';
   // If now visible and playing, draw immediately so canvas isn't blank
   if (show) { const s = window[liveId]; if (s) drawLiveFrame(liveId); }
+}
+
+// Change which band the topomap is coloured by
+function setTopoBand(liveId, band) {
+  const s = window[liveId];
+  if (!s) return;
+  s.topoActiveBand = band;
+  drawLiveFrame(liveId);   // redraw immediately on band switch
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
