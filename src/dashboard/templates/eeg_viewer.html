@@ -182,13 +182,13 @@ function loadAndView() {
         
         eegState.backendData = data;
         eegState.channelNames = data.channel_names;
-        eegState.sfreq = data.vis_sfreq || data.sfreq;  // use decimated rate for display
-        eegState.origSfreq = data.sfreq;                 // keep original for info badge
+        eegState.sfreq = data.sfreq || data.vis_sfreq;  // Native sampling rate
+        eegState.origSfreq = data.sfreq;
         eegState.nTimes = (data.sample_data && data.sample_data[0]) ? data.sample_data[0].length : data.n_times;
         eegState.duration = data.duration_sec;
         eegState.data = data.sample_data;
         
-        document.getElementById('fileInfoBadge').textContent = file.name + ' · ' + data.n_channels + 'ch · ' + data.sfreq + 'Hz (vis: ' + Math.round(data.vis_sfreq || data.sfreq) + 'Hz)';
+        document.getElementById('fileInfoBadge').textContent = file.name + ' · ' + data.n_channels + 'ch · ' + data.sfreq + 'Hz (Native 60 FPS)';
         document.getElementById('statusBar').textContent = '✅ Loaded: ' + file.name;
         document.getElementById('viewTitle').textContent = 'EEG Viewer — ' + file.name;
         

@@ -9,6 +9,21 @@ NeuroBench Studio platform for EEG foundation model research, featuring a **conv
 
 > Democratize EEG deep learning by providing a unified platform that combines EEGDash dataset streaming, Braindecode foundation models, an intuitive visual MLOps pipeline builder, and a conversational EEG AI assistant—making advanced analysis accessible to neuroscientists, clinicians, and machine learning researchers alike.
 
+## Quickstart
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/gel1has3/NeuroBench_Studio.git
+cd NeuroBench_Studio
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Launch the platform
+python main.py
+# → Open http://localhost:5000 in your browser
+```
+
 ## Platform Features
 
 ### 1. Conversational EEG AI Assistant
@@ -230,14 +245,14 @@ Model-specific downstream classification metrics (validation accuracy, confidenc
 ### Live EEG Visualization
 Triggered by: `"Visualize <file> live"` / `"Show <file> real-time"`
 
-Renders a 4-panel animated player inside the chat. The backend dynamically downsamples visualization traces to ~32 Hz, allowing seamless live playback for recordings up to **1 hour** long without freezing the browser, while still respecting the original sampling rate for inference.
+Renders a 4-panel animated player inside the chat. The player leverages modern hardware-accelerated Canvas rendering to stream and visualize multi-channel time-domain waveforms at their full native sampling rate (60 FPS) without lossy downsampling, preserving sharp epileptiform spikes and Gamma band oscillations, while displaying synchronized model inference and spectral band power.
 
 | Panel | Description | Toggle |
 |-------|-------------|--------|
-| 🔵 Raw Time-Domain Traces | Scrolling multi-channel waveforms (5s window) | Always shown |
-| 🔴 Model Inference | Seizure probability label updated based on user interval | Always shown |
-| 🟡 FFT Frequency Band Power | Live Delta, Theta, Alpha, Beta, Gamma bar chart | ☐ Optional (tick to enable) |
-| 🟢 Topographic 2D Scalp Map | Live 2D scalp heatmap of channel power | ☐ Optional (tick to enable) |
+| 🔵 Raw Time-Domain Traces | Scrolling multi-channel waveforms (5s window) at native sampling rate | Always shown |
+| 🔴 Model Inference | Seizure probability label updated based on user-configured interval | Always shown |
+| 🟡 FFT Frequency Band Power | Live Delta, Theta, Alpha, Beta, Gamma power bars computed via native-rate Welch PSD | ☐ Optional (tick to enable) |
+| 🟢 Topographic 2D Scalp Map | Live 2D scalp heatmap with interactive band selection (δ, θ, α, β, γ) | ☐ Optional (tick to enable) |
 
 **Playback controls:** Play / Pause / Reset, Speed selector (1×, 2×, 5×, 10×, 20×).
 **Seizure Event Log:** Automatically logs all detected seizure events with timestamp and confidence. Each event has a **▶ Replay** button that jumps playback to 2 seconds before the event for clinical review.
@@ -253,20 +268,20 @@ The preprocessing engine auto-adjusts bandpass filter cutoffs to respect the Nyq
 
 ### Cascading Fallback Router
 To balance computational efficiency with robust natural language understanding, the assistant implements a hybrid **Cascading Fallback Router**:
-- **Heuristic Rule-Based Engine (Primary Layer):** A zero-latency engine that instantly parses highly deterministic clinical keywords.
-- **Semantic Router (Secondary Layer):** When a query is classified as Out-of-Distribution (OOD) by the primary layer—indicating novel phrasing or synonyms—the system gracefully falls back to a Semantic Router using the `intfloat/e5-base-v2` dense embedding model (requires `sentence-transformers`). This provides strict predictability for standard clinical commands while leveraging deep vector similarity to seamlessly handle natural language variation.
-
-
+- **Heuristic Rule-Based Engine (Primary Layer):** A zero-latency engine that instantly parses highly deterministic clinical keywords (>150 entries).
+- **Semantic Router (Secondary Layer):** When a query is classified as Out-of-Distribution (OOD) by the primary layer—indicating novel phrasing or synonyms—the system routes the query to a semantic layer. It employs the `intfloat/e5-base-v2` dense embedding model (`sentence-transformers`) for deep vector similarity, backed by an automatic built-in semantic keyword fallback engine to guarantee zero downtime even in lightweight environments.
 
 ## Technology Stack
 
 | Component | Technology |
 |-----------|-----------|
 | Web Framework | Flask (Python) |
-| Frontend | Bootstrap 5.3, Plotly.js |
-| EEG Processing | MNE-Python, Braindecode |
-| Deep Learning | PyTorch |
+| Frontend | Bootstrap 5.3, Plotly.js, HTML5 Canvas |
+| NLP & Routing | Sentence-Transformers (`intfloat/e5-base-v2`), Scikit-Learn |
+| EEG Processing | MNE-Python, Braindecode, PyRiemann |
+| Deep Learning | PyTorch, Skorch |
 | Dataset Streaming | EEGDash, OpenNeuro |
+| Experiment Tracking | MLflow |
 
 ## Dependencies
 

@@ -946,7 +946,7 @@ function addLiveEEGPlayer(targetFileName) {
     channelNames = ['Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2'];
     eegData = channelNames.map((_, ch) => Array.from({length: nTimes}, (_, t) => {
       const tm = t / sfreq;
-      return 15*Math.sin(2*Math.PI*10*tm + ch*0.5) + 4*Math.sin(2*Math.PI*20*tm) + 1.5*Math.sin(2*Math.PI*2*tm) + 2*(Math.random()-0.5);
+      return 15*Math.sin(2*Math.PI*10*tm + ch*0.5) + 4*Math.sin(2*Math.PI*20*tm) + 2.0*Math.sin(2*Math.PI*40*tm) + 1.5*Math.sin(2*Math.PI*2*tm) + 2*(Math.random()-0.5);
     }));
   }
   const targetChCount = currentSettings.channelCount ? parseInt(currentSettings.channelCount, 10) : 8;

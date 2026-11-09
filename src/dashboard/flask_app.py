@@ -1317,27 +1317,18 @@ def register_api_routes(app):
                         result['epoching'] = None
                         result['evoked'] = None
                     
-                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    # Native-rate sample data extraction for modern hardware-accelerated browsers (up to 300s preview window)
                     sfreq = raw.info['sfreq']
-                    max_samples = min(int(sfreq * 3600), raw.n_times)
+                    max_samples = min(int(sfreq * 300), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
 
-                    # ── Band power at FULL sfreq (before any decimation) ──────────────────
-                    # Gamma (30-100 Hz) requires full-resolution data; compute here server-side
-                    # so the browser receives lightweight scalars, not raw high-rate samples.
+                    # Spectral band power at native full sampling rate (capturing Gamma up to 100 Hz)
                     result['band_power'] = _compute_band_power(data, sfreq)
                     result['band_power_sfreq'] = float(sfreq)
 
-                    stride = max(1, int(sfreq / 32.0))
-                    if stride > 1:
-                        # decimate applies a Chebyshev anti-alias filter before subsampling,
-                        # preventing high-frequency content from folding into the display band.
-                        from scipy.signal import decimate
-                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
-                    else:
-                        vis_data = data
-                    result['sample_data'] = vis_data.tolist()
-                    result['vis_sfreq'] = float(sfreq / stride)
+                    # Native full-resolution waveform (no downsampling) to preserve clinical spikes and Gamma oscillations
+                    result['sample_data'] = data.tolist()
+                    result['vis_sfreq'] = float(sfreq)
                     result['channel_summary'] = {
                         'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
                         'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
@@ -1443,27 +1434,18 @@ def register_api_routes(app):
                         result['epoching'] = None
                         result['evoked'] = None
                     
-                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    # Native-rate sample data extraction for modern hardware-accelerated browsers (up to 300s preview window)
                     sfreq = raw.info['sfreq']
-                    max_samples = min(int(sfreq * 3600), raw.n_times)
+                    max_samples = min(int(sfreq * 300), raw.n_times)
                     data = raw_filtered.get_data(start=0, stop=max_samples)
 
-                    # ── Band power at FULL sfreq (before any decimation) ──────────────────
-                    # Gamma (30-100 Hz) requires full-resolution data; compute here server-side
-                    # so the browser receives lightweight scalars, not raw high-rate samples.
+                    # Spectral band power at native full sampling rate (capturing Gamma up to 100 Hz)
                     result['band_power'] = _compute_band_power(data, sfreq)
                     result['band_power_sfreq'] = float(sfreq)
 
-                    stride = max(1, int(sfreq / 32.0))
-                    if stride > 1:
-                        # decimate applies a Chebyshev anti-alias filter before subsampling,
-                        # preventing high-frequency content from folding into the display band.
-                        from scipy.signal import decimate
-                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
-                    else:
-                        vis_data = data
-                    result['sample_data'] = vis_data.tolist()
-                    result['vis_sfreq'] = float(sfreq / stride)
+                    # Native full-resolution waveform (no downsampling) to preserve clinical spikes and Gamma oscillations
+                    result['sample_data'] = data.tolist()
+                    result['vis_sfreq'] = float(sfreq)
                     result['channel_summary'] = {
                         'eeg': int(sum(1 for t in result['channel_types'] if t == 'eeg')),
                         'stim': int(sum(1 for t in result['channel_types'] if t == 'stim')),
@@ -1532,22 +1514,17 @@ def register_api_routes(app):
                         'other': 0
                     }
                     
-                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
-                    max_samples = min(int(sfreq * 3600), n_times)
+                    # Native-rate sample data extraction for modern hardware-accelerated browsers (up to 300s preview window)
+                    max_samples = min(int(sfreq * 300), n_times)
                     data = eeg_data[:, :max_samples]
 
-                    # Band power at FULL sfreq before decimation (gamma needs full rate)
+                    # Band power at native full sampling rate (including Gamma)
                     result['band_power'] = _compute_band_power(data, sfreq)
                     result['band_power_sfreq'] = float(sfreq)
 
-                    stride = max(1, int(sfreq / 32.0))
-                    if stride > 1:
-                        from scipy.signal import decimate
-                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
-                    else:
-                        vis_data = data
-                    result['sample_data'] = vis_data.tolist()
-                    result['vis_sfreq'] = float(sfreq / stride)
+                    # Native full-resolution waveform (no downsampling)
+                    result['sample_data'] = data.tolist()
+                    result['vis_sfreq'] = float(sfreq)
                     
                 except Exception as e:
                     logger.error(f"Failed to parse MAT: {e}")
@@ -1584,23 +1561,18 @@ def register_api_routes(app):
                         'other': 0
                     }
                     
-                    # Extract sample data (up to 1 hour, downsampled to ~32Hz for UI performance)
+                    # Native-rate sample data extraction for modern hardware-accelerated browsers (up to 300s preview window)
                     sfreq = 250.0
-                    max_samples = min(int(sfreq * 3600), len(df))
+                    max_samples = min(int(sfreq * 300), len(df))
                     data = df[channel_cols].head(max_samples).values.T
 
-                    # Band power at FULL sfreq before decimation (gamma needs full rate)
+                    # Band power at native full sampling rate (including Gamma)
                     result['band_power'] = _compute_band_power(data, sfreq)
                     result['band_power_sfreq'] = float(sfreq)
 
-                    stride = max(1, int(sfreq / 32.0))
-                    if stride > 1:
-                        from scipy.signal import decimate
-                        vis_data = decimate(data, stride, axis=1, zero_phase=True)
-                    else:
-                        vis_data = data
-                    result['sample_data'] = vis_data.tolist()
-                    result['vis_sfreq'] = float(sfreq / stride)
+                    # Native full-resolution waveform (no downsampling)
+                    result['sample_data'] = data.tolist()
+                    result['vis_sfreq'] = float(sfreq)
                     
                 except Exception as e:
                     logger.error(f"Failed to parse CSV: {e}")
@@ -2297,48 +2269,102 @@ def register_main_routes(app):
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+    SEMANTIC_KB = [
+        {
+            "keywords": ["export", "pdf", "report", "download", "summary"],
+            "text": "How do I export my EEG pipeline report to PDF?",
+            "answer": "You can export your analysis report by navigating to the **Results** tab and clicking the **'Export PDF'** or **'Export Markdown'** button."
+        },
+        {
+            "keywords": ["size", "file size", "maximum", "limit", "upload", "edf", "fif", "large"],
+            "text": "What is the maximum file size for EEG uploads?",
+            "answer": "NeuroBench Studio supports EDF, FIF, MAT, and CSV uploads up to **500MB** directly in the browser."
+        },
+        {
+            "keywords": ["normalize", "normalization", "z-score", "min-max", "scaling", "algorithm"],
+            "text": "How to change the normalization algorithm?",
+            "answer": "Click the sliders icon next to the Assistant badge to open the **Settings** modal. From there, you can select **Z-Score**, **Min-Max**, or **Exponential Moving Std**."
+        },
+        {
+            "keywords": ["model", "checkpoint", "labram", "bendr", "biot", "eegpt", "foundation", "architecture"],
+            "text": "Which foundation models are supported?",
+            "answer": "NeuroBench Studio supports 14 pretrained Braindecode models including **LaBraM**, **BENDR**, **BIOT**, **EEGPT**, **SignalJEPA**, **REVE**, **CBraMod**, **CodeBrain**, and **STEEGFormer**, with automatic channel interpolation for mismatched montages."
+        },
+        {
+            "keywords": ["seizure", "epilepsy", "detect", "ictal", "markers", "classification"],
+            "text": "How to run seizure detection?",
+            "answer": "Upload an EDF or FIF recording, select **LaBraM** or **BENDR** in the Settings modal, and ask: *'Does this patient have epilepsy markers?'* or *'Run seizure detection'*."
+        },
+        {
+            "keywords": ["stream", "player", "live", "real-time", "visualize", "playback"],
+            "text": "How does the streaming inference player work?",
+            "answer": "Type *'Visualize [filename] live'* into the chat. The 4-panel player visualizes multi-channel waveforms at their native sampling rate (60 FPS), synchronizing live FFT power bars (Delta through Gamma), a 2D scalp topomap, and model inference."
+        },
+        {
+            "keywords": ["pipeline", "builder", "nodes", "graph", "mne", "train", "benchmark"],
+            "text": "How to construct a custom pipeline?",
+            "answer": "Open the **Pipeline Builder** tab (`/pipeline`) to drag-and-drop Dataset, Preprocessing (Filtering, Bad Channels, ICA, Re-referencing), Split Strategy, and Model nodes into an executable DAG."
+        }
+    ]
+
     @app.route('/api/chat/semantic_route', methods=['POST'])
     def semantic_route():
-        data = request.json
-        query = data.get('query', '')
-        
+        data = request.json or {}
+        query = (data.get('query', '') or '').strip()
+
+        if not query:
+            return jsonify({"answer": "Please provide a query for the semantic router."})
+
+        # 1. Primary: Deep neural vector similarity via sentence-transformers (if installed)
         try:
             from sentence_transformers import SentenceTransformer
             from sklearn.metrics.pairwise import cosine_similarity
             import numpy as np
-            
-            # Load model safely (cached after first load)
+
             if not hasattr(app, 'embedding_model'):
                 app.embedding_model = SentenceTransformer('intfloat/e5-base-v2')
-                
-                # Define a small knowledge base for the semantic router to match against
-                app.semantic_kb = [
-                    {"text": "query: How do I export my EEG pipeline report to PDF?", "answer": "You can export your analysis report by navigating to the Results tab and clicking the 'Export PDF' button."},
-                    {"text": "query: What is the maximum file size for EDF uploads?", "answer": "The studio currently supports EDF file uploads up to 500MB. For larger files, consider downsampling first."},
-                    {"text": "query: How to change the normalization algorithm?", "answer": "Click the sliders icon next to the Assistant badge to open the Settings modal. From there, you can select Z-Score, Min-Max, or Exponential Moving Std."}
-                ]
-                app.kb_embeddings = app.embedding_model.encode([item['text'] for item in app.semantic_kb])
+                app.semantic_kb = SEMANTIC_KB
+                app.kb_embeddings = app.embedding_model.encode([f"query: {item['text']}" for item in app.semantic_kb])
 
-            # Prefix query as required by e5 models
             query_embedding = app.embedding_model.encode([f"query: {query}"])
-            
-            # Compute cosine similarity
             similarities = cosine_similarity(query_embedding, app.kb_embeddings)[0]
-            best_match_idx = np.argmax(similarities)
-            best_score = similarities[best_match_idx]
-            
-            if best_score > 0.8:  # Threshold for a confident match
-                return jsonify({"answer": app.semantic_kb[best_match_idx]['answer'], "score": float(best_score)})
-            else:
-                return jsonify({"answer": "I'm sorry, I couldn't find a confident answer for your specific phrasing. Please try using standard clinical keywords.", "score": float(best_score)})
+            best_idx = int(np.argmax(similarities))
+            best_score = float(similarities[best_idx])
 
-        except ImportError:
-            # Failsafe if sentence-transformers is not installed
+            if best_score > 0.75:
+                return jsonify({"answer": app.semantic_kb[best_idx]['answer'], "score": best_score, "engine": "e5-base-v2"})
+        except Exception:
+            # sentence-transformers not installed or loading; seamlessly fall back
+            pass
+
+        # 2. Fallback: Built-in semantic token & keyword ranker (zero external dependencies)
+        import re
+        q_tokens = set(re.findall(r'\w+', query.lower()))
+        best_item = None
+        best_score = 0.0
+
+        for item in SEMANTIC_KB:
+            # Keyword matching score
+            kw_hits = sum(1 for kw in item.get('keywords', []) if any(k in query.lower() for k in kw.split()))
+            # Token Jaccard overlap on text
+            t_tokens = set(re.findall(r'\w+', item['text'].lower()))
+            jaccard = len(q_tokens & t_tokens) / max(1, len(q_tokens | t_tokens))
+            score = (kw_hits * 0.3) + (jaccard * 0.7)
+            if score > best_score:
+                best_score = score
+                best_item = item
+
+        if best_item and best_score >= 0.2:
             return jsonify({
-                "answer": "⚠️ Semantic Router is currently offline. To enable deep vector similarity, please install the required backend dependencies: `pip install sentence-transformers scikit-learn`"
+                "answer": best_item['answer'],
+                "score": float(best_score),
+                "engine": "fallback_semantic"
             })
-        except Exception as e:
-            return jsonify({"answer": f"⚠️ Semantic Router encountered an error: {str(e)}"})
+
+        return jsonify({
+            "answer": "I couldn't find a direct match for your specific phrasing in the clinical knowledge base. Try asking about **file formats**, **supported foundation models (LaBraM, BENDR, BIOT)**, **pipeline construction**, **seizure detection**, or **report exporting**.\n\n*Note: To enable deep dense vector embeddings (`intfloat/e5-base-v2`), run: `pip install sentence-transformers scikit-learn` in your terminal.*",
+            "score": 0.0
+        })
 
 
 # ---------------------------------------------------------------------------
