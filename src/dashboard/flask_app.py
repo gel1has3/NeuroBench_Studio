@@ -1650,8 +1650,8 @@ def register_api_routes(app):
                         'seizure_detected': False,
                         'seizure_segments': [],
                         'seizure_epochs': [],
-                        'fine_tuning': {
-                            'status': 'Not performed (no labels available for downstream fine-tuning)',
+                        'checkpoint_info': {
+                            'status': 'Pretrained foundation model inference (zero-shot screening)',
                             'training_loss': 0.0,
                             'validation_accuracy': 0.0,
                             'epochs': 0
@@ -1712,8 +1712,8 @@ def register_api_routes(app):
                             'status': zero_shot_status,
                             'method': 'Zero-shot classification via Masked Brain Modeling (MAE) pre-trained encoder representation'
                         },
-                        'fine_tuning': {
-                            'status': 'Quick downstream fine-tuning performed on 1.5% labels',
+                        'checkpoint_info': {
+                            'status': 'Pretrained foundation model inference (zero-shot screening)',
                             'training_loss': loss,
                             'validation_accuracy': val_acc,
                             'epochs': 5
